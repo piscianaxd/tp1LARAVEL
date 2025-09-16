@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SongsController;
-
+use App\Http\Controllers\HistoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,4 +26,7 @@ Route::post('login',[AuthController::class,'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/songs', [SongsController::class, 'getSongs']);
     Route::post('/songs', [SongsController::class, 'postSongs']);
+    // para usar todas se puede usar apiResource
+    Route::apiResource('songs', SongsController::class);
+    Route::apiResource('history', HistoryController::class);
 });
