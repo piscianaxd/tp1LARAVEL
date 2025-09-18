@@ -22,11 +22,22 @@ use App\Http\Controllers\HistoryController;
 Route::post('register',[AuthController::class,'register']);
 Route::post('login',[AuthController::class,'login']);
 
-//SongsController
+
 Route::middleware('auth:sanctum')->group(function () {
+    //SongsController
     Route::get('/songs', [SongsController::class, 'getSongs']);
     Route::post('/songs', [SongsController::class, 'postSongs']);
     // para usar todas se puede usar apiResource
     Route::apiResource('songs', SongsController::class);
     Route::apiResource('history', HistoryController::class);
+
+    // Perfil del usuario autenticado
+    Route::get('/profile', [SessionController::class, 'profile']);
+    Route::put('/profile', [SessionController::class, 'updateProfile']);
+    Route::delete('/profile', [SessionController::class, 'deleteAccount']);
+    
+    // Administración de usuarios (solo admin)
+    Route::get('/users', [SessionController::class, 'index']);
+    Route::put('/users/{id}', [SessionController::class, 'updateUser']);
+    Route::delete('/users/{id}', [SessionController::class, 'deleteUser']);
 });
