@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SongsController;
 use App\Http\Controllers\HistoryController;
+use App\Http\Controllers\SessionController;
+use App\Http\Controllers\PlaylistController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,4 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users', [SessionController::class, 'index']);
     Route::put('/users/{id}', [SessionController::class, 'updateUser']);
     Route::delete('/users/{id}', [SessionController::class, 'deleteUser']);
+
+    //PlaylistController
+    Route::apiResource('playlists', PlaylistController::class);
 });
