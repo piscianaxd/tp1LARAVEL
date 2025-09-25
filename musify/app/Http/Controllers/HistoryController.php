@@ -13,12 +13,10 @@ class HistoryController extends Controller
     public function store(Request $request)
     {
         try {
-            // 1. Validar los datos
             $validated = $request->validate([
                 'song_id' => 'required|integer|exists:songs_saved_db,id',
             ]);
 
-            // 2. Obtener el usuario autenticado
             $user = Auth::user();
 
             if (! $user) {
@@ -27,16 +25,13 @@ class HistoryController extends Controller
                 ], 401);
             }
 
-            // 3. Crear el registro en el historial
             $historial = Historial::create([
                 'user_id' => $user->id,
                 'songs_saved_db_id' => $validated['song_id'],
             ]);
 
-            // 4. Obtener datos de la canción (opcional)
-            $song = songSaveDB::find($validated['song_id']);
+            $song = songSavedDB::find($validated['song_id']);
 
-            // 5. Devolver respuesta exitosa
             return response()->json([
                 'message' => 'Canción guardada en el historial correctamente.',
                 'historial' => $historial,
@@ -73,7 +68,6 @@ class HistoryController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Transformar la respuesta
         $data = $historial->map(function ($item) {
             return [
                 'historial_id' => $item->id,
