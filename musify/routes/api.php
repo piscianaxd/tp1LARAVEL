@@ -22,12 +22,11 @@ use App\Http\Controllers\RecommendedSongController;
 //AuthController
 Route::post('register',[AuthController::class,'register']);
 Route::post('login',[AuthController::class,'login']);
-//SongsController
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/songs', [SongsController::class, 'getSongs']);
-    Route::post('/songs', [SongsController::class, 'postSongs']);
-    // para usar todas se puede usar apiResource
     Route::apiResource('songs', SongsController::class);
+//SongsController
+Route::apiResource('recommended-songs', RecommendedSongController::class);
+Route::middleware('auth:sanctum')->group(function () {
+
     Route::apiResource('history', HistoryController::class);    
-    Route::apiResource('recommended-songs', RecommendedSongController::class);
+
 });

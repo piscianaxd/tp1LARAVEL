@@ -1,0 +1,94 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API en Laravel",
+        "description": "Documentación de la API con Swagger en Laravel",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://127.0.0.1:8000",
+            "description": "Servidor local"
+        }
+    ],
+    "paths": {
+        "/api/songs": {
+            "get": {
+                "tags": [
+                    "Songs"
+                ],
+                "summary": "Obtener lista de canciones",
+                "operationId": "b0683c01ccac2a9f42d6ebae249be865",
+                "responses": {
+                    "200": {
+                        "description": "Lista de canciones obtenida correctamente"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Songs"
+                ],
+                "summary": "Guardar una nueva canción",
+                "operationId": "9961b4eefb86c14e67daf167ad69afda",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "url_song",
+                                    "name_song",
+                                    "genre_song",
+                                    "artist_song",
+                                    "album_song",
+                                    "art_work_song"
+                                ],
+                                "properties": {
+                                    "url_song": {
+                                        "type": "string",
+                                        "format": "url",
+                                        "example": "https://example.com/song.mp3"
+                                    },
+                                    "name_song": {
+                                        "type": "string",
+                                        "example": "Nombre de la canción"
+                                    },
+                                    "genre_song": {
+                                        "type": "string",
+                                        "example": "Género de la canción"
+                                    },
+                                    "artist_song": {
+                                        "type": "string",
+                                        "example": "Artista de la canción"
+                                    },
+                                    "album_song": {
+                                        "type": "string",
+                                        "example": "Álbum de la canción"
+                                    },
+                                    "art_work_song": {
+                                        "type": "string",
+                                        "format": "url",
+                                        "example": "https://example.com/artwork.jpg"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Canción guardada correctamente"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Songs",
+            "description": "Songs"
+        }
+    ]
+}
