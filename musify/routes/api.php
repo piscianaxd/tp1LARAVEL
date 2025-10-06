@@ -44,5 +44,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/users/{id}', [SessionController::class, 'deleteUser']);
 
     //PlaylistController
-    Route::apiResource('playlists', PlaylistController::class);
+     Route::apiResource('playlists', PlaylistController::class);
 });
