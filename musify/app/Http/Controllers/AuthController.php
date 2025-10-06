@@ -10,9 +10,41 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    /**
-     * Registra un nuevo usuario y genera un token de Sanctum.
+
+     /**
+     * @OA\Post(
+     *     path="/api/register",
+     *     summary="Registrar un nuevo usuario",
+     *     description="Registra un nuevo usuario y devuelve un token de autenticación",
+     *     tags={"Autenticación"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name","email","password"},
+     *             @OA\Property(property="name", type="string", example="Juan Pérez"),
+     *             @OA\Property(property="email", type="string", format="email", example="juan@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="password123"),
+     *             @OA\Property(property="is_admin", type="boolean", example=false)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Usuario registrado exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Usuario registrado exitosamente"),
+     *             @OA\Property(property="user", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Juan Pérez"),
+     *                 @OA\Property(property="email", type="string", example="juan@example.com"),
+     *                 @OA\Property(property="is_admin", type="boolean", example=false)
+     *             ),
+     *             @OA\Property(property="token", type="string", example="1|abcd1234efgh5678")
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Error de validación")
+     * )
      */
+
     public function register(Request $request)
     {
         // Validar los datos de entrada
@@ -46,8 +78,37 @@ class AuthController extends Controller
     }
 
     /**
-     * Autentica un usuario y genera un nuevo token de Sanctum.
+     * @OA\Post(
+     *     path="/api/login",
+     *     summary="Iniciar sesión",
+     *     description="Autentica un usuario existente y devuelve un nuevo token",
+     *     tags={"Autenticación"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email","password"},
+     *             @OA\Property(property="email", type="string", format="email", example="juan@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="password123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Inicio de sesión exitoso",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Inicio de sesión exitoso"),
+     *             @OA\Property(property="user", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Juan Pérez"),
+     *                 @OA\Property(property="email", type="string", example="juan@example.com"),
+     *                 @OA\Property(property="is_admin", type="boolean", example=false)
+     *             ),
+     *             @OA\Property(property="token", type="string", example="1|abcd1234efgh5678")
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Credenciales inválidas")
+     * )
      */
+
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
@@ -71,9 +132,25 @@ class AuthController extends Controller
         ]);
     }
 
+
     /**
-     * Cierra la sesión del usuario revocando su token actual.
+     * @OA\Post(
+     *     path="/api/logout",
+     *     summary="Cerrar sesión",
+     *     description="Revoca el token actual del usuario autenticado",
+     *     tags={"Autenticación"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Sesión cerrada exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Sesión cerrada exitosamente")
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="No autenticado")
+     * )
      */
+    
     public function logout(Request $request)
     {
         // Revocar el token de Sanctum que se está usando actualmente.
