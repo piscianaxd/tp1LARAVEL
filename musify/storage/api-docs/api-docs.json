@@ -221,6 +221,246 @@
                 ]
             }
         },
+        "/api/history": {
+            "get": {
+                "tags": [
+                    "Historial"
+                ],
+                "summary": "Obtener el historial del usuario autenticado",
+                "description": "Devuelve la lista de canciones escuchadas o guardadas en el historial del usuario autenticado, ordenadas por fecha descendente.",
+                "operationId": "2c91f335de85204f3ae1465ff34e29d2",
+                "responses": {
+                    "200": {
+                        "description": "Historial obtenido correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Historial obtenido correctamente."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "historial_id": {
+                                                        "type": "integer",
+                                                        "example": 12
+                                                    },
+                                                    "fecha": {
+                                                        "type": "string",
+                                                        "example": "2025-10-07 13:45:22"
+                                                    },
+                                                    "cancion": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 5
+                                                            },
+                                                            "nombre": {
+                                                                "type": "string",
+                                                                "example": "In the End"
+                                                            },
+                                                            "artista": {
+                                                                "type": "string",
+                                                                "example": "Linkin Park"
+                                                            },
+                                                            "genero": {
+                                                                "type": "string",
+                                                                "example": "Rock"
+                                                            },
+                                                            "album": {
+                                                                "type": "string",
+                                                                "example": "Hybrid Theory"
+                                                            },
+                                                            "url": {
+                                                                "type": "string",
+                                                                "example": "https://example.com/in-the-end.mp3"
+                                                            },
+                                                            "artwork": {
+                                                                "type": "string",
+                                                                "example": "https://example.com/artwork/in-the-end.jpg"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Usuario no autenticado"
+                    },
+                    "500": {
+                        "description": "Error al obtener el historial"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Historial"
+                ],
+                "summary": "Agregar una canción al historial del usuario autenticado",
+                "description": "Guarda una canción reproducida o escuchada en el historial personal del usuario autenticado.",
+                "operationId": "588e089eb0d578fe142b8bbd1ba58af3",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "song_id"
+                                ],
+                                "properties": {
+                                    "song_id": {
+                                        "description": "ID de la canción (de la tabla songs_saved_db)",
+                                        "type": "integer",
+                                        "example": 5
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Canción guardada en el historial correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Canción guardada en el historial correctamente."
+                                        },
+                                        "historial": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                },
+                                                "user_id": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "songs_saved_db_id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "example": "2025-10-07T13:45:22.000000Z"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "song": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "name_song": {
+                                                    "type": "string",
+                                                    "example": "In the End"
+                                                },
+                                                "artist_song": {
+                                                    "type": "string",
+                                                    "example": "Linkin Park"
+                                                },
+                                                "genre_song": {
+                                                    "type": "string",
+                                                    "example": "Rock"
+                                                },
+                                                "album_song": {
+                                                    "type": "string",
+                                                    "example": "Hybrid Theory"
+                                                },
+                                                "url_song": {
+                                                    "type": "string",
+                                                    "example": "https://example.com/in-the-end.mp3"
+                                                },
+                                                "art_work_song": {
+                                                    "type": "string",
+                                                    "example": "https://example.com/artwork/in-the-end.jpg"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Usuario no autenticado"
+                    },
+                    "422": {
+                        "description": "Error de validación (song_id no existe o no es válido)"
+                    },
+                    "500": {
+                        "description": "Error interno del servidor"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/history/{id}": {
+            "delete": {
+                "tags": [
+                    "Historial"
+                ],
+                "summary": "Eliminar una canción del historial del usuario",
+                "description": "Elimina una entrada específica del historial del usuario autenticado.",
+                "operationId": "ad8da49ae2b6d6e748bfe339a9247c8c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del registro del historial",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 12
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Registro eliminado del historial"
+                    },
+                    "404": {
+                        "description": "Registro no encontrado"
+                    },
+                    "401": {
+                        "description": "Usuario no autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/playlists": {
             "get": {
                 "tags": [
@@ -420,6 +660,874 @@
                 "security": [
                     {
                         "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/recommended-songs": {
+            "get": {
+                "tags": [
+                    "Recommended Songs"
+                ],
+                "summary": "Obtener todas las listas de generos de canciones mas escuchadas",
+                "operationId": "757e6a6e5317dd8d5cd59dc2377c21e0",
+                "responses": {
+                    "200": {
+                        "description": "listas de generos obtenidas correctamente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "listas de generos obtenidas correctamente."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "user_id": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "rock": {
+                                                        "type": "integer",
+                                                        "example": 3
+                                                    },
+                                                    "pop": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "tropical": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "blues": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "rap": {
+                                                        "type": "integer",
+                                                        "example": 4
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-10-07T15:00:00Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-10-07T16:30:00Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "500": {
+                        "description": "Error interno del servidor"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Recommended Songs"
+                ],
+                "summary": "Guardar una nueva lista de generos de canciones mas escuchadas",
+                "operationId": "f5f4db1b4df05c0ee86e2bd84bbe8a3e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "rock",
+                                    "pop",
+                                    "tropical",
+                                    "blues",
+                                    "rap"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "rock": {
+                                        "type": "integer",
+                                        "example": 3
+                                    },
+                                    "pop": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "tropical": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "blues": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "rap": {
+                                        "type": "integer",
+                                        "example": 4
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "lista de generos por ID usuario obtenida correctamente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "lista de generos por ID usuario obtenida correctamente."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "user_id": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "rock": {
+                                                        "type": "integer",
+                                                        "example": 3
+                                                    },
+                                                    "pop": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "tropical": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "blues": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "rap": {
+                                                        "type": "integer",
+                                                        "example": 4
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-10-07T15:00:00Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-10-07T16:30:00Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "500": {
+                        "description": "Error interno del servidor"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/recommended-songs/{id}": {
+            "get": {
+                "tags": [
+                    "Recommended Songs"
+                ],
+                "summary": "Obtener los generos mas escuchados por la ID de la lista",
+                "operationId": "971b227e1b4d5c2bbf9c8663086deb62",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la canción recomendada",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Canción recomendada obtenida correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Canción recomendada obtenida correctamente."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "user_id": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "rock": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "pop": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "tropical": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "blues": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                },
+                                                "rap": {
+                                                    "type": "integer",
+                                                    "example": 4
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-10-03T20:30:00Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-10-07T12:00:00Z"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Canción no encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Canción no encontrada."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/recommended-songs/{userId}": {
+            "patch": {
+                "tags": [
+                    "Recommended Songs"
+                ],
+                "summary": "Incrementar el contador de un género para un usuario",
+                "description": "Aumenta en 1 el contador del género especificado para el usuario indicado.",
+                "operationId": "aed5fb3ed00a529906e6012c94689580",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "ID del usuario asociado a las canciones recomendadas",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 5
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "genre"
+                                ],
+                                "properties": {
+                                    "genre": {
+                                        "description": "Género a incrementar",
+                                        "type": "string",
+                                        "enum": [
+                                            "rock",
+                                            "pop",
+                                            "tropical",
+                                            "blues",
+                                            "rap"
+                                        ],
+                                        "example": "rock"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Contador del género incrementado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Se incrementó correctamente el género rock para el usuario 5."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "user_id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "rock": {
+                                                    "type": "integer",
+                                                    "example": 6
+                                                },
+                                                "pop": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "tropical": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "blues": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                },
+                                                "rap": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-10-01T10:30:00Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-10-07T14:00:00Z"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Parámetros inválidos o género no permitido",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "El campo genre es obligatorio y debe ser uno de los valores permitidos."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Usuario no encontrado."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/profile": {
+            "get": {
+                "tags": [
+                    "Sesión"
+                ],
+                "summary": "Obtener perfil del usuario autenticado",
+                "description": "Devuelve los datos del usuario autenticado mediante token Sanctum.",
+                "operationId": "e3f9a35bbfcba4d278cbd4166bf5438b",
+                "responses": {
+                    "200": {
+                        "description": "Perfil obtenido exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Juan Pérez"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "juan@example.com"
+                                                },
+                                                "is_admin": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Sesión"
+                ],
+                "summary": "Actualizar perfil del usuario autenticado",
+                "description": "Permite modificar nombre, email o contraseña del usuario autenticado. Si se cambia la contraseña, debe incluirse la contraseña actual.",
+                "operationId": "419cf1f22d331398002aa0ee98664a0c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Juan Actualizado"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "juan_nuevo@example.com"
+                                    },
+                                    "current_password": {
+                                        "type": "string",
+                                        "example": "password123"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "nuevaClave123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Perfil actualizado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Perfil actualizado exitosamente"
+                                        },
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Juan Actualizado"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "juan_nuevo@example.com"
+                                                },
+                                                "is_admin": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación o contraseña incorrecta"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Sesión"
+                ],
+                "summary": "Eliminar cuenta del usuario autenticado",
+                "description": "Elimina la cuenta del usuario actual previa verificación de la contraseña.",
+                "operationId": "28584a1a4ca2d2c634d7dc6b0ffd391c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "password"
+                                ],
+                                "properties": {
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cuenta eliminada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Cuenta eliminada exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Contraseña incorrecta o error de validación"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/users": {
+            "get": {
+                "tags": [
+                    "Administración"
+                ],
+                "summary": "Listar todos los usuarios (solo administradores)",
+                "description": "Devuelve la lista completa de usuarios. Solo accesible para usuarios con privilegios de administrador.",
+                "operationId": "00212853059298ce455a2d276340d616",
+                "responses": {
+                    "200": {
+                        "description": "Lista de usuarios obtenida exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "name": {
+                                                "type": "string",
+                                                "example": "Juan Pérez"
+                                            },
+                                            "email": {
+                                                "type": "string",
+                                                "example": "juan@example.com"
+                                            },
+                                            "is_admin": {
+                                                "type": "boolean",
+                                                "example": false
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/users/{id}": {
+            "put": {
+                "tags": [
+                    "Administración"
+                ],
+                "summary": "Actualizar usuario (solo administradores)",
+                "description": "Permite a un administrador actualizar la información de un usuario específico.",
+                "operationId": "08399f27f44485d9bc9964485bd4d5ff",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del usuario a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Carlos Gómez"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "carlos@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "nuevoPass123"
+                                    },
+                                    "is_admin": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Usuario actualizado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Usuario actualizado exitosamente"
+                                        },
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Carlos Gómez"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "carlos@example.com"
+                                                },
+                                                "is_admin": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Administración"
+                ],
+                "summary": "Eliminar usuario (solo administradores)",
+                "description": "Permite a un administrador eliminar un usuario específico. No se puede eliminar a sí mismo.",
+                "operationId": "2a5554f72bcd342add2e030afb45a596",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del usuario a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 4
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuario eliminado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Usuario eliminado exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "422": {
+                        "description": "No puedes eliminar tu propia cuenta"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
                     }
                 ]
             }
@@ -852,12 +1960,28 @@
     },
     "tags": [
         {
+            "name": "Autenticación",
+            "description": "Endpoints para registro, login y logout de usuarios"
+        },
+        {
+            "name": "Sesión",
+            "description": "Gestión del perfil del usuario y administración"
+        },
+        {
+            "name": "Historial",
+            "description": "Operaciones relacionadas con el historial de canciones escuchadas"
+        },
+        {
             "name": "Playlists",
             "description": "Operaciones relacionadas con playlists"
         },
         {
-            "name": "Autenticación",
-            "description": "Autenticación"
+            "name": "Recommended Songs",
+            "description": "Recommended Songs"
+        },
+        {
+            "name": "Administración",
+            "description": "Administración"
         },
         {
             "name": "Songs",
