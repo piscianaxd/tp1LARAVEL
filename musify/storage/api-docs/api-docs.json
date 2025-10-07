@@ -221,6 +221,209 @@
                 ]
             }
         },
+        "/playlists": {
+            "get": {
+                "tags": [
+                    "Playlists"
+                ],
+                "summary": "Obtener todas las playlists del usuario",
+                "operationId": "c83e676680386f4f85886d12621ae7b7",
+                "responses": {
+                    "200": {
+                        "description": "Lista de playlists obtenida exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Playlist"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Error retrieving playlists"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Playlists"
+                ],
+                "summary": "Crear una nueva playlist",
+                "operationId": "206df3847e4b7d04a2bb273d97abef2e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PlaylistInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Playlist creada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Playlist creada exitosamente"
+                                        },
+                                        "playlist": {
+                                            "$ref": "#/components/schemas/Playlist"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "name_playlist": [
+                                                    "El campo nombre de playlist es requerido."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Internal server error"
+                                        },
+                                        "debug": {
+                                            "type": "string",
+                                            "example": "Mensaje de error detallado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/playlists/{id}": {
+            "delete": {
+                "tags": [
+                    "Playlists"
+                ],
+                "summary": "Eliminar una playlist",
+                "operationId": "91a467eefc09d3524ed83bfe66898996",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la playlist a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Playlist eliminada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Playlist eliminada exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Playlist no encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "No se encontró la playlist"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error eliminando playlist",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Error eliminando playlist"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/songs": {
             "get": {
                 "tags": [
@@ -230,9 +433,80 @@
                 "operationId": "b0683c01ccac2a9f42d6ebae249be865",
                 "responses": {
                     "200": {
-                        "description": "Lista de canciones obtenida correctamente"
+                        "description": "Lista de canciones obtenida correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "count": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "songs": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "url_song": {
+                                                        "type": "string",
+                                                        "example": "https://example.com/song.mp3"
+                                                    },
+                                                    "name_song": {
+                                                        "type": "string",
+                                                        "example": "Nombre de la canción"
+                                                    },
+                                                    "genre_song": {
+                                                        "type": "string",
+                                                        "example": "Rock"
+                                                    },
+                                                    "artist_song": {
+                                                        "type": "string",
+                                                        "example": "Artista X"
+                                                    },
+                                                    "album_song": {
+                                                        "type": "string",
+                                                        "example": "Álbum Y"
+                                                    },
+                                                    "art_work_song": {
+                                                        "type": "string",
+                                                        "example": "https://example.com/artwork.jpg"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-10-03T20:30:00Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-10-03T20:30:00Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
@@ -265,15 +539,15 @@
                                     },
                                     "genre_song": {
                                         "type": "string",
-                                        "example": "Género de la canción"
+                                        "example": "Rock"
                                     },
                                     "artist_song": {
                                         "type": "string",
-                                        "example": "Artista de la canción"
+                                        "example": "Artista X"
                                     },
                                     "album_song": {
                                         "type": "string",
-                                        "example": "Álbum de la canción"
+                                        "example": "Álbum Y"
                                     },
                                     "art_work_song": {
                                         "type": "string",
@@ -288,9 +562,77 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Canción guardada correctamente"
+                        "description": "Canción guardada correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Canción guardada correctamente."
+                                        },
+                                        "song": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "url_song": {
+                                                    "type": "string",
+                                                    "example": "https://example.com/song.mp3"
+                                                },
+                                                "name_song": {
+                                                    "type": "string",
+                                                    "example": "Nombre de la canción"
+                                                },
+                                                "genre_song": {
+                                                    "type": "string",
+                                                    "example": "Rock"
+                                                },
+                                                "artist_song": {
+                                                    "type": "string",
+                                                    "example": "Artista X"
+                                                },
+                                                "album_song": {
+                                                    "type": "string",
+                                                    "example": "Álbum Y"
+                                                },
+                                                "art_work_song": {
+                                                    "type": "string",
+                                                    "example": "https://example.com/artwork.jpg"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-10-03T20:30:00Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-10-03T20:30:00Z"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/songs/{id}": {
@@ -419,6 +761,86 @@
         }
     },
     "components": {
+        "schemas": {
+            "Playlist": {
+                "title": "Playlist",
+                "description": "Modelo de Playlist",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name_playlist": {
+                        "type": "string",
+                        "example": "Mi Playlist Favorita"
+                    },
+                    "is_public": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "songs": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Song"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "PlaylistInput": {
+                "title": "Datos de entrada para Playlist",
+                "required": [
+                    "name_playlist",
+                    "is_public"
+                ],
+                "properties": {
+                    "name_playlist": {
+                        "type": "string",
+                        "example": "Nueva Playlist"
+                    },
+                    "is_public": {
+                        "type": "boolean",
+                        "example": false
+                    }
+                },
+                "type": "object"
+            },
+            "Song": {
+                "title": "Canción",
+                "description": "Modelo de Canción guardada",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Imagine"
+                    },
+                    "artist": {
+                        "type": "string",
+                        "example": "John Lennon"
+                    },
+                    "playlist_id": {
+                        "type": "integer",
+                        "example": 1
+                    }
+                },
+                "type": "object"
+            }
+        },
         "securitySchemes": {
             "bearerAuth": {
                 "type": "http",
@@ -429,6 +851,10 @@
         }
     },
     "tags": [
+        {
+            "name": "Playlists",
+            "description": "Operaciones relacionadas con playlists"
+        },
         {
             "name": "Autenticación",
             "description": "Autenticación"

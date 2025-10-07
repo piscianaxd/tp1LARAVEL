@@ -1,0 +1,73 @@
+<div class="playlist-container">
+  <div class="playlist-header">
+    <h2 class="playlist-title">🎧 Mis Playlists</h2>
+    <p class="playlist-subtitle">Organiza y gestiona tus listas de reproducción</p>
+  </div>
+
+  <div class="playlist-creation">
+    <h3 class="section-title">Crear nueva playlist</h3>
+    <form (submit)="createPlaylist(); $event.preventDefault()" class="playlist-form">
+      <div class="form-group">
+        <input
+          type="text"
+          [(ngModel)]="name_playlist"
+          name="name_playlist"
+          placeholder="Nombre de la playlist"
+          class="form-input"
+          required
+        />
+      </div>
+      
+      <div class="form-group">
+        <label class="toggle-container">
+          <input type="checkbox" [(ngModel)]="is_public" name="is_public" />
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">{{ is_public ? 'Pública' : 'Privada' }}</span>
+        </label>
+      </div>
+      
+      <button type="submit" class="btn btn-primary">
+        <span class="btn-text">Crear playlist</span>
+        <span class="btn-icon">+</span>
+      </button>
+    </form>
+  </div>
+
+  <div class="playlist-messages">
+    <p class="error-message" *ngIf="errorMsg">
+      <span class="error-icon">⚠</span> {{ errorMsg }}
+    </p>
+    <p class="loading-message" *ngIf="loading">
+      <span class="loading-spinner"></span> Cargando playlists...
+    </p>
+  </div>
+
+  <div class="playlist-content" *ngIf="!loading">
+    <div class="playlist-list" *ngIf="playlists.length">
+      <h3 class="section-title">Tus playlists ({{ playlists.length }})</h3>
+      <div class="playlist-grid">
+        <div class="playlist-card" *ngFor="let p of playlists">
+          <div class="playlist-info">
+            <h4 class="playlist-name">{{ p.name_playlist }}</h4>
+            <div class="playlist-meta">
+              <span class="playlist-status" [class.public]="p.is_public" [class.private]="!p.is_public">
+                <span class="status-icon">{{ p.is_public ? '🌐' : '🔒' }}</span>
+                {{ p.is_public ? 'Pública' : 'Privada' }}
+              </span>
+            </div>
+          </div>
+          <button class="btn btn-danger" (click)="deletePlaylist(p.id)">
+            <span class="btn-icon">🗑️</span>
+            <span class="btn-text">Eliminar</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="!playlists.length">
+      <div class="empty-icon">🎵</div>
+      <h3 class="empty-title">No tienes playlists todavía</h3>
+      <p class="empty-description">Crea tu primera playlist para comenzar a organizar tu música</p>
+    </div>
+  </div>
+</div>
