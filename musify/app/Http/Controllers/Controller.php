@@ -25,7 +25,19 @@ use Illuminate\Routing\Controller as BaseController;
 *     bearerFormat="JWT",
 *     description="Usa un token sanctum para autenticar" 
 * ) 
-
+*
+* @OA\Tag(
+*     name="Autenticación",
+*     description="Endpoints para registro, login y logout de usuarios"
+* ),
+* @OA\Tag(
+*     name="Sesión",
+*     description="Gestión del perfil del usuario y administración"
+* ),
+* @OA\Tag(
+*     name="Historial",
+*     description="Operaciones relacionadas con el historial de canciones escuchadas"
+* )
 */ 
 
 class Controller extends BaseController

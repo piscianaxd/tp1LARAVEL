@@ -10,8 +10,27 @@ use Illuminate\Support\Facades\Validator;
 
 class SessionController extends Controller
 {
-    /**
-     * Obtiene el perfil del usuario autenticado
+        /**
+     * @OA\Get(
+     *     path="/api/profile",
+     *     summary="Obtener perfil del usuario autenticado",
+     *     description="Devuelve los datos del usuario autenticado mediante token Sanctum.",
+     *     tags={"Sesión"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Perfil obtenido exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="user", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Juan Pérez"),
+     *                 @OA\Property(property="email", type="string", example="juan@example.com"),
+     *                 @OA\Property(property="is_admin", type="boolean", example=false)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="No autenticado")
+     * )
      */
     public function profile(Request $request)
     {
@@ -20,8 +39,38 @@ class SessionController extends Controller
         ]);
     }
 
-    /**
-     * Actualiza el perfil del usuario autenticado
+ /**
+     * @OA\Put(
+     *     path="/api/profile",
+     *     summary="Actualizar perfil del usuario autenticado",
+     *     description="Permite modificar nombre, email o contraseña del usuario autenticado. Si se cambia la contraseña, debe incluirse la contraseña actual.",
+     *     tags={"Sesión"},
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="name", type="string", example="Juan Actualizado"),
+     *             @OA\Property(property="email", type="string", format="email", example="juan_nuevo@example.com"),
+     *             @OA\Property(property="current_password", type="string", example="password123"),
+     *             @OA\Property(property="password", type="string", format="password", example="nuevaClave123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Perfil actualizado exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Perfil actualizado exitosamente"),
+     *             @OA\Property(property="user", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Juan Actualizado"),
+     *                 @OA\Property(property="email", type="string", example="juan_nuevo@example.com"),
+     *                 @OA\Property(property="is_admin", type="boolean", example=false)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Error de validación o contraseña incorrecta"),
+     *     @OA\Response(response=401, description="No autenticado")
+     * )
      */
     public function updateProfile(Request $request)
     {
@@ -67,7 +116,29 @@ class SessionController extends Controller
     }
 
     /**
-     * Elimina la cuenta del usuario autenticado
+     * @OA\Delete(
+     *     path="/api/profile",
+     *     summary="Eliminar cuenta del usuario autenticado",
+     *     description="Elimina la cuenta del usuario actual previa verificación de la contraseña.",
+     *     tags={"Sesión"},
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"password"},
+     *             @OA\Property(property="password", type="string", format="password", example="password123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Cuenta eliminada exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Cuenta eliminada exitosamente")
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Contraseña incorrecta o error de validación"),
+     *     @OA\Response(response=401, description="No autenticado")
+     * )
      */
     public function deleteAccount(Request $request)
     {
@@ -98,7 +169,28 @@ class SessionController extends Controller
     }
 
     /**
-     * Obtiene todos los usuarios (solo para administradores)
+     * @OA\Get(
+     *     path="/api/users",
+     *     summary="Listar todos los usuarios (solo administradores)",
+     *     description="Devuelve la lista completa de usuarios. Solo accesible para usuarios con privilegios de administrador.",
+     *     tags={"Administración"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de usuarios obtenida exitosamente",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Juan Pérez"),
+     *                 @OA\Property(property="email", type="string", example="juan@example.com"),
+     *                 @OA\Property(property="is_admin", type="boolean", example=false)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="No autorizado"),
+     *     @OA\Response(response=401, description="No autenticado")
+     * )
      */
     public function index()
     {
@@ -111,8 +203,44 @@ class SessionController extends Controller
         return response()->json($users);
     }
 
-    /**
-     * Actualiza un usuario específico (solo para administradores)
+ /**
+     * @OA\Put(
+     *     path="/api/users/{id}",
+     *     summary="Actualizar usuario (solo administradores)",
+     *     description="Permite a un administrador actualizar la información de un usuario específico.",
+     *     tags={"Administración"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID del usuario a actualizar",
+     *         @OA\Schema(type="integer", example=3)
+     *     ),
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="name", type="string", example="Carlos Gómez"),
+     *             @OA\Property(property="email", type="string", format="email", example="carlos@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="nuevoPass123"),
+     *             @OA\Property(property="is_admin", type="boolean", example=true)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Usuario actualizado exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Usuario actualizado exitosamente"),
+     *             @OA\Property(property="user", type="object",
+     *                 @OA\Property(property="id", type="integer", example=3),
+     *                 @OA\Property(property="name", type="string", example="Carlos Gómez"),
+     *                 @OA\Property(property="email", type="string", example="carlos@example.com"),
+     *                 @OA\Property(property="is_admin", type="boolean", example=true)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="No autorizado"),
+     *     @OA\Response(response=422, description="Error de validación")
+     * )
      */
     public function updateUser(Request $request, $id)
     {
@@ -159,8 +287,30 @@ class SessionController extends Controller
         ]);
     }
 
-    /**
-     * Elimina un usuario específico (solo para administradores)
+ /**
+     * @OA\Delete(
+     *     path="/api/users/{id}",
+     *     summary="Eliminar usuario (solo administradores)",
+     *     description="Permite a un administrador eliminar un usuario específico. No se puede eliminar a sí mismo.",
+     *     tags={"Administración"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID del usuario a eliminar",
+     *         @OA\Schema(type="integer", example=4)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Usuario eliminado exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Usuario eliminado exitosamente")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="No autorizado"),
+     *     @OA\Response(response=422, description="No puedes eliminar tu propia cuenta")
+     * )
      */
     public function deleteUser($id)
     {
