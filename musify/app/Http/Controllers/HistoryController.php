@@ -16,7 +16,7 @@ class HistoryController extends Controller
      *     summary="Agregar una canción al historial del usuario autenticado",
      *     description="Guarda una canción reproducida o escuchada en el historial personal del usuario autenticado.",
      *     tags={"Historial"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -99,7 +99,7 @@ class HistoryController extends Controller
      *     summary="Obtener el historial del usuario autenticado",
      *     description="Devuelve la lista de canciones escuchadas o guardadas en el historial del usuario autenticado, ordenadas por fecha descendente.",
      *     tags={"Historial"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth":{}}},
      *     @OA\Response(
      *         response=200,
      *         description="Historial obtenido correctamente",
@@ -181,7 +181,7 @@ class HistoryController extends Controller
  *     summary="Eliminar una canción del historial del usuario",
  *     description="Elimina una entrada específica del historial del usuario autenticado.",
  *     tags={"Historial"},
- *     security={{"sanctum":{}}},
+ *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",

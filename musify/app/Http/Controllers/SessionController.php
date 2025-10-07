@@ -16,7 +16,7 @@ class SessionController extends Controller
      *     summary="Obtener perfil del usuario autenticado",
      *     description="Devuelve los datos del usuario autenticado mediante token Sanctum.",
      *     tags={"Sesión"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth":{}}},
      *     @OA\Response(
      *         response=200,
      *         description="Perfil obtenido exitosamente",
@@ -45,7 +45,7 @@ class SessionController extends Controller
      *     summary="Actualizar perfil del usuario autenticado",
      *     description="Permite modificar nombre, email o contraseña del usuario autenticado. Si se cambia la contraseña, debe incluirse la contraseña actual.",
      *     tags={"Sesión"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -121,7 +121,7 @@ class SessionController extends Controller
      *     summary="Eliminar cuenta del usuario autenticado",
      *     description="Elimina la cuenta del usuario actual previa verificación de la contraseña.",
      *     tags={"Sesión"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -174,7 +174,7 @@ class SessionController extends Controller
      *     summary="Listar todos los usuarios (solo administradores)",
      *     description="Devuelve la lista completa de usuarios. Solo accesible para usuarios con privilegios de administrador.",
      *     tags={"Administración"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth":{}}},
      *     @OA\Response(
      *         response=200,
      *         description="Lista de usuarios obtenida exitosamente",
@@ -209,7 +209,7 @@ class SessionController extends Controller
      *     summary="Actualizar usuario (solo administradores)",
      *     description="Permite a un administrador actualizar la información de un usuario específico.",
      *     tags={"Administración"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -293,7 +293,7 @@ class SessionController extends Controller
      *     summary="Eliminar usuario (solo administradores)",
      *     description="Permite a un administrador eliminar un usuario específico. No se puede eliminar a sí mismo.",
      *     tags={"Administración"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
