@@ -56,7 +56,7 @@ class PlaylistController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/playlists",
+     *     path="/api/playlists",
      *     summary="Obtener todas las playlists del usuario",
      *     tags={"Playlists"},
      *     security={{"bearerAuth":{}}},
@@ -84,9 +84,7 @@ class PlaylistController extends Controller
         Log::info('🎵 User ID:', ['user_id' => $request->user()?->id]);
 
         try {
-            // TEMPORAL: Para pruebas sin autenticación
             $userId = $request->user()?->id ?? 1;
-            
             Log::info('🎵 Using user ID:', ['user_id' => $userId]);
 
             $playlists = Playlist::where('user_id', $userId)
@@ -111,7 +109,7 @@ class PlaylistController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/playlists",
+     *     path="/api/playlists",
      *     summary="Crear una nueva playlist",
      *     tags={"Playlists"},
      *     security={{"bearerAuth":{}}},
@@ -152,9 +150,7 @@ class PlaylistController extends Controller
         Log::info('🎵 User ID:', ['user_id' => $request->user()?->id]);
 
         try {
-            // TEMPORAL: Para pruebas sin autenticación
             $userId = $request->user()?->id ?? 1;
-            
             Log::info('🎵 Using user ID for creation:', ['user_id' => $userId]);
 
             $validator = Validator::make($request->all(), [
@@ -168,13 +164,6 @@ class PlaylistController extends Controller
             }
 
             Log::info('🎵 Validation passed');
-
-            // Verificar que la tabla existe y podemos crear
-            Log::info('🎵 Creating playlist with data:', [
-                'name_playlist' => $request->name_playlist,
-                'is_public' => $request->is_public,
-                'user_id' => $userId
-            ]);
 
             $playlist = Playlist::create([
                 'name_playlist' => $request->name_playlist,
@@ -207,7 +196,7 @@ class PlaylistController extends Controller
 
     /**
      * @OA\Delete(
-     *     path="/playlists/{id}",
+     *     path="/api/playlists/{id}",
      *     summary="Eliminar una playlist",
      *     tags={"Playlists"},
      *     security={{"bearerAuth":{}}},
@@ -247,14 +236,12 @@ class PlaylistController extends Controller
         Log::info('🎵 Deleting playlist:', ['id' => $id, 'user_id' => $request->user()?->id]);
 
         try {
-            // TEMPORAL: Para pruebas sin autenticación
             $userId = $request->user()?->id ?? 1;
             
             $playlist = Playlist::where('id', $id)
                 ->where('user_id', $userId)
                 ->firstOrFail();
 
-            // Eliminar canciones asociadas
             SavedSong::where('playlist_id', $playlist->id)->delete();
 
             $playlist->delete();

@@ -461,13 +461,13 @@
                 ]
             }
         },
-        "/playlists": {
+        "/api/playlists": {
             "get": {
                 "tags": [
                     "Playlists"
                 ],
                 "summary": "Obtener todas las playlists del usuario",
-                "operationId": "c83e676680386f4f85886d12621ae7b7",
+                "operationId": "758aa7244638ce70d4ce78a5c27ac3a5",
                 "responses": {
                     "200": {
                         "description": "Lista de playlists obtenida exitosamente",
@@ -510,7 +510,7 @@
                     "Playlists"
                 ],
                 "summary": "Crear una nueva playlist",
-                "operationId": "206df3847e4b7d04a2bb273d97abef2e",
+                "operationId": "87ac9a92f0fb81a38eeaf7699cbd0e86",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -589,13 +589,13 @@
                 ]
             }
         },
-        "/playlists/{id}": {
+        "/api/playlists/{id}": {
             "delete": {
                 "tags": [
                     "Playlists"
                 ],
                 "summary": "Eliminar una playlist",
-                "operationId": "91a467eefc09d3524ed83bfe66898996",
+                "operationId": "8d5370dcdb5fde9a0ebf49aa2a5f563c",
                 "parameters": [
                     {
                         "name": "id",

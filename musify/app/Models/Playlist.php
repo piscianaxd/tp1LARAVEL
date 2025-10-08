@@ -9,16 +9,12 @@ class Playlist extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['is_public','user_id', 'name_playlist'];
+    protected $fillable = ['name_playlist', 'is_public', 'user_id'];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
+    // Relación con las canciones guardadas
     public function songs()
     {
-        return $this->belongsToMany(SongSavedDb::class, 'saved_songs');
+        return $this->hasMany(SavedSong::class, 'playlist_id');
     }
 }
-
+    
