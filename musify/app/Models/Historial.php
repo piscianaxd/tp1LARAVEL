@@ -10,8 +10,6 @@ class Historial extends Model
     use HasFactory;
 
     /**
-     * El nombre de la tabla asociada al modelo.
-     * Esto le dice a Laravel que use 'historial' en lugar de 'historials'.
      *
      * @var string
      */
@@ -25,12 +23,17 @@ class Historial extends Model
     protected $fillable = ['user_id', 'songs_saved_db_id'];
 
     /**
-     * Un historial pertenece a un usuario.
      */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+
+
+    public function song()
+    {
+        return $this->belongsTo(SongSavedDb::class, 'songs_saved_db_id');
+}
 
     /**
      * Un historial pertenece a una canción guardada en la base de datos.

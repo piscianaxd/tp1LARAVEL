@@ -43,6 +43,12 @@ class RecommendedSongController extends Controller
 
     public function index()
     {
+
+            
+        if (!auth()->user() || !auth()->user()->is_admin) {
+            return response()->json(['message' => 'No autorizado. Solo administradores pueden acceder.'], 403);
+        }
+
         $songs = RecommendedSong::all();
 
         return response()->json([
@@ -50,6 +56,8 @@ class RecommendedSongController extends Controller
             'data' => $songs
         ], 200, [], JSON_PRETTY_PRINT);
     }
+
+
 
     /**
      * @OA\Post(

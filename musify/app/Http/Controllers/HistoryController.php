@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Historial;
-use App\Models\songSaveDB;
+use App\Models\songSavedDB;
 use Illuminate\Database\QueryException;
 
 class HistoryController extends Controller
