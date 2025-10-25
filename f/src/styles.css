@@ -1,5 +1,61 @@
-/* You can add global styles to this file, and also import other style files */
-body{
-    background-color: #949494;
-    
+/* ====== Global styles (styles.css) ====== */
+/* Paleta base (coincide con el login) */
+:root{
+  --bg1:#0b0f14;     /* fondo base */
+  --bg2:#0a0720;     /* fondo secundario */
+  --txt:#e9eef5;     /* texto principal */
+  --muted:#9aa3ad;   /* texto atenuado */
+  --indigo:#4f46e5;  /* acento 1 */
+  --cyan:#06b6d4;    /* acento 2 */
+  --ring: rgba(79,70,229,.45);
+}
+
+/* Reset mínimo + fondo oscuro global */
+html, body{
+  height:100%;
+  background: linear-gradient(180deg, var(--bg1), var(--bg2));
+  color: var(--txt);
+}
+
+/* Si algún contenedor trae bg/blancos de Bootstrap, al menos el texto se mantiene legible */
+.text-muted{ color: var(--muted) !important; }
+
+/* Links en dark theme */
+a{ color: var(--cyan); }
+a:hover{ color:#7cdff0; }
+
+/* Inputs más legibles globalmente (si tu app es dark en general) */
+.form-control{
+  color: var(--txt);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.18);
+}
+.form-control::placeholder{ color:#adb7c3; }
+.form-control:focus{
+  color: var(--txt);
+  background: rgba(255,255,255,.06);
+  border-color: var(--indigo);
+  box-shadow: 0 0 0 .25rem var(--ring);
+}
+
+/* Botón gradiente reusable por si lo usás en otras pantallas */
+.btn-gradient{
+  --g1: var(--indigo);
+  --g2: var(--cyan);
+  border:0; color:#fff; font-weight:600;
+  background-image: linear-gradient(90deg, var(--g1), var(--g2));
+}
+
+/* Spinner tamaño consistente */
+.spinner-border-sm{ width:1rem; height:1rem; }
+
+/* Scrollbar discreto en dark (soporta WebKit/Chromium/Edge) */
+::-webkit-scrollbar{ width: 10px; }
+::-webkit-scrollbar-track{ background: rgba(255,255,255,.04); }
+::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.18); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover{ background: rgba(255,255,255,.28); }
+
+/* Respeta dark si el SO lo pide (por si usás algo claro en otras vistas) */
+@media (prefers-color-scheme: dark){
+  :root{ color-scheme: dark; }
 }

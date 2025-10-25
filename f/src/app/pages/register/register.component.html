@@ -1,0 +1,102 @@
+<div class="auth-wrap">
+  <div class="bg-blobs"></div>
+  <div class="bg-noise"></div>
+
+  <div class="auth-card shadow-lg">
+    <div class="brand text-center">
+      <i class="bi bi-soundwave"></i>
+      <h1 class="brand-title">Crear cuenta</h1>
+      <p class="brand-sub">Unite y empezá a escuchar</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <!-- Name -->
+      <div class="mb-3">
+        <label for="name" class="form-label">Nombre y apellido</label>
+        <div class="input-group has-icon">
+          <span class="input-group-text"><i class="bi bi-person"></i></span>
+          <input id="name"
+                 type="text"
+                 class="form-control"
+                 formControlName="name"
+                 placeholder="Juan Pérez"
+                 [class.is-invalid]="(name.invalid && (name.dirty || name.touched)) || backendErrors['name']" />
+        </div>
+        <div class="invalid-feedback d-block" *ngIf="name.errors && (name.dirty || name.touched)">
+          <span *ngIf="name.errors['required']">El nombre es obligatorio.</span>
+          <span *ngIf="name.errors['minlength']">Mínimo 2 caracteres.</span>
+          <span *ngIf="name.errors['maxlength']">Máximo 255 caracteres.</span>
+        </div>
+        <div class="invalid-feedback d-block" *ngIf="backendErrors['name']">
+          {{ backendErrors['name'][0] }}
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="mb-3">
+        <label for="email" class="form-label">Correo electrónico</label>
+        <div class="input-group has-icon">
+          <span class="input-group-text"><i class="bi bi-at"></i></span>
+          <input id="email"
+                 type="email"
+                 class="form-control"
+                 formControlName="email"
+                 placeholder="juan@example.com"
+                 autocomplete="email"
+                 [class.is-invalid]="(email.invalid && (email.dirty || email.touched)) || backendErrors['email']" />
+        </div>
+        <div class="invalid-feedback d-block" *ngIf="email.errors && (email.dirty || email.touched)">
+          <span *ngIf="email.errors['required']">El correo es obligatorio.</span>
+          <span *ngIf="email.errors['email']">Formato de correo no válido.</span>
+          <span *ngIf="email.errors['maxlength']">Máximo 255 caracteres.</span>
+        </div>
+        <div class="invalid-feedback d-block" *ngIf="backendErrors['email']">
+          {{ backendErrors['email'][0] }}
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="mb-2">
+        <label for="password" class="form-label">Contraseña</label>
+        <div class="input-group has-icon">
+          <span class="input-group-text"><i class="bi bi-lock"></i></span>
+          <input id="password"
+                 [type]="showPassword ? 'text' : 'password'"
+                 class="form-control"
+                 formControlName="password"
+                 placeholder="Mínimo 8 caracteres"
+                 autocomplete="new-password"
+                 [class.is-invalid]="(password.invalid && (password.dirty || password.touched)) || backendErrors['password']" />
+          <button type="button" class="btn btn-icon" (click)="togglePassword()" [attr.aria-pressed]="showPassword">
+            <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+          </button>
+        </div>
+        <div class="invalid-feedback d-block" *ngIf="password.errors && (password.dirty || password.touched)">
+          <span *ngIf="password.errors['required']">La contraseña es obligatoria.</span>
+          <span *ngIf="password.errors['minlength']">Debe tener al menos 8 caracteres.</span>
+        </div>
+        <div class="invalid-feedback d-block" *ngIf="backendErrors['password']">
+          {{ backendErrors['password'][0] }}
+        </div>
+      </div>
+
+      <!-- Error general -->
+      <div *ngIf="errorMessage" class="alert alert-danger text-center mb-3">
+        <i class="bi bi-exclamation-triangle me-2"></i>{{ errorMessage }}
+      </div>
+
+      <!-- CTA -->
+      <button class="btn btn-gradient w-100 mb-3" type="submit" [disabled]="form.invalid || loading">
+        <span *ngIf="!loading"><i class="bi bi-person-plus me-2"></i>Crear cuenta</span>
+        <span *ngIf="loading" class="d-inline-flex align-items-center">
+          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+          Registrando…
+        </span>
+      </button>
+
+      <div class="text-center small text-muted">
+        ¿Ya tenés cuenta? <a class="link-muted" routerLink="/login">Iniciar sesión</a>
+      </div>
+    </form>
+  </div>
+</div>
