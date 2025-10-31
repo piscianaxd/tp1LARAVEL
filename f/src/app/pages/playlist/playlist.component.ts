@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { PlaylistService } from '../../services/playlist.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-playlist',
@@ -17,9 +19,17 @@ export class PlaylistComponent implements OnInit {
   loading = false;
   errorMsg = '';
 
-  constructor(private playlistService: PlaylistService) {}
+  constructor(private playlistService: PlaylistService,
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/login']); // ← Si no, al login
+      return;
+    }
+    //si está logueado, cargar playlist normalmente
     this.loadPlaylists();
   }
 
@@ -34,6 +44,12 @@ export class PlaylistComponent implements OnInit {
         console.error(err);
         this.errorMsg = 'No se pudieron cargar las playlists';
         this.loading = false;
+
+        // Si es error de autenticación, redirigir al login
+        if (err.status === 401) {
+          this.authService.clearSession();
+          this.router.navigate(['/login']);
+        }
       },
     });
   }
