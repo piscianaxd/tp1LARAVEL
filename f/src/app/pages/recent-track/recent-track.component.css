@@ -1,0 +1,4 @@
+/* Ajustes suaves para dark + transparencia sin pelear con Bootstrap */
+:host { display:block; }
+.list-group-item { border: 0; }
+.object-fit-cover { object-fit: cover; }
