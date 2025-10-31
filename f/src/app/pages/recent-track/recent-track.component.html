@@ -1,14 +1,14 @@
-<section class="container-fluid py-3">
-  <div class="d-flex justify-content-between align-items-center mb-2">
+<section class="recent-section container-xxl px-3 px-md-4 py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="h3 fw-bold mb-0">Escuchados recientemente</h2>
     <div class="d-flex gap-2">
-      <button class="btn btn-sm btn-outline-light" (click)="playAll()">
-        <i class="bi bi-play-fill me-1"></i> Reproducir todo
+      <button class="round-btn" (click)="playAll()" title="Reproducir todo">
+        <i class="bi bi-play-fill"></i>
       </button>
-      <button class="btn btn-sm btn-outline-light d-none d-md-inline-flex" title="Anterior">
+      <button class="round-btn d-none d-md-inline-flex" title="Anterior">
         <i class="bi bi-chevron-left"></i>
       </button>
-      <button class="btn btn-sm btn-outline-light d-none d-md-inline-flex" title="Siguiente">
+      <button class="round-btn d-none d-md-inline-flex" title="Siguiente">
         <i class="bi bi-chevron-right"></i>
       </button>
     </div>
@@ -20,14 +20,10 @@
       <ul class="list-group list-group-flush">
         <li class="list-group-item bg-transparent px-0" *ngFor="let __ of [0,1,2,3]">
           <div class="d-flex align-items-center gap-3">
-            <span class="placeholder rounded" style="width:48px;height:48px;"></span>
+            <span class="sk-cover"></span>
             <div class="flex-grow-1">
               <div class="placeholder-glow mb-1"><span class="placeholder col-7"></span></div>
               <div class="placeholder-glow"><span class="placeholder col-4"></span></div>
-            </div>
-            <div class="d-flex gap-2">
-              <button class="btn btn-sm btn-outline-secondary disabled"><i class="bi bi-play-fill"></i></button>
-              <button class="btn btn-sm btn-outline-secondary disabled"><i class="bi bi-x-lg"></i></button>
             </div>
           </div>
         </li>
@@ -40,42 +36,65 @@
     {{ error() }}
   </div>
 
-  <!-- Empty state -->
+  <!-- Empty -->
   <div *ngIf="!loading() && !error() && tracks().length === 0" class="alert alert-info mt-3">
     Aún no hay reproducciones recientes.
   </div>
 
-  <!-- Lista (columnas ya precalculadas en TS: columns() => Track[][]) -->
-  <div *ngIf="!loading() && !error() && tracks().length > 0" class="row g-3">
-    <!-- 3 columnas en lg, 2 en md, 1 en xs -->
-    <div class="col-12 col-md-6 col-lg-4" *ngFor="let col of columns()">
-      <ul class="list-group list-group-flush">
-        <li class="list-group-item bg-transparent px-0" *ngFor="let t of col">
-          <div class="d-flex align-items-center gap-3">
-            <img
-              [src]="t.artwork || 'assets/placeholder-cover.png'"
-              class="rounded object-fit-cover"
-              style="width:48px; height:48px;"
-              alt="cover"
-              (dblclick)="play(t)"
-            />
-            <div class="flex-grow-1 overflow-hidden">
-              <div class="fw-semibold text-truncate" [title]="t.title">{{ t.title }}</div>
-              <div class="text-muted small text-truncate" [title]="t.artist + ' • ' + t.album">
-                {{ t.artist }} • {{ t.album }} · {{ rel(t.playedAt) }}
-              </div>
-            </div>
-            <div class="d-flex gap-2">
-              <button class="btn btn-sm btn-outline-light" (click)="play(t)" title="Reproducir">
-                <i class="bi bi-play-fill"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-secondary" (click)="remove(t.historyId)" title="Quitar del historial">
-                <i class="bi bi-x-lg"></i>
-              </button>
+  <!-- Lista -->
+<!-- Lista -->
+<div *ngIf="!loading() && !error() && tracks().length > 0" class="row g-4">
+  <div class="col-12 col-md-6 col-lg-4" *ngFor="let col of columns()">
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item bg-transparent px-0" *ngFor="let t of col">
+        <div class="d-flex align-items-center gap-3 recent-item">
+          <!-- Cover con overlay SOLO Play -->
+          <div class="cover-wrap">
+  <!-- Imagen si no falló -->
+  <ng-container *ngIf="!noImg.has(t.id); else iconFallback">
+    <img
+      [src]="(t.artwork | mediaUrl) + bust(t.id)"
+      alt="cover"
+      width="56" height="56"
+      class="cover-img"
+      loading="lazy"
+      (error)="onImgError($event, t)"
+    />
+  </ng-container>
+
+  <!-- Fallback con ícono Bootstrap -->
+  <ng-template #iconFallback>
+    <div class="cover-fallback">
+      <i class="bi bi-music-note-beamed"></i>
+    </div>
+  </ng-template>
+
+  <!-- overlay: solo Play -->
+  <button class="overlay-btn play" (click)="play(t)" title="Reproducir">
+    <i class="bi bi-play-fill"></i>
+  </button>
+</div>
+
+
+          <!-- Texto (clic en título reproduce) -->
+          <div class="flex-grow-1 overflow-hidden minw0">
+            <span class="track-title text-truncate" role="button" (click)="play(t)" [title]="t.title">
+              {{ t.title }}
+            </span>
+            <div class="track-meta text-truncate" [title]="t.artist + ' • ' + t.album">
+              {{ t.artist }} • {{ t.album }} · {{ rel(t.playedAt) }}
             </div>
           </div>
-        </li>
-      </ul>
-    </div>
+
+          <!-- Acciones al extremo derecho (aparecen en hover) -->
+          <div class="end-actions">
+            <button class="icon-btn" (click)="remove(t.historyId)" title="Quitar de recientes">
+              <i class="bi bi-hand-thumbs-down"></i>
+            </button>
+          </div>
+        </div>
+      </li>
+    </ul>
   </div>
+</div>
 </section>
