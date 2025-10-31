@@ -1,5 +1,163 @@
-/* You can add global styles to this file, and also import other style files */
-body{
-    background-color: #949494;
-    
+/* ====== Global styles (styles.css) — Dark Neutral (Tidal/YT Music) ====== */
+
+/* Paleta neutra (sin acentos azules) */
+:root{
+  --bg0: #0a0a0a;   /* fondo principal (casi negro) */
+  --bg1: #111;      /* bloques/hover suaves */
+  --bg2: #181818;   /* tarjetas/superficie */
+  --txt: #f3f4f6;   /* texto principal (blanco suave) */
+  --muted: #b0b6bf; /* texto secundario */
+  --line: rgba(255,255,255,.08); /* bordes sutiles */
+  --focus: rgba(255,255,255,.18); /* anillo de foco accesible */
+  --ok: #22c55e;
+  --warn: #f59e0b;
+  --err: #ef4444;
+}
+
+/* Fondo liso (sin gradiente) + tipografía */
+html, body{
+  height:100%;
+  background: var(--bg0);
+  color: var(--txt);
+}
+
+/* Contenedores anchos con buen “aire” */
+.container-xxl { padding-left: 1rem; padding-right: 1rem; }
+@media (min-width: 1600px){
+  .container-xxl { max-width: 1480px; }
+}
+
+/* Secciones del dashboard */
+.section + .section { margin-top: 2rem; }
+.main-shell { padding-top: 16px; }
+
+/* Cards/“paneles” oscuros */
+.card,
+.recent-section,
+.panel {
+  background: var(--bg1) !important;
+  color: var(--txt);
+  border: 1px solid var(--line) !important;
+  border-radius: 16px;
+}
+
+/* Listas */
+.list-group-item{
+  background: transparent;
+  border: 0;
+  color: var(--txt);
+}
+
+/* Títulos y metadatos */
+h1,h2,h3,h4,h5,h6{ color: var(--txt); }
+.text-muted,
+.small,
+.track-meta{ color: var(--muted) !important; }
+
+/* Links sin azul — blancos/grises */
+a{ color: #e5e7eb; text-decoration: none; }
+a:hover{ color: #ffffff; text-decoration: underline; }
+
+/* Botones neutrales (circulares o rectos según tu clase) */
+.btn,
+button{
+  color: #fff;
+  background: #222;
+  border: 1px solid var(--line);
+}
+.btn:hover,
+button:hover{ background: #2a2a2a; }
+
+.round-btn{
+  width:40px; height:40px; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  background:#1a1a1a; border:1px solid var(--line); color:#fff;
+}
+.round-btn:hover{ background:#222; }
+
+/* Estados (por si usás alertas) */
+.alert{ border:0; border-radius:12px; }
+.alert-danger{ background: rgba(239,68,68,.12); color:#fecaca; }
+.alert-info{ background: rgba(59,130,246,.12); color:#c7d2fe; }
+
+/* Inputs en dark */
+.form-control{
+  color: var(--txt);
+  background: #111;
+  border: 1px solid var(--line);
+}
+.form-control::placeholder{ color:#9aa3ad; }
+.form-control:focus{
+  color: var(--txt);
+  background: #141414;
+  border-color: var(--line);
+  box-shadow: 0 0 0 .25rem var(--focus);
+}
+
+/* Badges/pill neutrales */
+.badge{ background:#222; color:#e5e7eb; border:1px solid var(--line); }
+
+/* Iconos de Bootstrap en claro */
+.bi{ color: #e5e7eb; }
+
+/* Scrollbar discreto */
+::-webkit-scrollbar{ width: 10px; }
+::-webkit-scrollbar-track{ background: #0f0f0f; }
+::-webkit-scrollbar-thumb{ background: #2b2b2b; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover{ background: #3a3a3a; }
+
+/* Utilidades */
+.bg-0{ background: var(--bg0) !important; }
+.bg-1{ background: var(--bg1) !important; }
+.bg-2{ background: var(--bg2) !important; }
+.text-main{ color: var(--txt) !important; }
+.text-muted-neo{ color: var(--muted) !important; }
+.border-line{ border:1px solid var(--line) !important; }
+
+/* === Componentes de música (coinciden con tu RecentTracks) === */
+.track-title{
+  color: var(--txt);
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+.track-title:hover{ text-decoration: underline; }
+
+.recent-item{ padding:.35rem .4rem; border-radius:12px; }
+.recent-item:hover{ background: var(--bg1); }
+
+.cover-wrap{
+  position:relative; width:56px; height:56px; border-radius:10px; overflow:hidden; flex:0 0 56px;
+}
+.cover-img{
+  width:100%; height:100%; object-fit:cover; display:block; background:#0f0f0f;
+}
+.overlay-btn{
+  position:absolute; top:50%; left:6px; transform:translateY(-50%);
+  width:28px; height:28px; border-radius:50%;
+  border:1px solid var(--line);
+  background: rgba(0,0,0,.55);
+  color:#fff; display:flex; align-items:center; justify-content:center;
+  opacity:0; transition:.15s ease;
+}
+.cover-wrap:hover .overlay-btn{ opacity:1; }
+
+.end-actions{
+  display:flex; align-items:center; gap:.25rem; opacity:0; transition:.15s ease;
+}
+.recent-item:hover .end-actions{ opacity:1; }
+
+.icon-btn{
+  width:34px; height:34px; border-radius:8px;
+  border:1px solid var(--line); background:#1a1a1a; color:#fff;
+}
+.icon-btn:hover{ background:#222; }
+
+/* Spinners y placeholders */
+.spinner-border-sm{ width:1rem; height:1rem; }
+.placeholder{ background: #222 !important; }
+.placeholder-glow .placeholder{ opacity:.6; }
+
+/* Accesibilidad: preferencia dark */
+@media (prefers-color-scheme: dark){
+  :root{ color-scheme: dark; }
 }
