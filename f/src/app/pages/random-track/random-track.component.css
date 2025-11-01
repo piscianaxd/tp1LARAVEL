@@ -1,11 +1,4 @@
-:root{
-  --bg0:#0b0f14;          /* fondo principal oscuro */
-  --bg1:#0e141b;          /* sutil contraste/hover */
-  --border: rgba(255,255,255,.08);
-  --title:#e8eef6;        /* títulos */
-  --muted:#aab4be;        /* meta info */
-  --brand:#ffffff;        /* íconos sobre dark */
-}
+
 
 .random-section{
   background: var(--bg0);
