@@ -5,6 +5,7 @@ import { LoginComponent } from './pages/login/login.component';
 import { RegisterComponent } from './pages/register/register.component';
 import { authGuard } from './services/auth-guard.service';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
+
 export const routes: Routes = [
   
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },

@@ -1,0 +1,87 @@
+<section class="random-section">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h3 fw-bold mb-0">Canciones Aleatorias</h2>
+    <div class="d-flex gap-2">
+      <button class="round-btn" (click)="playAll()" title="Reproducir todo">
+        <i class="bi bi-play-fill"></i>
+      </button>
+      <button class="round-btn" (click)="prevPage()" [disabled]="!canGoPrev()" title="Anterior">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <button class="round-btn" 
+              (click)="nextPage()" 
+              [disabled]="!canGoNext()" 
+              [class.disabled]="!canGoNext()"
+              title="Siguiente">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loader -->
+  <div *ngIf="loading()" class="row g-4">
+    <div class="col-6 col-md-4 col-lg-2" *ngFor="let _ of [0,1,2,3,4,5]">
+      <div class="random-card">
+        <div class="sk-cover-square mb-2"></div>
+        <div class="placeholder-glow mb-1">
+          <span class="placeholder col-8"></span>
+        </div>
+        <div class="placeholder-glow">
+          <span class="placeholder col-5"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="!loading() && error()" class="alert alert-danger mt-3">
+    {{ error() }}
+  </div>
+
+  <!-- Empty -->
+  <div *ngIf="!loading() && !error() && tracks().length === 0" class="alert alert-info mt-3">
+    No hay canciones disponibles.
+  </div>
+
+  <!-- Grid de canciones -->
+  <div *ngIf="!loading() && !error() && tracks().length > 0" class="row g-4">
+    <div class="col-6 col-md-4 col-lg-2" *ngFor="let song of tracks()">
+      <div class="random-card">
+        <!-- Cover con overlay -->
+        <div class="cover-wrap-square">
+          <ng-container *ngIf="!noImg.has(song.id); else iconFallback">
+            <img
+              [src]="(song.art_work_song | mediaUrl) + bust(song.id)"
+              [alt]="song.name_song"
+              class="cover-img-square"
+              loading="lazy"
+              (error)="onImgError($event, song)"
+            />
+          </ng-container>
+
+          <ng-template #iconFallback>
+            <div class="cover-fallback-square">
+              <i class="bi bi-music-note-beamed"></i>
+            </div>
+          </ng-template>
+
+          <!-- Overlay de reproducción -->
+          <button class="overlay-btn-square play" (click)="play(song)" title="Reproducir">
+            <i class="bi bi-play-fill"></i>
+          </button>
+        </div>
+
+        <!-- Información de la canción -->
+        <div class="random-card-info">
+          <h3 class="song-title text-truncate" [title]="song.name_song">
+            {{ song.name_song }}
+          </h3>
+          <p class="song-artist text-truncate" [title]="song.artist_song">
+            {{ song.artist_song }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>

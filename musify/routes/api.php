@@ -26,9 +26,10 @@ Route::post('register',[AuthController::class,'register']);
 Route::post('login',[AuthController::class,'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    //SongsController
-    Route::get('/songs', [SongsController::class, 'getSongs']);
-    Route::post('/songs', [SongsController::class, 'postSongs']);
+    // Rutas personalizadas
+    Route::get('/songs/random/{limit}', [SongsController::class, 'getRandomSongs']);
+    Route::get('/songs/random-from-start/{limit}', [SongsController::class, 'getRandomSongsFromStart']);
+    Route::get('/songs/random-ids/{limit}', [SongsController::class, 'getRandomSongsByIds']);
     // para usar todas se puede usar apiResource
     Route::apiResource('songs', SongsController::class);
 
