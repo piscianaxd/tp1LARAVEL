@@ -1,10 +1,10 @@
-<div class="container-fluid py-3">
-  <!-- Navbar/acciones del dashboard si querés -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 fw-bold mb-0">Navbar</h1>
-  </div>
+<!-- dashboard.component.html - ELIMINAR CONTENEDORES EXTERNOS -->
+<div class="container-fluid p-0"> <!-- Cambiado: p-0 para eliminar padding -->
+  
+  <!-- Navbar ahora ocupa todo el ancho -->
+  <app-nav-bar></app-nav-bar>
 
-  <!-- Widgets -->
+  <!-- Widgets - mantener el contenedor aquí -->
   <div class="container-xxl px-3 px-md-4 py-3">
     <app-mixes-capsule></app-mixes-capsule>
     <app-recent-tracks></app-recent-tracks>
@@ -13,6 +13,4 @@
      <app-player-bar></app-player-bar>
   </div>  
 
-  <!-- Acá más secciones cuando las tengas: recomendaciones, tus playlists, etc. -->
-  <!-- <app-your-playlists></app-your-playlists> -->
 </div>

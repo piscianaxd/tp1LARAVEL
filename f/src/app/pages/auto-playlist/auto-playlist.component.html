@@ -133,12 +133,11 @@
               </button>
               <button class="overlay-btn-square save" 
                       (click)="saveAsPlaylist(playlist, $event)" 
-                      [disabled]="creatingPlaylist() === playlist.name"
-                      title="Guardar como playlist">
+                      [disabled]="getPlaylistSaveState(playlist.name) === 'saving' || getPlaylistSaveState(playlist.name) === 'saved'"
+                      [title]="getPlaylistSaveState(playlist.name) === 'saved' ? 'Ya guardada' : 'Guardar como playlist'"
+                      [class.saved]="getPlaylistSaveState(playlist.name) === 'saved'">
                 <i class="bi" 
-                   [class.bi-plus-circle]="creatingPlaylist() !== playlist.name"
-                   [class.bi-arrow-repeat]="creatingPlaylist() === playlist.name"
-                   [class.loading]="creatingPlaylist() === playlist.name"></i>
+                   [class]="getSaveButtonIcon(playlist.name)"></i>
               </button>
             </div>
           </div>
@@ -199,11 +198,11 @@
           </button>
           <button class="save-playlist-btn" 
                   (click)="saveAsPlaylist(selectedPlaylist()!, $event)"
-                  [disabled]="creatingPlaylist() === selectedPlaylist()!.name">
+                  [disabled]="getPlaylistSaveState(selectedPlaylist()!.name) === 'saving' || getPlaylistSaveState(selectedPlaylist()!.name) === 'saved'"
+                  [class.saved]="getPlaylistSaveState(selectedPlaylist()!.name) === 'saved'">
             <i class="bi" 
-               [class.bi-plus-circle]="creatingPlaylist() !== selectedPlaylist()!.name"
-               [class.bi-arrow-repeat]="creatingPlaylist() === selectedPlaylist()!.name"></i>
-            {{ creatingPlaylist() === selectedPlaylist()!.name ? 'Guardando...' : 'Guardar Playlist' }}
+               [class]="getSaveButtonIcon(selectedPlaylist()!.name)"></i>
+            {{ getSaveButtonText(selectedPlaylist()!.name) }}
           </button>
         </div>
       </div>
