@@ -1,84 +1,219 @@
-<div class="playlist-container">
-  <div class="playlist-header">
-    <h2 class="playlist-title">🎧 Mis Playlists</h2>
-    <p class="playlist-subtitle">Organiza y gestiona tus listas de reproducción</p>
-  </div>
-
-  <div class="playlist-creation">
-    <h3 class="section-title">Crear nueva playlist</h3>
-    <form (submit)="createPlaylist(); $event.preventDefault()" class="playlist-form">
-      <div class="form-group">
-        <input
-          type="text"
-          [(ngModel)]="name_playlist"
-          name="name_playlist"
-          placeholder="Nombre de la playlist"
-          class="form-input"
-          required
-          />
-        </div>
-
-        <div class="form-group">
-          <label class="toggle-container">
-            <input type="checkbox" [(ngModel)]="is_public" name="is_public" />
-            <span class="toggle-slider"></span>
-            <span class="toggle-label">{{ is_public ? 'Pública' : 'Privada' }}</span>
-          </label>
-        </div>
-
-        <button type="submit" class="btn btn-primary">
-          <span class="btn-text">Crear playlist</span>
-          <span class="btn-icon">+</span>
-        </button>
-      </form>
+<!-- Vista principal de playlists -->
+<section class="playlists-section">
+  <div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="h2 fw-bold mb-1">Tus Playlists</h1>
+        <p class="text-muted mb-0">Gestiona tus listas de reproducción</p>
+      </div>
+      <button class="round-btn" (click)="loadPlaylists()" title="Actualizar playlists">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
     </div>
 
-    <div class="playlist-messages">
-      @if (errorMsg) {
-        <p class="error-message">
-          <span class="error-icon">⚠</span> {{ errorMsg }}
-        </p>
-      }
-      @if (loading) {
-        <p class="loading-message">
-          <span class="loading-spinner"></span> Cargando playlists...
-        </p>
-      }
+    <!-- Loader -->
+    <div *ngIf="loading()" class="row g-4">
+      <div class="col-6 col-md-4 col-lg-3 col-xl-2" *ngFor="let _ of [0,1,2,3,4,5]">
+        <div class="playlist-card">
+          <div class="sk-cover-square mb-3"></div>
+          <div class="placeholder-glow mb-2">
+            <span class="placeholder col-10"></span>
+          </div>
+          <div class="placeholder-glow">
+            <span class="placeholder col-7"></span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    @if (!loading) {
-      <div class="playlist-content">
-        @if (playlists.length) {
-          <div class="playlist-list">
-            <h3 class="section-title">Tus playlists ({{ playlists.length }})</h3>
-            <div class="playlist-grid">
-              @for (p of playlists; track p) {
-                <div class="playlist-card">
-                  <div class="playlist-info">
-                    <h4 class="playlist-name">{{ p.name_playlist }}</h4>
-                    <div class="playlist-meta">
-                      <span class="playlist-status" [class.public]="p.is_public" [class.private]="!p.is_public">
-                        <span class="status-icon">{{ p.is_public ? '🌐' : '🔒' }}</span>
-                        {{ p.is_public ? 'Pública' : 'Privada' }}
-                      </span>
-                    </div>
-                  </div>
-                  <button class="btn btn-danger" (click)="deletePlaylist(p.id)">
-                    <span class="btn-icon">🗑️</span>
-                    <span class="btn-text">Eliminar</span>
-                  </button>
-                </div>
-              }
+    <!-- Error -->
+    <div *ngIf="!loading() && error()" class="alert alert-danger mt-3">
+      {{ error() }}
+      <button class="btn btn-sm btn-outline-danger ms-2" (click)="loadPlaylists()">Reintentar</button>
+    </div>
+
+    <!-- Lista de Playlists -->
+    <div *ngIf="!loading() && !error() && playlists().length > 0" class="row g-4">
+      <div class="col-6 col-md-4 col-lg-3 col-xl-2" *ngFor="let playlist of playlists()">
+        <div class="playlist-card" (click)="openPlaylistModal(playlist)">
+          <div class="cover-wrap-square">
+            <ng-container *ngIf="getPlaylistCover(playlist) && playlist.songs && playlist.songs.length > 0; else iconFallback">
+              <img
+                [src]="(getPlaylistCover(playlist) | mediaUrl) + bust(playlist.songs[0]?.id || 0)"
+                [alt]="playlist.name_playlist"
+                class="cover-img-square"
+                loading="lazy"
+                (error)="playlist.songs[0] && onImgError($event, playlist.songs[0])"
+              />
+            </ng-container>
+
+            <ng-template #iconFallback>
+              <div class="cover-fallback-square">
+                <i class="bi bi-collection-play"></i>
+              </div>
+            </ng-template>
+
+            <div class="playlist-overlay">
+              <button class="overlay-btn-square play" 
+                      (click)="$event.stopPropagation()" 
+                      title="Reproducir playlist">
+                <i class="bi bi-play-fill"></i>
+              </button>
+              <button class="overlay-btn-square delete" 
+                      (click)="deletePlaylist(playlist, $event)" 
+                      title="Eliminar playlist">
+                <i class="bi bi-trash"></i>
+              </button>
             </div>
           </div>
-        }
-        @if (!playlists.length) {
-          <div class="empty-state">
-            <div class="empty-icon">🎵</div>
-            <h3 class="empty-title">No tienes playlists todavía</h3>
-            <p class="empty-description">Crea tu primera playlist para comenzar a organizar tu música</p>
+
+          <div class="playlist-card-info">
+            <h3 class="playlist-title text-truncate" [title]="playlist.name_playlist">
+              {{ playlist.name_playlist }}
+            </h3>
+            <p class="playlist-desc text-truncate">
+              {{ playlist.is_public ? 'Pública' : 'Privada' }}
+            </p>
+            <p class="playlist-meta">
+              {{ getSongCount(playlist) }}
+            </p>
           </div>
-        }
+        </div>
       </div>
-    }
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading() && !error() && playlists().length === 0" class="text-center py-5">
+      <div class="empty-state">
+        <i class="bi bi-collection-play display-1 text-muted mb-3"></i>
+        <h3 class="h4 text-muted mb-2">No tienes playlists</h3>
+        <p class="text-muted mb-4">Crea tu primera playlist desde la sección de Mixes Automáticos</p>
+        <button class="btn btn-primary" routerLink="/auto-playlists">
+          <i class="bi bi-music-note-list me-2"></i>
+          Explorar Mixes
+        </button>
+      </div>
+    </div>
   </div>
+</section>
+
+<!-- Modal de canciones de la playlist -->
+<div class="modal-backdrop fade show" *ngIf="showPlaylistModal() && selectedPlaylist()"></div>
+
+<div class="modal fade show d-block" 
+     *ngIf="showPlaylistModal() && selectedPlaylist()" 
+     tabindex="-1"
+     aria-modal="true"
+     role="dialog">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content playlist-modal-content">
+      
+      <!-- Header del Modal -->
+      <div class="modal-header playlist-modal-header">
+        <div class="modal-header-content">
+          <div class="playlist-cover-modal">
+            <ng-container *ngIf="getPlaylistCover(selectedPlaylist()!); else modalIconFallback">
+              <img
+                [src]="(getPlaylistCover(selectedPlaylist()!) | mediaUrl) + bust(selectedPlaylist()!.songs[0]?.id || 0)"
+                [alt]="selectedPlaylist()!.name_playlist"
+                class="cover-img-modal"
+                (error)="selectedPlaylist()!.songs[0] && onImgError($event, selectedPlaylist()!.songs[0])"
+              />
+            </ng-container>
+
+            <ng-template #modalIconFallback>
+              <div class="cover-fallback-modal">
+                <i class="bi bi-collection-play"></i>
+              </div>
+            </ng-template>
+          </div>
+          
+          <div class="playlist-info-modal">
+            <h2 class="playlist-modal-title">{{ selectedPlaylist()!.name_playlist }}</h2>
+            <p class="playlist-modal-desc">
+              {{ selectedPlaylist()!.is_public ? 'Playlist pública' : 'Playlist privada' }}
+            </p>
+            <p class="playlist-modal-meta">
+              {{ getSongCount(selectedPlaylist()!) }} • 
+              Creada el {{ selectedPlaylist()!.created_at | date:'dd/MM/yyyy' }}
+            </p>
+            
+            <div class="playlist-modal-actions">
+              <button class="play-all-btn">
+                <i class="bi bi-play-fill"></i>
+                Reproducir
+              </button>
+              <button class="btn-outline" (click)="deletePlaylist(selectedPlaylist()!, $event)">
+                <i class="bi bi-trash"></i>
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <button type="button" class="btn-close btn-close-white" (click)="closePlaylistModal()" aria-label="Close"></button>
+      </div>
+
+      <!-- Lista de canciones -->
+      <div class="modal-body playlist-modal-body">
+        <div class="tracks-container">
+          <div class="tracks-header">
+            <span class="track-number">#</span>
+            <span class="track-title-header">Título</span>
+            <span class="track-album">Álbum</span>
+            <span class="track-duration">Duración</span>
+          </div>
+
+          <div class="tracks-list">
+            <!-- En la lista de canciones del modal -->
+            <div class="track-item" 
+                *ngFor="let savedSong of selectedPlaylist()!.songs; let i = index">
+              <div class="track-number">
+                <span class="track-index">{{ i + 1 }}</span>
+                <button class="track-play-btn">
+                  <i class="bi bi-play-fill"></i>
+                </button>
+              </div>
+              
+              <div class="track-info">
+                <div class="track-cover-small">
+                  <img
+                    [src]="(savedSong.song?.art_work_song | mediaUrl) + bust(savedSong.song?.id || 0)"
+                    [alt]="savedSong.song?.name_song"
+                    class="cover-img-small"
+                    (error)="onImgError($event, savedSong.song)"
+                  />
+                  <div class="cover-fallback-small" *ngIf="savedSong.song && noImg.has(savedSong.song.id)">
+                    <i class="bi bi-music-note-beamed"></i>
+                  </div>
+                </div>
+                
+                <div class="track-details">
+                  <span class="track-name">{{ savedSong.song?.name_song }}</span>
+                  <span class="track-artist">{{ savedSong.song?.artist_song }}</span>
+                </div>
+              </div>
+              
+              <div class="track-album">
+                {{ savedSong.song?.album_song || 'Sin álbum' }}
+              </div>
+              
+              <div class="track-duration">
+                {{ formatDuration(savedSong.song?.duration || 180) }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty state para playlist sin canciones -->
+          <div *ngIf="!selectedPlaylist()!.songs || selectedPlaylist()!.songs.length === 0" 
+               class="empty-tracks text-center py-5">
+            <i class="bi bi-music-note-beamed display-4 text-muted mb-3"></i>
+            <h4 class="text-muted mb-2">No hay canciones</h4>
+            <p class="text-muted">Esta playlist no tiene canciones aún</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
