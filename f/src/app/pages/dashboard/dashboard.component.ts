@@ -10,13 +10,14 @@ import { RecentTracksComponent } from '../recent-track/recent-track.component';
 import { RandomTracksComponent } from '../random-track/random-track.component';
 import { MixesCapsuleComponent } from '../../features/mixes-capsule/mixes-capsule.component';
 import { AutoPlaylistsComponent } from '../auto-playlist/auto-playlist.component';
+import { PlayerBarComponent } from '../player-bar/player-bar.component';
 import { NavBar } from "../navbar/navbar.component";
 
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, RecentTracksComponent, RandomTracksComponent, MixesCapsuleComponent, AutoPlaylistsComponent, NavBar],
+  imports: [CommonModule, RouterModule, FormsModule, RecentTracksComponent, RandomTracksComponent, MixesCapsuleComponent, AutoPlaylistsComponent, NavBar, PlayerBarComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
 })

@@ -1,8 +1,12 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RandomTrackService, Song } from '../../services/random-track.service';
-import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { HttpErrorResponse } from '@angular/common/http';
+
+import { RandomTrackService, Song } from '../../services/random-track.service';
+import { PlayerService } from '../../services/player.service';
+import { Track } from '../../models/track/track.model';
+import { songToTrack } from '../../helpers/adapters'; 
+import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 
 @Component({
   selector: 'app-random-tracks',
@@ -12,130 +16,116 @@ import { HttpErrorResponse } from '@angular/common/http';
   styleUrls: ['./random-track.component.css']
 })
 export class RandomTracksComponent implements OnInit {
+  // estado
   loading = signal(true);
-  error = signal<string | null>(null);
+  error   = signal<string | null>(null);
+
+  // canciones visibles en la página actual
   tracks = signal<Song[]>([]);
+
+  // paginado simple: 3 páginas x 6 = 18
   currentPage = signal(0);
-  maxPages = signal(3); // 3 páginas × 6 canciones = 18 canciones máximo
+  maxPages    = signal(3);
 
-  // Almacenar todas las canciones generadas por página
-  generatedSongs = new Map<number, Song[]>();
+  // cache por página
+  private generatedSongs = new Map<number, Song[]>();
 
-  constructor(private randomTrackService: RandomTrackService) {}
+  // helpers de UI
+  canGoNext = computed(() => this.currentPage() < this.maxPages() - 1);
+  canGoPrev = computed(() => this.currentPage() > 0);
+  hasReachedLimit = computed(() => !this.canGoNext());
+
+  // control de fallback de imagen
+  noImg = new Set<number>();
+
+  constructor(
+    private randomTrackService: RandomTrackService,
+    private player: PlayerService
+  ) {}
 
   ngOnInit(): void {
     this.loadRandomTracks();
   }
 
-  loadRandomTracks() {
-    // Si ya tenemos canciones generadas para esta página, usarlas
-    if (this.generatedSongs.has(this.currentPage())) {
-      const cachedSongs = this.generatedSongs.get(this.currentPage());
-      if (cachedSongs) {
-        this.tracks.set(cachedSongs);
-        this.loading.set(false);
-        return;
-      }
+  loadRandomTracks(): void {
+    const page = this.currentPage();
+
+    // usar cache si ya existe
+    const cached = this.generatedSongs.get(page);
+    if (cached) {
+      this.tracks.set(cached);
+      this.loading.set(false);
+      this.error.set(null);
+      return;
     }
 
     this.loading.set(true);
     this.error.set(null);
-    
+
     this.randomTrackService.getRandomSongs(6).subscribe({
-      next: (response) => {
-        // Guardar las canciones en el cache
-        this.generatedSongs.set(this.currentPage(), response.songs);
-        this.tracks.set(response.songs);
+      next: (res) => {
+        const songs = res.songs ?? [];
+        this.generatedSongs.set(page, songs);
+        this.tracks.set(songs);
         this.loading.set(false);
       },
       error: (err: HttpErrorResponse) => {
-        console.error('Error completo:', err);
-        
-        let errorMessage = 'No se pudieron cargar las canciones aleatorias.';
-        
-        if (err.status === 0) {
-          errorMessage = 'Error de conexión: No se pudo conectar al servidor.';
-        } else if (err.status === 401) {
-          errorMessage = 'No autorizado: Token inválido o expirado.';
-        } else if (err.status === 404) {
-          errorMessage = 'Endpoint no encontrado. Verifica la URL.';
-        } else if (err.status >= 500) {
-          errorMessage = 'Error del servidor. Intenta más tarde.';
-        }
-        
-        this.error.set(errorMessage);
+        console.error('Error random tracks:', err);
+        let msg = 'No se pudieron cargar las canciones aleatorias.';
+        if (err.status === 0)       msg = 'Error de conexión: no se pudo conectar al servidor.';
+        else if (err.status === 401) msg = 'No autorizado: token inválido o expirado.';
+        else if (err.status === 404) msg = 'Endpoint no encontrado. Verificá la URL.';
+        else if (err.status >= 500)  msg = 'Error del servidor. Probá más tarde.';
+        this.error.set(msg);
         this.loading.set(false);
       }
     });
   }
 
-  nextPage() {
-    const nextPage = this.currentPage() + 1;
-    if (nextPage < this.maxPages()) {
-      this.currentPage.set(nextPage);
-      this.loadRandomTracks();
-    }
+  nextPage(): void {
+    if (!this.canGoNext()) return;
+    this.currentPage.set(this.currentPage() + 1);
+    this.loadRandomTracks();
   }
 
-  prevPage() {
-    const prevPage = this.currentPage() - 1;
-    if (prevPage >= 0) {
-      this.currentPage.set(prevPage);
-      this.loadRandomTracks();
-    }
+  prevPage(): void {
+    if (!this.canGoPrev()) return;
+    this.currentPage.set(this.currentPage() - 1);
+    this.loadRandomTracks();
   }
 
-  play(song: Song) {
-    // TODO: integrar con tu reproductor
-    console.log('Reproducir:', song);
+  // reproducir una
+  play(song: Song): void {
+    const t: Track = songToTrack(song);
+    const queue: Track[] = this.tracks().map(songToTrack);
+    this.player.playNow(t, queue);
   }
 
-  playAll() {
-    // TODO: reproducir todas las canciones
-    console.log('Reproducir todo:', this.getAllSongs());
+  // reproducir todas las visibles (o todas generadas hasta ahora si preferís)
+  playAll(): void {
+    const q: Track[] = this.tracks().map(songToTrack);
+    if (q.length) this.player.playNow(q[0], q);
   }
 
-  // Obtener todas las canciones generadas hasta el momento
+  // si preferís “todas las generadas hasta el momento”
   getAllSongs(): Song[] {
-    const allSongs: Song[] = [];
+    const all: Song[] = [];
     for (let i = 0; i <= this.currentPage(); i++) {
-      const pageSongs = this.generatedSongs.get(i);
-      if (pageSongs) {
-        allSongs.push(...pageSongs);
-      }
+      const pg = this.generatedSongs.get(i);
+      if (pg) all.push(...pg);
     }
-    return allSongs;
+    return all;
   }
 
-  // Verificar si podemos ir a la siguiente página
-  canGoNext(): boolean {
-    return this.currentPage() < this.maxPages() - 1;
-  }
-
-  // Verificar si podemos ir a la página anterior
-  canGoPrev(): boolean {
-    return this.currentPage() > 0;
-  }
-
-  // Verificar si hemos alcanzado el límite máximo
-  hasReachedLimit(): boolean {
-    return !this.canGoNext();
-  }
-
-  // Cache busting para imágenes
-  noImg = new Set<number>();
-  
-  bust(id: number) {
-    return `?v=${id}`;
-  }
+  // cache-busting opcional para carátulas
+  bust(id: number) { return `?v=${id}`; }
 
   onImgError(ev: Event, song: Song) {
     this.noImg.add(song.id);
     console.warn('IMG ERROR:', song.art_work_song, (ev.target as HTMLImageElement).currentSrc);
   }
 
-  // Método para resetear y comenzar de nuevo
-  resetAndReload() {
+  resetAndReload(): void {
     this.generatedSongs.clear();
     this.currentPage.set(0);
     this.loadRandomTracks();

@@ -1,0 +1,85 @@
+<footer class="player fixed-bottom">
+  <div class="container-xxl player-grid">
+    <!-- Izquierda: carátula + info -->
+    <div class="left d-flex align-items-center gap-3 minw0">
+      <div class="cover">
+        <ng-container *ngIf="!useFallback && player.current()?.artwork; else fallback">
+          <img
+            [src]="player.current()?.artwork | mediaUrl"
+            alt="cover"
+            class="cover-img"
+            (error)="onCoverError()"
+          />
+        </ng-container>
+        <ng-template #fallback>
+          <div class="cover-fallback">
+            <i class="bi bi-music-note-beamed"></i>
+          </div>
+        </ng-template>
+      </div>
+      <div class="minw0">
+        <div class="title text-truncate">
+          {{ player.current()?.title || 'Nada en reproducción' }}
+        </div>
+        <div class="meta text-truncate">
+          {{ player.current()?.artist || '' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Centro: controles (arriba) + progreso (abajo) -->
+    <div class="center d-flex flex-column align-items-center w-100">
+      <div class="controls d-flex align-items-center gap-3">
+        <button class="ctrl" (click)="player.toggleShuffle()" [class.active]="player.shuffle()" title="Aleatorio">
+          <i class="bi bi-shuffle"></i>
+        </button>
+
+        <button class="ctrl" (click)="player.prev()" title="Anterior">
+          <i class="bi bi-skip-start-fill"></i>
+        </button>
+
+        <button class="ctrl big" (click)="player.togglePlayPause()" [attr.aria-pressed]="player.isPlaying()" title="Play/Pause">
+          <i class="bi" [ngClass]="player.isPlaying() ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+        </button>
+
+        <button class="ctrl" (click)="player.next()" title="Siguiente">
+          <i class="bi bi-skip-end-fill"></i>
+        </button>
+
+        <button class="ctrl" (click)="player.cycleRepeat()" [class.active]="player.repeat()!=='off'" [attr.title]="'Repetir: ' + player.repeat()">
+          <i class="bi" [ngClass]="{ 'bi-repeat': player.repeat() !== 'one', 'bi-repeat-1': player.repeat() === 'one' }"></i>
+        </button>
+      </div>
+
+      <div class="progress-wrap d-flex align-items-center gap-2 w-100">
+        <div class="time small">{{ fmt(player.currentTime()) }}</div>
+        <input
+          #seek
+          type="range"
+          class="seek flex-grow-1"
+          [min]="0"
+          [max]="player.duration() || 0"
+          step="1"
+          [value]="player.currentTime()"
+          (input)="player.seek(seek.valueAsNumber)"
+        />
+<div class="time small">-{{ fmt(remaining()) }}</div>
+      </div>
+    </div>
+
+    <!-- Derecha: volumen -->
+    <div class="right d-none d-md-flex align-items-center justify-content-end gap-2">
+      <button class="ctrl" (click)="player.toggleMute()" title="Silenciar">
+        <i class="bi" [ngClass]="player.muted() ? 'bi-volume-mute-fill' : 'bi-volume-up-fill'"></i>
+      </button>
+      <input
+        #vol
+        type="range"
+        class="vol"
+        min="0" max="1" step="0.01"
+        [value]="player.muted() ? 0 : player.volume()"
+        (input)="player.setVolume(vol.valueAsNumber)"
+      />
+    </div>
+  </div>
+</footer>
