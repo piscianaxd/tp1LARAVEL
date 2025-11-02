@@ -1,0 +1,100 @@
+<div class="search-results-container" *ngIf="showResults">
+  <!-- Solo la card interna tiene fondo blanco -->
+  <div class="search-results-card">
+    
+    <!-- Estado de carga -->
+    <div class="results-loading" *ngIf="isLoading">
+      <i class="bi bi-search"></i>
+      <span>Buscando "{{ currentSearchTerm }}"...</span>
+    </div>
+
+    <!-- Resultados de canciones -->
+    <div class="results-section" *ngIf="!isLoading && songResults.length > 0">
+      <h6 class="section-title">
+        <i class="bi bi-music-note-beamed me-1"></i>
+        Canciones ({{ songResults.length }})
+      </h6>
+      <div class="result-item" 
+           *ngFor="let song of songResults" 
+           [routerLink]="['/songs', song.id]" 
+           (click)="onResultClick()">
+        <div class="item-icon">
+          <i class="bi bi-music-note-beamed"></i>
+        </div>
+        <div class="item-info">
+          <div class="item-name">{{ song.name_song || 'Sin nombre' }}</div>
+          <div class="item-details">
+            {{ song.artist_song || 'Artista desconocido' }} 
+            <span *ngIf="song.album_song">• {{ song.album_song }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultados de playlists -->
+    <div class="results-section" *ngIf="!isLoading && playlistResults.length > 0">
+      <h6 class="section-title">
+        <i class="bi bi-list-ul me-1"></i>
+        Playlists ({{ playlistResults.length }})
+      </h6>
+      <div class="result-item" 
+           *ngFor="let playlist of playlistResults"
+           [routerLink]="['/playlists', playlist.id]" 
+           (click)="onResultClick()">
+        <div class="item-icon">
+          <i class="bi bi-list-ul"></i>
+        </div>
+        <div class="item-info">
+          <div class="item-name">{{ playlist.name_playlist || 'Sin nombre' }}</div>
+          <div class="item-details">
+            {{ playlist.is_public ? 'Pública' : 'Privada' }}
+            <span *ngIf="playlist.song_count">• {{ playlist.song_count }} canciones</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultados de artistas -->
+    <div class="results-section" *ngIf="!isLoading && artistResults.length > 0">
+      <h6 class="section-title">
+        <i class="bi bi-person me-1"></i>
+        Artistas ({{ artistResults.length }})
+      </h6>
+      <div class="result-item" 
+           *ngFor="let artist of artistResults"
+           (click)="searchByArtist(artist.name); onResultClick()">
+        <div class="item-icon">
+          <i class="bi bi-person"></i>
+        </div>
+        <div class="item-info">
+          <div class="item-name">{{ artist.name || 'Artista desconocido' }}</div>
+          <div class="item-details">{{ artist.songCount || 0 }} canciones</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sin resultados -->
+    <div class="no-results" *ngIf="!isLoading && hasNoResults">
+      <i class="bi bi-search"></i>
+      <p>No se encontraron resultados</p>
+      <small>Intenta con otros términos de búsqueda</small>
+    </div>
+
+    <!-- Ver todos los resultados -->
+    <div class="view-all-section" *ngIf="!isLoading && !hasNoResults && currentSearchTerm">
+      <div class="result-item view-all" 
+           [routerLink]="['/search']" 
+           [queryParams]="{q: currentSearchTerm}"
+           (click)="onResultClick()">
+        <div class="item-icon">
+          <i class="bi bi-arrow-right"></i>
+        </div>
+        <div class="item-info">
+          <div class="item-name">Ver todos los resultados</div>
+          <div class="item-details">Buscar "{{ currentSearchTerm }}" en toda la aplicación</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

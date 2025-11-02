@@ -1,0 +1,251 @@
+.search-results-container {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: 600px;
+  max-width: 90vw;
+  margin-top: 8px;
+  animation: slideDown 0.3s ease;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.search-results-card {
+  background: rgba(52, 58, 64, 0.75); /* ✅ Fondo oscuro */
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); /* ✅ Sombra más oscura para contraste */
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1); /* ✅ Borde sutil blanco */
+  backdrop-filter: blur(10px);
+}
+
+/* Scrollbar personalizado para fondo oscuro */
+.search-results-card::-webkit-scrollbar {
+  width: 6px;
+}
+
+.search-results-card::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1); /* ✅ Track claro para fondo oscuro */
+  border-radius: 3px;
+}
+
+.search-results-card::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3); /* ✅ Thumb claro */
+  border-radius: 3px;
+}
+
+.search-results-card::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5); /* ✅ Thumb más claro al hover */
+}
+
+/* Secciones de resultados */
+.results-section {
+  margin-bottom: 20px;
+}
+
+.results-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-title {
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: rgba(255, 255, 255, 0.9) !important; /* ✅ Texto blanco */
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+}
+
+/* Items de resultado */
+.result-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 4px;
+}
+
+.result-item:last-child {
+  margin-bottom: 0;
+}
+
+.result-item:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important; /* ✅ Hover blanco transparente */
+  transform: translateX(2px);
+}
+
+.item-icon {
+  margin-right: 12px;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.7) !important; /* ✅ Iconos en blanco */
+  width: 20px;
+  text-align: center;
+}
+
+.item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-name {
+  font-weight: 500;
+  margin-bottom: 2px;
+  color: rgba(255, 255, 255, 0.95) !important; /* ✅ Texto blanco */
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-details {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7) !important; /* ✅ Texto gris claro */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Estado de carga */
+.results-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  color: rgba(255, 255, 255, 0.8) !important; /* ✅ Texto blanco */
+  font-style: italic;
+}
+
+.results-loading i {
+  margin-right: 8px;
+  font-size: 1.2rem;
+}
+
+/* Sin resultados */
+.no-results {
+  text-align: center;
+  padding: 30px 20px;
+  color: rgba(255, 255, 255, 0.8) !important; /* ✅ Texto blanco */
+}
+
+.no-results i {
+  font-size: 2rem;
+  margin-bottom: 12px;
+  opacity: 0.7;
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.no-results p {
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.no-results small {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Ver todos los resultados */
+.view-all-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.2) !important; /* ✅ Borde blanco */
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+.view-all {
+  background-color: rgba(255, 255, 255, 0.1) !important; /* ✅ Fondo muy transparente */
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.view-all:hover {
+  background-color: rgba(255, 255, 255, 0.2) !important; /* ✅ Hover más visible */
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.view-all .item-icon {
+  color: #4dabf7 !important; /* ✅ Azul más claro para contraste */
+}
+
+.view-all .item-name {
+  color: #4dabf7 !important; /* ✅ Azul más claro */
+  font-weight: 600;
+}
+
+.view-all .item-details {
+  color: rgba(255, 255, 255, 0.6) !important; /* ✅ Texto claro */
+}
+
+/* Animaciones */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .search-results-container {
+    position: fixed;
+    top: 60px;
+    left: 5%;
+    right: 5%;
+    transform: none;
+    width: 90%;
+    max-width: 90%;
+  }
+  
+  .search-results-card {
+    max-height: 60vh;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Estados de foco para accesibilidad */
+.result-item:focus {
+  outline: 2px solid #4dabf7;
+  outline-offset: -2px;
+}
+
+/* Efectos de transición suave */
+.search-results-card {
+  transition: all 0.3s ease;
+}
+
+.result-item {
+  transition: all 0.2s ease;
+}
+
+/* Asegurar que el contenedor no tenga fondo */
+.search-results-container:before {
+  display: none !important;
+}
+
+.search-results-container {
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
