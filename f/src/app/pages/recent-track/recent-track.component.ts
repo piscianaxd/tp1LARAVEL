@@ -1,82 +1,124 @@
-  import { Component, OnInit, signal } from '@angular/core';
-  import { CommonModule, NgOptimizedImage } from '@angular/common';
-  import { RouterModule } from '@angular/router';
-  import { HistoryService, Track } from '../../services/history.service';
-  import { EllipsisPipe } from '../../shared/pipes/ellipsis.pipe';
-  import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
+import { Component, OnInit, signal, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
-  @Component({
-    selector: 'app-recent-tracks',
-    standalone: true,
-    imports: [CommonModule, RouterModule, MediaUrlPipe],
-    templateUrl: './recent-track.component.html',
-    styleUrls: ['./recent-track.component.css']
-  })
-  export class RecentTracksComponent implements OnInit {
-    loading = signal(true);
-    error = signal<string | null>(null);
-    tracks = signal<Track[]>([]);
-    columns = signal<Track[][]>([]);   // 👈 columnas ya precalculadas
+import { HistoryService, HistoryTrack } from '../../services/history.service';
+import { Track } from '../../models/track/track.model';
+import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
+import { PlayerService } from '../../services/player.service';
 
-    private readonly COLS = 3;
+@Component({
+  selector: 'app-recent-tracks',
+  standalone: true,
+  imports: [CommonModule, RouterModule, MediaUrlPipe],
+  templateUrl: './recent-track.component.html',
+  styleUrls: ['./recent-track.component.css']
+})
+export class RecentTracksComponent implements OnInit {
+  loading = signal(true);
+  error   = signal<string | null>(null);
 
-    constructor(private history: HistoryService) {}
+  // 🔹 Lista "cruda" (todo el historial, con posibles duplicados por canción)
+  private all = signal<HistoryTrack[]>([]);
 
-    ngOnInit(): void {
-      this.history.getHistory().subscribe({
-        next: (data) => {
-          this.tracks.set(data);
-          this.columns.set(this.toColumns(data, this.COLS));
-          this.loading.set(false);
-        },
-        error: () => { this.error.set('No se pudo cargar el historial.'); this.loading.set(false); }
-      });
-    }
+  // 🔹 Vista deduplicada por canción (conserva la MÁS RECIENTE)
+  visible = computed<HistoryTrack[]>(() => this.dedupeBySong(this.all()));
 
-    noImg = new Set<number>();                 // tracks con imagen fallida
+  // Paginación 3×3
+  readonly pageSize = 9;
+  readonly COLS = 3;
+  page = signal(0);
 
-      bust(id: number) {                         // cache-buster para evitar 404 cacheadas
-        return `?v=${id}`;
-      }
+  totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.visible().length / this.pageSize))
+  );
 
-      onImgError(ev: Event, t: Track) {          // marcar el track y mostrar ícono
-        this.noImg.add(t.id);
-        // opcional: log de depuración
-         console.warn('IMG ERROR:', t.artwork, (ev.target as HTMLImageElement).currentSrc);
-      }
+  pageItems = computed<HistoryTrack[]>(() => {
+    const v = this.visible();
+    const start = this.page() * this.pageSize;
+    return v.slice(start, start + this.pageSize);
+  });
 
+  columns = computed<HistoryTrack[][]>(() => {
+    const list = this.pageItems();
+    const colSize = Math.ceil((list.length || 1) / this.COLS);
+    return Array.from({ length: this.COLS }, (_, i) => list.slice(i * colSize, (i + 1) * colSize));
+  });
 
+  // control de imagen fallida por id
+  noImg = new Set<number>();
 
-    private toColumns(list: Track[], cols: number): Track[][] {
-      const size = Math.ceil((list.length || 1) / cols);
-      return Array.from({ length: cols }, (_, i) => list.slice(i * size, (i + 1) * size));
-    }
+  constructor(
+    private history: HistoryService,
+    private player: PlayerService
+  ) {}
 
-
-    playAll() {
-      // TODO: integrar con tu reproductor
-      console.log('Reproducir todo', this.tracks());
-    }
-
-    play(track: Track) {
-      // TODO: iniciar reproducción track.url
-      console.log('Play', track);
-    }
-
-    remove(historyId: number) {
-      this.history.deleteFromHistory(historyId).subscribe({
-        next: () => this.tracks.set(this.tracks().filter(t => t.historyId !== historyId))
-      });
-    }
-
-    // util: fecha relativa simple
-    rel(d: Date) {
-      const diff = (Date.now() - d.getTime()) / 1000;
-      if (diff < 60) return 'justo ahora';
-      if (diff < 3600) return `${Math.floor(diff/60)} min`;
-      if (diff < 86400) return `${Math.floor(diff/3600)} h`;
-      return `${Math.floor(diff/86400)} d`;
-    }
+  ngOnInit(): void {
+    this.history.getHistory().subscribe({
+      next: (data) => {
+        // El backend ya viene ordenado desc por fecha → la primera ocurrencia de cada canción es la más reciente
+        this.all.set(data);
+        this.clampPage();
+        this.loading.set(false);
+      },
+      error: () => { this.error.set('No se pudo cargar el historial.'); this.loading.set(false); }
+    });
   }
 
-  
+  // ✅ Deduplicar por id de canción (quedarse con la PRIMERA ocurrencia del array ya ordenado desc)
+  private dedupeBySong(list: HistoryTrack[]): HistoryTrack[] {
+    const seen = new Set<number>(); // ids de canción
+    const out: HistoryTrack[] = [];
+    for (const t of list) {
+      if (seen.has(t.id)) continue;
+      seen.add(t.id);
+      out.push(t);
+    }
+    return out;
+  }
+
+  // navegación
+  canPrev() { return this.page() > 0; }
+  canNext() { return this.page() < this.totalPages() - 1; }
+  prev()    { if (this.canPrev()) this.page.set(this.page() - 1); }
+  next()    { if (this.canNext()) this.page.set(this.page() + 1); }
+  private clampPage() {
+    this.page.set(Math.min(this.page(), this.totalPages() - 1));
+  }
+
+  // acciones
+  playAll() {
+    const q: Track[] = this.pageItems().map(x => x); // HistoryTrack extiende Track
+    if (q.length) this.player.playNow(q[0], q);
+  }
+
+  play(t: HistoryTrack) {
+    const q: Track[] = this.pageItems().map(x => x);
+    this.player.playNow(t, q);
+  }
+
+  // 🔁 Importante: borrar del origen "all" y se recalcula la vista deduplicada
+  remove(historyId: number) {
+    this.history.deleteFromHistory(historyId).subscribe({
+      next: () => {
+        const nextAll = this.all().filter(it => it.historyId !== historyId);
+        this.all.set(nextAll);
+        this.clampPage();
+      }
+    });
+  }
+
+  bust(id: number) { return `?v=${id}`; }
+  onImgError(ev: Event, t: HistoryTrack) {
+    this.noImg.add(t.id);
+    // console.warn('IMG ERROR:', t.artwork, (ev.target as HTMLImageElement).currentSrc);
+  }
+
+  rel(d: Date) {
+    const diff = (Date.now() - d.getTime()) / 1000;
+    if (diff < 60) return 'justo ahora';
+    if (diff < 3600) return `${Math.floor(diff/60)} min`;
+    if (diff < 86400) return `${Math.floor(diff/3600)} h`;
+    return `${Math.floor(diff/86400)} d`;
+  }
+}

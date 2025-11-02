@@ -2,7 +2,7 @@
 <section class="auto-playlists-section" [class.d-none]="showPlaylistDetail()">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-      <h2 class="h3 fw-bold mb-0">mixes aleatorios</h2>
+      <h2 class="h3 fw-bold mb-0">Cargas para tí</h2>
     </div>
     <button class="round-btn" (click)="generateAutoPlaylists()" title="Regenerar playlists">
       <i class="bi bi-arrow-clockwise"></i>
@@ -101,7 +101,7 @@
   <div *ngIf="!loading() && !error() && playlists().length > 0">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div>
-        <h3 class="h4 fw-bold mb-0">mixes</h3>
+        <h3 class="h4 fw-bold mb-0">Descubrí nuevas playlists</h3>
       </div>
     </div>
 
