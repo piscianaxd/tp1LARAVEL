@@ -7,9 +7,15 @@
         <h1 class="h2 fw-bold mb-1">Tus Playlists</h1>
         <p class="text-muted mb-0">Gestiona tus listas de reproducción</p>
       </div>
-      <button class="round-btn" (click)="loadPlaylists()" title="Actualizar playlists">
-        <i class="bi bi-arrow-clockwise"></i>
-      </button>
+      <div class="d-flex gap-2">
+        <!-- Botón para crear nueva playlist -->
+        <button class="round-btn" (click)="openCreatePlaylistModal()" title="Crear nueva playlist">
+          <i class="bi bi-plus-lg"></i>
+        </button>
+        <button class="round-btn" (click)="loadPlaylists()" title="Actualizar playlists">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+      </div>
     </div>
 
     <!-- Loader -->
@@ -89,14 +95,114 @@
         <i class="bi bi-collection-play display-1 text-muted mb-3"></i>
         <h3 class="h4 text-muted mb-2">No tienes playlists</h3>
         <p class="text-muted mb-4">Crea tu primera playlist desde la sección de Mixes Automáticos</p>
-        <button class="btn btn-primary" routerLink="/auto-playlists">
-          <i class="bi bi-music-note-list me-2"></i>
-          Explorar Mixes
-        </button>
+        <div class="d-flex gap-3 justify-content-center">
+          <button class="btn btn-primary" routerLink="/auto-playlists">
+            <i class="bi bi-music-note-list me-2"></i>
+            Explorar Mixes
+          </button>
+          <button class="btn btn-outline-primary" (click)="openCreatePlaylistModal()">
+            <i class="bi bi-plus-circle me-2"></i>
+            Crear Nueva Playlist
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </section>
+
+<!-- Modal para crear nueva playlist -->
+<div class="modal-backdrop fade show" *ngIf="showCreatePlaylistModal()"></div>
+
+<div class="modal fade show d-block" 
+     *ngIf="showCreatePlaylistModal()" 
+     tabindex="-1"
+     aria-modal="true"
+     role="dialog">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content create-playlist-modal-content">
+      
+      <!-- Header del Modal -->
+      <div class="modal-header create-playlist-modal-header">
+        <h2 class="modal-title">Crear Nueva Playlist</h2>
+        <button type="button" class="btn-close btn-close-white" 
+                (click)="closeCreatePlaylistModal()" 
+                [disabled]="creatingNewPlaylist()"
+                aria-label="Close"></button>
+      </div>
+
+      <!-- Formulario -->
+      <div class="modal-body create-playlist-modal-body">
+        <form (ngSubmit)="createNewPlaylist()">
+          <!-- Nombre de la playlist -->
+          <div class="mb-4">
+            <label for="playlistName" class="form-label">Nombre de la playlist</label>
+            <input type="text" 
+                   class="form-control custom-input" 
+                   id="playlistName"
+                   [(ngModel)]="newPlaylistName" 
+                   name="playlistName"
+                   placeholder="Mi playlist favorita"
+                   required
+                   [disabled]="creatingNewPlaylist()">
+            <div class="form-text">Elige un nombre único para tu playlist</div>
+          </div>
+
+          <!-- Visibilidad -->
+          <div class="mb-4">
+            <label class="form-label">Visibilidad</label>
+            <div class="visibility-options">
+              <div class="form-check">
+                <input class="form-check-input" 
+                       type="radio" 
+                       id="publicPlaylist"
+                       [(ngModel)]="newPlaylistIsPublic" 
+                       name="playlistVisibility"
+                       [value]="true"
+                       [disabled]="creatingNewPlaylist()">
+                <label class="form-check-label" for="publicPlaylist">
+                  <i class="bi bi-globe me-2"></i>
+                  Pública
+                  <small class="d-block text-muted">Cualquier usuario puede ver esta playlist</small>
+                </label>
+              </div>
+              <div class="form-check mt-2">
+                <input class="form-check-input" 
+                       type="radio" 
+                       id="privatePlaylist"
+                       [(ngModel)]="newPlaylistIsPublic" 
+                       name="playlistVisibility"
+                       [value]="false"
+                       [disabled]="creatingNewPlaylist()">
+                <label class="form-check-label" for="privatePlaylist">
+                  <i class="bi bi-lock me-2"></i>
+                  Privada
+                  <small class="d-block text-muted">Solo tú puedes ver esta playlist</small>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botones -->
+          <div class="create-playlist-actions">
+            <button type="button" 
+                    class="btn btn-outline-secondary" 
+                    (click)="closeCreatePlaylistModal()"
+                    [disabled]="creatingNewPlaylist()">
+              Cancelar
+            </button>
+            <button type="submit" 
+                    class="btn btn-primary"
+                    [disabled]="!newPlaylistName().trim() || creatingNewPlaylist()">
+              <span *ngIf="creatingNewPlaylist()" class="spinner-border spinner-border-sm me-2"></span>
+              <i class="bi" [class.bi-plus-circle]="!creatingNewPlaylist()" [class.bi-arrow-repeat]="creatingNewPlaylist()"></i>
+              {{ creatingNewPlaylist() ? 'Creando...' : 'Crear Playlist' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Modal de canciones de la playlist -->
 <div class="modal-backdrop fade show" *ngIf="showPlaylistModal() && selectedPlaylist()"></div>
@@ -107,10 +213,10 @@
      aria-modal="true"
      role="dialog">
   <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content playlist-modal-content">
+    <div class="modal-content create-playlist-modal-content"> <!-- Cambiado a create-playlist-modal-content -->
       
       <!-- Header del Modal -->
-      <div class="modal-header playlist-modal-header">
+      <div class="modal-header create-playlist-modal-header"> <!-- Cambiado a create-playlist-modal-header -->
         <div class="modal-header-content">
           <div class="playlist-cover-modal">
             <ng-container *ngIf="getPlaylistCover(selectedPlaylist()!); else modalIconFallback">
@@ -130,11 +236,11 @@
           </div>
           
           <div class="playlist-info-modal">
-            <h2 class="playlist-modal-title">{{ selectedPlaylist()!.name_playlist }}</h2>
-            <p class="playlist-modal-desc">
+            <h2 class="playlist-modal-title" style="color: #ffffff !important;">{{ selectedPlaylist()!.name_playlist }}</h2>
+            <p class="playlist-modal-desc" style="color: #f8f9fa !important;">
               {{ selectedPlaylist()!.is_public ? 'Playlist pública' : 'Playlist privada' }}
             </p>
-            <p class="playlist-modal-meta">
+            <p class="playlist-modal-meta" style="color: #e9ecef !important;">
               {{ getSongCount(selectedPlaylist()!) }} • 
               Creada el {{ selectedPlaylist()!.created_at | date:'dd/MM/yyyy' }}
             </p>
@@ -156,9 +262,9 @@
       </div>
 
       <!-- Lista de canciones -->
-      <div class="modal-body playlist-modal-body">
+      <div class="modal-body create-playlist-modal-body"> <!-- Cambiado a create-playlist-modal-body -->
         <div class="tracks-container">
-          <div class="tracks-header">
+          <div class="tracks-header" style="color: #e9ecef !important;">
             <span class="track-number">#</span>
             <span class="track-title-header">Título</span>
             <span class="track-album">Álbum</span>
@@ -166,11 +272,10 @@
           </div>
 
           <div class="tracks-list">
-            <!-- En la lista de canciones del modal -->
             <div class="track-item" 
                 *ngFor="let savedSong of selectedPlaylist()!.songs; let i = index">
               <div class="track-number">
-                <span class="track-index">{{ i + 1 }}</span>
+                <span class="track-index" style="color: #e9ecef !important;">{{ i + 1 }}</span>
                 <button class="track-play-btn">
                   <i class="bi bi-play-fill"></i>
                 </button>
@@ -190,16 +295,16 @@
                 </div>
                 
                 <div class="track-details">
-                  <span class="track-name">{{ savedSong.song?.name_song }}</span>
-                  <span class="track-artist">{{ savedSong.song?.artist_song }}</span>
+                  <span class="track-name" style="color: #ffffff !important;">{{ savedSong.song?.name_song }}</span>
+                  <span class="track-artist" style="color: #e9ecef !important;">{{ savedSong.song?.artist_song }}</span>
                 </div>
               </div>
               
-              <div class="track-album">
+              <div class="track-album" style="color: #e9ecef !important;">
                 {{ savedSong.song?.album_song || 'Sin álbum' }}
               </div>
               
-              <div class="track-duration">
+              <div class="track-duration" style="color: #e9ecef !important;">
                 {{ formatDuration(savedSong.song?.duration || 180) }}
               </div>
             </div>
@@ -208,9 +313,9 @@
           <!-- Empty state para playlist sin canciones -->
           <div *ngIf="!selectedPlaylist()!.songs || selectedPlaylist()!.songs.length === 0" 
                class="empty-tracks text-center py-5">
-            <i class="bi bi-music-note-beamed display-4 text-muted mb-3"></i>
-            <h4 class="text-muted mb-2">No hay canciones</h4>
-            <p class="text-muted">Esta playlist no tiene canciones aún</p>
+            <i class="bi bi-music-note-beamed display-4 mb-3" style="color: #dee2e6 !important;"></i>
+            <h4 class="mb-2" style="color: #ffffff !important;">No hay canciones</h4>
+            <p style="color: #e9ecef !important;">Esta playlist no tiene canciones aún</p>
           </div>
         </div>
       </div>

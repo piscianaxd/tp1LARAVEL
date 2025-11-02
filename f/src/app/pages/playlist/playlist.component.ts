@@ -1,5 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms'; // Importar FormsModule
 import { PlaylistService } from '../../services/playlist.service';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -17,7 +19,7 @@ interface Playlist {
 @Component({
   selector: 'app-playlists',
   standalone: true,
-  imports: [CommonModule, MediaUrlPipe],
+  imports: [CommonModule, MediaUrlPipe, RouterModule, FormsModule], // Agregar FormsModule
   templateUrl: './playlist.component.html',
   styleUrls: ['./playlist.component.css']
 })
@@ -26,9 +28,15 @@ export class PlaylistsComponent implements OnInit {
   error = signal<string | null>(null);
   playlists = signal<Playlist[]>([]);
   
-  // Estado para el modal
+  // Estado para el modal de canciones
   selectedPlaylist = signal<Playlist | null>(null);
   showPlaylistModal = signal(false);
+
+  // Estado para el modal de crear nueva playlist
+  showCreatePlaylistModal = signal(false);
+  creatingNewPlaylist = signal(false);
+  newPlaylistName = signal('');
+  newPlaylistIsPublic = signal(true);
 
   constructor(private playlistService: PlaylistService) {}
 
@@ -54,13 +62,57 @@ export class PlaylistsComponent implements OnInit {
     });
   }
 
+  // Abrir modal para crear nueva playlist
+  openCreatePlaylistModal() {
+    this.newPlaylistName.set('');
+    this.newPlaylistIsPublic.set(true);
+    this.showCreatePlaylistModal.set(true);
+  }
+
+  // Cerrar modal de crear playlist
+  closeCreatePlaylistModal() {
+    this.showCreatePlaylistModal.set(false);
+    this.newPlaylistName.set('');
+    this.newPlaylistIsPublic.set(true);
+  }
+
+  // Crear nueva playlist vacía
+  createNewPlaylist() {
+    const name = this.newPlaylistName().trim();
+    
+    if (!name) {
+      this.error.set('El nombre de la playlist es requerido');
+      return;
+    }
+
+    this.creatingNewPlaylist.set(true);
+    
+    this.playlistService.createPlaylist({
+      name_playlist: name,
+      is_public: this.newPlaylistIsPublic()
+    }).subscribe({
+      next: (response: any) => {
+        console.log('Nueva playlist creada:', response);
+        this.creatingNewPlaylist.set(false);
+        this.closeCreatePlaylistModal();
+        this.loadPlaylists(); // Recargar la lista
+        this.error.set(null);
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error('Error creando playlist:', err);
+        this.creatingNewPlaylist.set(false);
+        this.error.set('Error al crear la playlist');
+      }
+    });
+  }
+
   // Abrir modal con las canciones de la playlist
   openPlaylistModal(playlist: Playlist) {
     this.selectedPlaylist.set(playlist);
     this.showPlaylistModal.set(true);
   }
 
-  // Cerrar modal
+  // Cerrar modal de canciones
   closePlaylistModal() {
     this.showPlaylistModal.set(false);
     this.selectedPlaylist.set(null);

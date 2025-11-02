@@ -2,9 +2,12 @@
   --bg0:#0b0f14;          /* fondo principal oscuro */
   --bg1:#0e141b;          /* sutil contraste/hover */
   --border: rgba(255,255,255,.08);
-  --title:#e8eef6;        /* títulos */
-  --muted:#aab4be;        /* meta info */
+  --title:#ffffff;        /* BLANCO PURO */
+  --muted:#f8f9fa;        /* BLANCO MUY CLARO */
   --brand:#ffffff;        /* íconos sobre dark */
+  --text-primary: #ffffff; /* BLANCO PURO */
+  --text-secondary: #e9ecef; /* BLANCO CLARO */
+  --text-muted: #dee2e6;   /* BLANCO GRISÁCEO */
 }
 
 .playlists-section{
@@ -66,7 +69,7 @@
   height: 100%;
   border-radius: 8px;
   background: var(--bg1);
-  color: #cdd6df;
+  color: var(--muted); /* MÁS CLARO */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -121,9 +124,9 @@
   background: rgba(220, 53, 69, 0.8);
 }
 
-/* Texto */
+/* Texto - MEJOR CONTRASTE */
 .playlist-title{
-  color: var(--title);
+  color: var(--title) !important; /* BLANCO PURO */
   font-weight: 700;
   font-size: 0.9rem;
   margin: 0;
@@ -131,17 +134,18 @@
 }
 
 .playlist-desc{
-  color: var(--muted);
+  color: var(--text-secondary) !important; /* BLANCO CLARO */
   font-size: 0.8rem;
   margin: 0.25rem 0;
   line-height: 1.2;
+  opacity: 0.9 !important;
 }
 
 .playlist-meta {
-  color: var(--muted);
+  color: var(--text-muted) !important; /* BLANCO GRISÁCEO */
   font-size: 0.75rem;
   margin: 0;
-  opacity: 0.7;
+  opacity: 0.8 !important;
 }
 
 /* Loader skeleton */
@@ -150,7 +154,7 @@
   aspect-ratio: 1;
   border-radius: 8px;
   display: inline-block;
-  background: linear-gradient(90deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .12), rgba(255, 255, 255, .06));
+  background: linear-gradient(90deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .15), rgba(255, 255, 255, .08));
   background-size: 200% 100%;
   animation: shimmer 1.3s linear infinite;
 }
@@ -168,6 +172,54 @@
 .empty-state {
   max-width: 400px;
   margin: 0 auto;
+}
+
+.empty-state .text-muted {
+  color: var(--text-secondary) !important; /* BLANCO CLARO */
+  opacity: 0.9 !important;
+}
+
+/* Estilos para el empty state con botones */
+.empty-state .btn {
+  min-width: 200px;
+}
+
+/* Asegurar que los botones se vean bien en móviles */
+@media (max-width: 768px) {
+  .empty-state .d-flex {
+    flex-direction: column;
+    gap: 1rem !important;
+  }
+  
+  .empty-state .btn {
+    min-width: auto;
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+/* Botón primario */
+.btn-primary {
+  background: #1db954;
+  border-color: #1db954;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #1ed760;
+  border-color: #1ed760;
+}
+
+/* Botón outline */
+.btn-outline-primary {
+  background: transparent;
+  border-color: #1db954;
+  color: #1db954;
+}
+
+.btn-outline-primary:hover {
+  background: #1db954;
+  color: white;
 }
 
 /* ========== MODAL STYLES ========== */
@@ -222,7 +274,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #cdd6df;
+  color: var(--muted); /* BLANCO MUY CLARO */
   font-size: 3rem;
   border: 1px solid rgba(255, 255, 255, .06);
 }
@@ -232,7 +284,7 @@
 }
 
 .playlist-modal-title {
-  color: var(--title);
+  color: var(--title) !important; /* BLANCO PURO */
   font-size: 2rem;
   font-weight: 700;
   margin: 0 0 0.5rem 0;
@@ -240,15 +292,15 @@
 }
 
 .playlist-modal-desc {
-  color: var(--muted);
+  color: var(--muted) !important; /* BLANCO MUY CLARO */
   font-size: 1rem;
   margin: 0 0 0.5rem 0;
 }
 
 .playlist-modal-meta {
-  color: var(--muted);
+  color: var(--text-secondary) !important; /* BLANCO CLARO */
   font-size: 0.9rem;
-  opacity: 0.8;
+  opacity: 0.9 !important; /* MENOS TRANSPARENTE */
   margin: 0 0 1.5rem 0;
 }
 
@@ -312,7 +364,7 @@
   gap: 1rem;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--border);
-  color: var(--muted);
+  color: var(--text-secondary) !important; /* BLANCO CLARO */
   font-size: 0.9rem;
   font-weight: 500;
   position: sticky;
@@ -343,7 +395,7 @@
 }
 
 .track-index {
-  color: var(--muted);
+  color: var(--text-secondary) !important; /* BLANCO CLARO */
   font-size: 0.9rem;
 }
 
@@ -398,7 +450,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
+  color: var(--muted) !important; /* BLANCO MUY CLARO */
   font-size: 0.9rem;
 }
 
@@ -408,23 +460,23 @@
 }
 
 .track-name {
-  color: var(--title);
+  color: var(--title) !important; /* BLANCO PURO */
   font-weight: 500;
   margin-bottom: 0.25rem;
 }
 
 .track-artist {
-  color: var(--muted);
+  color: var(--text-secondary) !important; /* BLANCO CLARO */
   font-size: 0.85rem;
 }
 
 .track-album {
-  color: var(--muted);
+  color: var(--text-secondary) !important; /* BLANCO CLARO */
   font-size: 0.9rem;
 }
 
 .track-duration {
-  color: var(--muted);
+  color: var(--text-secondary) !important; /* BLANCO CLARO */
   font-size: 0.9rem;
   text-align: right;
 }
@@ -435,55 +487,334 @@
   margin: 2rem;
 }
 
-/* Responsive */
+.empty-tracks .text-muted {
+  color: var(--text-secondary) !important; /* BLANCO CLARO */
+}
+
+/* ========== MODAL CREAR PLAYLIST ========== */
+
+.create-playlist-modal-content {
+  background: var(--bg0);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.create-playlist-modal-header {
+  background: var(--bg1);
+  border-bottom: 1px solid var(--border);
+  padding: 1.5rem;
+}
+
+.create-playlist-modal-header .modal-title {
+  color: #ffffff !important; /* BLANCO PURO */
+  font-weight: 600;
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.create-playlist-modal-body {
+  padding: 1.5rem;
+}
+
+/* Estilos para formularios - TEXTO MÁS BLANCO */
+.form-label {
+  color: #ffffff !important; /* BLANCO PURO */
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+.custom-input {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  color: #ffffff !important; /* BLANCO PURO */
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.custom-input:focus {
+  background: var(--bg1);
+  border-color: #1db954;
+  color: #ffffff !important; /* BLANCO PURO */
+  box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.25);
+  outline: none;
+}
+
+.custom-input::placeholder {
+  color: #aab4be; /* Gris claro para placeholder */
+  opacity: 0.8;
+}
+
+.form-text {
+  color: #e9ecef !important; /* BLANCO CLARO */
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  opacity: 0.9;
+}
+
+/* Opciones de visibilidad - TEXTO MÁS BLANCO */
+.visibility-options {
+  background: var(--bg1);
+  border-radius: 8px;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+}
+
+.form-check {
+  margin-bottom: 0;
+}
+
+.form-check-input {
+  background-color: var(--bg0);
+  border: 1px solid var(--border);
+  width: 1.1em;
+  height: 1.1em;
+  margin-top: 0.1em;
+}
+
+.form-check-input:checked {
+  background-color: #1db954;
+  border-color: #1db954;
+}
+
+.form-check-input:focus {
+  box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.25);
+  border-color: #1db954;
+}
+
+.form-check-label {
+  color: #ffffff !important; /* BLANCO PURO */
+  cursor: pointer;
+  width: 100%;
+  font-weight: 500;
+  font-size: 1rem;
+  padding-left: 0.5rem;
+}
+
+.form-check-label i {
+  color: #1db954; /* Verde para los iconos */
+  font-size: 1.1rem;
+  margin-right: 0.5rem;
+}
+
+.form-check-label small {
+  color: #e9ecef !important; /* BLANCO CLARO */
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  display: block;
+  font-weight: 400;
+  opacity: 0.9;
+}
+
+/* Mejorar el espaciado entre opciones de radio */
+.visibility-options .form-check + .form-check {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Botones del formulario - MÁS VISIBLES */
+.create-playlist-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.create-playlist-actions .btn {
+  padding: 0.75rem 2rem;
+  border-radius: 50px;
+  font-weight: 600;
+  min-width: 140px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-secondary {
+  background: transparent;
+  border: 2px solid #6c757d;
+  color: #ffffff !important; /* BLANCO PURO */
+}
+
+.btn-outline-secondary:hover:not(:disabled) {
+  background: #6c757d;
+  border-color: #6c757d;
+  color: #ffffff !important;
+  transform: translateY(-2px);
+}
+
+.btn-primary {
+  background: #1db954;
+  border: 2px solid #1db954;
+  color: white !important;
+  font-weight: 600;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #1ed760;
+  border-color: #1ed760;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(29, 185, 84, 0.3);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Spinner para loading */
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 2px;
+}
+
+/* Estados de hover mejorados */
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Mejorar el contraste del modal completo */
+.create-playlist-modal-content {
+  background: #0f1419; /* Fondo ligeramente más claro para mejor contraste */
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.create-playlist-modal-header {
+  background: #131a22; /* Fondo del header más definido */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive para el modal de crear playlist */
 @media (max-width: 768px) {
-  .playlists-section {
+  .create-playlist-modal-body {
+    padding: 1.25rem;
+  }
+  
+  .create-playlist-actions {
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+  }
+  
+  .create-playlist-actions .btn {
+    width: 100%;
+    min-width: auto;
+    padding: 0.875rem 1.5rem;
+  }
+  
+  .visibility-options {
     padding: 1rem;
   }
   
-  .modal-header-content {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 1rem;
+  .form-label {
+    font-size: 1.1rem;
   }
   
-  .playlist-cover-modal {
-    width: 150px;
-    height: 150px;
+  .custom-input {
+    font-size: 1.1rem;
+    padding: 0.875rem 1rem;
   }
-  
-  .playlist-modal-title {
-    font-size: 1.5rem;
+}
+
+/* Asegurar que el texto en todo el modal sea visible */
+.create-playlist-modal-body * {
+  color: inherit;
+}
+
+/* Mejorar el focus states para accesibilidad */
+.custom-input:focus,
+.form-check-input:focus,
+.btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.3);
+}
+
+/* Estilos específicos para los iconos en el modal */
+.bi-globe,
+.bi-lock {
+  color: #1db954 !important;
+  opacity: 0.9;
+}
+
+/* Efecto de transición suave para todo el modal */
+.create-playlist-modal-content {
+  animation: modalAppear 0.3s ease-out;
+}
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
   }
-  
-  .tracks-header {
-    grid-template-columns: 40px 1fr 60px;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-  }
-  
-  .track-item {
-    grid-template-columns: 40px 1fr 60px;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-  }
-  
-  .track-album {
-    display: none;
-  }
-  
-  .playlist-modal-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-  
-  .play-all-btn, .btn-outline {
-    width: 100%;
-    justify-content: center;
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
 }
 
 .btn-close-white {
   filter: invert(1) grayscale(100%) brightness(200%);
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.btn-close-white:hover {
+  opacity: 1;
+}
+
+/* Alertas con mejor contraste */
+.alert {
+  border: 1px solid;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.alert-danger {
+  background: rgba(220, 53, 69, 0.1);
+  border-color: rgba(220, 53, 69, 0.3);
+  color: #ffffff !important; /* BLANCO PURO */
+}
+
+.alert-info {
+  background: rgba(13, 110, 253, 0.1);
+  border-color: rgba(13, 110, 253, 0.3);
+  color: #ffffff !important; /* BLANCO PURO */
+}
+
+.text-muted {
+  color: var(--text-secondary) !important; /* SOBREESCRIBIR BOOTSTRAP */
+  opacity: 0.9 !important;
+}
+
+/* REGLAS AGREGADAS PARA MEJORAR CONTRASTE */
+.playlists-section .h2,
+.playlists-section h1,
+.playlists-section h2,
+.playlists-section h3,
+.playlists-section h4,
+.playlists-section h5,
+.playlists-section h6 {
+  color: var(--title) !important;
+}
+
+.playlists-section p:not(.btn):not(.form-control) {
+  color: var(--text-secondary) !important;
+  opacity: 0.9 !important;
+}
+
+.empty-state h3,
+.empty-state h4 {
+  color: var(--title) !important;
+}
+
+.empty-state p {
+  color: var(--text-secondary) !important;
+  opacity: 0.9 !important;
 }
