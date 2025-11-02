@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RandomTrackService, Song } from '../../services/random-track.service';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
@@ -38,9 +38,11 @@ export class AutoPlaylistsComponent implements OnInit {
   popularPlaylistPage = signal(0);
   popularPlaylistMaxPages = signal(3); // 3 páginas × 6 canciones = 18 canciones
 
+  // Servicio inyectado para guardado instantáneo
+  private playlistService = inject(PlaylistService);
+
   constructor(
-    private randomTrackService: RandomTrackService,
-    private playlistService: PlaylistService
+    private randomTrackService: RandomTrackService
   ) {}
 
   ngOnInit(): void {
@@ -212,26 +214,100 @@ export class AutoPlaylistsComponent implements OnInit {
     }
   }
 
+  // ========== MÉTODOS NUEVOS PARA GUARDADO INSTANTÁNEO ==========
+  
+  // Método modificado para guardar playlist con canciones
   saveAsPlaylist(playlist: AutoPlaylist, event: Event) {
     event.stopPropagation();
+    
+    // Verificar si ya está guardada
+    if (this.isPlaylistSaved(playlist.name)) {
+      console.log('Playlist ya guardada:', playlist.name);
+      return;
+    }
+
+    // Marcar como guardando instantáneamente
     this.creatingPlaylist.set(playlist.name);
 
-    this.playlistService.createPlaylist({
+    // Preparar datos con las canciones
+    const playlistData = {
       name_playlist: playlist.name,
-      is_public: true
-    }).subscribe({
+      is_public: true,
+      songs: playlist.songs.map(song => ({
+        id: song.id,
+        name_song: song.name_song,
+        artist_song: song.artist_song,
+        album_song: song.album_song || '',
+        art_work_song: song.art_work_song || '',
+        genre_song: song.genre_song || '',
+        url_song: song.url_song || '' // Añadir url_song si existe
+      }))
+    };
+
+    console.log('Enviando playlist con canciones:', playlistData);
+
+    // Simulación de guardado instantáneo
+    setTimeout(() => {
+      console.log('Playlist guardada instantáneamente:', playlist.name);
+    }, 0);
+
+    // Llamada real al servidor (en segundo plano)
+    this.playlistService.createPlaylist(playlistData).subscribe({
       next: (response: any) => {
-        console.log('Playlist creada:', response);
+        console.log('Playlist confirmada en servidor:', response);
         this.creatingPlaylist.set(null);
         this.error.set(null);
       },
       error: (err: HttpErrorResponse) => {
         console.error('Error creando playlist:', err);
         this.creatingPlaylist.set(null);
-        this.error.set('Error al crear la playlist');
+        this.error.set('Error al sincronizar la playlist');
       }
     });
   }
+
+  // Verificar si una playlist ya está guardada
+  isPlaylistSaved(playlistName: string): boolean {
+    // Usamos el servicio para verificar el estado
+    return this.playlistService.isPlaylistSaved(playlistName);
+  }
+
+  // Obtener el estado de guardado de una playlist
+  getPlaylistSaveState(playlistName: string): string {
+    if (this.creatingPlaylist() === playlistName) {
+      return 'saving';
+    }
+    return this.playlistService.isPlaylistSaved(playlistName) ? 'saved' : 'unsaved';
+  }
+
+  // Modificar el template para usar el estado de guardado
+  getSaveButtonIcon(playlistName: string): string {
+    const state = this.getPlaylistSaveState(playlistName);
+    
+    switch (state) {
+      case 'saving':
+        return 'bi-arrow-repeat loading';
+      case 'saved':
+        return 'bi-check-circle-fill';
+      default:
+        return 'bi-plus-circle';
+    }
+  }
+
+  getSaveButtonText(playlistName: string): string {
+    const state = this.getPlaylistSaveState(playlistName);
+    
+    switch (state) {
+      case 'saving':
+        return 'Guardando...';
+      case 'saved':
+        return 'Guardada';
+      default:
+        return 'Guardar Playlist';
+    }
+  }
+
+  // ========== FIN MÉTODOS NUEVOS ==========
 
   // Reproducir canción individual
   playSong(song: Song, event: Event) {
