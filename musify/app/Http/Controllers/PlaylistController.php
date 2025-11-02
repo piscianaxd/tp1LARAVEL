@@ -12,6 +12,64 @@ use Illuminate\Support\Facades\DB;
 
 class PlaylistController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/api/playlists",
+     *     summary="Obtener todas las playlists del usuario",
+     *     description="Retorna todas las playlists del usuario autenticado con sus canciones",
+     *     operationId="getPlaylists",
+     *     tags={"Playlists"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de playlists obtenida exitosamente",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name_playlist", type="string", example="Mi Playlist Favorita"),
+     *                 @OA\Property(property="is_public", type="boolean", example=true),
+     *                 @OA\Property(property="user_id", type="integer", example=1),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time"),
+     *                 @OA\Property(
+     *                     property="songs",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="playlist_id", type="integer", example=1),
+     *                         @OA\Property(property="songs_saved_db_id", type="integer", example=1),
+     *                         @OA\Property(
+     *                             property="song",
+     *                             @OA\Property(property="id", type="integer", example=1),
+     *                             @OA\Property(property="name_song", type="string", example="Bohemian Rhapsody"),
+     *                             @OA\Property(property="artist_song", type="string", example="Queen"),
+     *                             @OA\Property(property="album_song", type="string", example="A Night at the Opera"),
+     *                             @OA\Property(property="art_work_song", type="string", example="https://example.com/cover.jpg"),
+     *                             @OA\Property(property="genre_song", type="string", example="Rock"),
+     *                             @OA\Property(property="url_song", type="string", example="https://example.com/song.mp3")
+     *                         )
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error del servidor",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Error retrieving playlists")
+     *         )
+     *     )
+     * )
+     */
     public function index(Request $request)
     {
         Log::info('🎵 ========== PLAYLIST INDEX START ==========');
@@ -42,6 +100,75 @@ class PlaylistController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/playlists",
+     *     summary="Crear una nueva playlist",
+     *     description="Crea una nueva playlist para el usuario autenticado",
+     *     operationId="createPlaylist",
+     *     tags={"Playlists"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Datos de la playlist y canciones opcionales",
+     *         @OA\JsonContent(
+     *             required={"name_playlist","is_public"},
+     *             @OA\Property(property="name_playlist", type="string", example="Mi Nueva Playlist", maxLength=255),
+     *             @OA\Property(property="is_public", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="songs",
+     *                 type="array",
+     *                 description="Lista opcional de canciones para agregar a la playlist",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=1, description="ID de la canción (opcional)"),
+     *                     @OA\Property(property="name_song", type="string", example="Bohemian Rhapsody"),
+     *                     @OA\Property(property="artist_song", type="string", example="Queen"),
+     *                     @OA\Property(property="album_song", type="string", example="A Night at the Opera"),
+     *                     @OA\Property(property="art_work_song", type="string", example="https://example.com/cover.jpg"),
+     *                     @OA\Property(property="genre_song", type="string", example="Rock"),
+     *                     @OA\Property(property="url_song", type="string", example="https://example.com/song.mp3")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Playlist creada exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Playlist creada exitosamente"),
+     *             @OA\Property(
+     *                 property="playlist",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name_playlist", type="string", example="Mi Nueva Playlist"),
+     *                 @OA\Property(property="is_public", type="boolean", example=true),
+     *                 @OA\Property(property="user_id", type="integer", example=1),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time"),
+     *                 @OA\Property(
+     *                     property="songs",
+     *                     type="array",
+     *                     @OA\Items()
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error de validación",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="name_playlist", type="array", @OA\Items(type="string", example="El campo name playlist es obligatorio."))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error del servidor",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Internal server error")
+     *         )
+     *     )
+     * )
+     */
     public function store(Request $request)
     {
         Log::info('🎵 ========== PLAYLIST STORE START ==========');
@@ -157,6 +284,44 @@ class PlaylistController extends Controller
         }
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/api/playlists/{id}",
+     *     summary="Eliminar una playlist",
+     *     description="Elimina una playlist específica del usuario autenticado",
+     *     operationId="deletePlaylist",
+     *     tags={"Playlists"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID de la playlist a eliminar",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Playlist eliminada exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Playlist eliminada exitosamente")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Playlist no encontrada",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="No query results for model [App\\Models\\Playlist]")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error del servidor",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Error eliminando playlist")
+     *         )
+     *     )
+     * )
+     */
     public function destroy(Request $request, $id)
     {
         Log::info('🎵 ========== PLAYLIST DESTROY START ==========');
@@ -198,7 +363,71 @@ class PlaylistController extends Controller
     }
 
     /**
-     * Agregar canciones a una playlist existente
+     * @OA\Post(
+     *     path="/api/playlists/{playlistId}/songs",
+     *     summary="Agregar canciones a una playlist existente",
+     *     description="Agrega una o más canciones a una playlist existente del usuario",
+     *     operationId="addSongsToPlaylist",
+     *     tags={"Playlists"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="playlistId",
+     *         in="path",
+     *         required=true,
+     *         description="ID de la playlist a la que se agregarán las canciones",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Lista de canciones a agregar",
+     *         @OA\JsonContent(
+     *             required={"songs"},
+     *             @OA\Property(
+     *                 property="songs",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     required={"name_song","artist_song"},
+     *                     @OA\Property(property="id", type="integer", example=1, description="ID de la canción (opcional)"),
+     *                     @OA\Property(property="name_song", type="string", example="Bohemian Rhapsody"),
+     *                     @OA\Property(property="artist_song", type="string", example="Queen"),
+     *                     @OA\Property(property="album_song", type="string", example="A Night at the Opera"),
+     *                     @OA\Property(property="art_work_song", type="string", example="https://example.com/cover.jpg"),
+     *                     @OA\Property(property="genre_song", type="string", example="Rock"),
+     *                     @OA\Property(property="url_song", type="string", example="https://example.com/song.mp3")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Canciones agregadas exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Canciones agregadas exitosamente"),
+     *             @OA\Property(property="added_count", type="integer", example=3)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Playlist no encontrada",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="No query results for model [App\\Models\\Playlist]")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error de validación",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="songs", type="array", @OA\Items(type="string", example="El campo songs es obligatorio."))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error del servidor",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Error agregando canciones")
+     *         )
+     *     )
+     * )
      */
     public function addSongs(Request $request, $playlistId)
     {
