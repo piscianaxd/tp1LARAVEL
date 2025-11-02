@@ -58,6 +58,40 @@ class SongsController extends Controller
         );
     }
 
+    //Agregado por Lucas 1/11/25
+  public function getSongsByGenre($genre)
+{
+    try {
+        // Filtra canciones por género (insensible a mayúsculas/minúsculas)
+        $songs = SongSavedDb::whereRaw('LOWER(genre_song) = ?', [strtolower($genre)])
+            ->inRandomOrder() // Mezcla aleatoriamente
+            ->limit(6)         // Solo 6 canciones
+            ->get();
+
+        if ($songs->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se encontraron canciones para el género especificado.',
+                'songs' => []
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Canciones obtenidas correctamente.',
+            'songs' => $songs
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al obtener canciones.',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+
  /**
      * @OA\Post(
      *     path="/api/songs",
