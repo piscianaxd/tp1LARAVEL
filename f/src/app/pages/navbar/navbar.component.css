@@ -1,4 +1,6 @@
-/* Agrega esto para el contexto del dashboard */
+/* navbar.component.css - VERSIÓN CORREGIDA */
+
+/* ELIMINA estas líneas que estaban causando problemas: */
 :host-context(.dashboard) .search-results-container,
 :host-context(app-dashboard) .search-results-container {
   z-index: 9999 !important;
@@ -8,7 +10,9 @@
 /* Asegura que el navbar tenga un z-index adecuado */
 .navbar {
   z-index: 1000;
-  position: relative;
+  position: sticky !important; /* ✅ CAMBIADO de relative a sticky */
+  top: 0; /* ✅ AGREGADO: Se pega al top cuando haces scroll */
+  width: 100%;
 }
 
 /* El contenedor de búsqueda necesita un stacking context */
@@ -48,12 +52,18 @@
   background: rgba(52, 58, 64, 0.75);
   padding: 10px 15px;
   transition: all 0.3s ease;
+  color: white !important; /* ✅ AGREGADO: Texto blanco para contraste */
+}
+
+.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important; /* ✅ AGREGADO: Placeholder visible */
 }
 
 .form-control:focus {
   background: rgba(52, 58, 64, 0.75);
   box-shadow: none;
   outline: none;
+  color: white !important;
 }
 
 .btn-outline-secondary {
@@ -68,6 +78,8 @@
   color: white;
 }
 
+/* ELIMINA o COMENTA estas reglas que no se usan: */
+/*
 .search-results-card {
   background: white;
   border-radius: 12px;
@@ -91,6 +103,7 @@
 .results-loading i {
   margin-right: 8px;
 }
+*/
 
 /* Información de usuario */
 .user-info {
@@ -157,7 +170,8 @@
   }
 }
 
-/* Animaciones */
+/* ELIMINA o COMENTA estas animaciones que no se usan: */
+/*
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -173,7 +187,6 @@
   animation: slideDown 0.3s ease;
 }
 
-/* Scrollbar personalizado para resultados */
 .search-results-card::-webkit-scrollbar {
   width: 6px;
 }
@@ -191,3 +204,4 @@
 .search-results-card::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
+*/
