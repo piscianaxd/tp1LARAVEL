@@ -58,6 +58,40 @@ class SongsController extends Controller
         );
     }
 
+    //Agregado por Lucas 1/11/25
+  public function getSongsByGenre($genre)
+{
+    try {
+        // Filtra canciones por género (insensible a mayúsculas/minúsculas)
+        $songs = SongSavedDb::whereRaw('LOWER(genre_song) = ?', [strtolower($genre)])
+            ->inRandomOrder() // Mezcla aleatoriamente
+            ->limit(6)         // Solo 6 canciones
+            ->get();
+
+        if ($songs->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se encontraron canciones para el género especificado.',
+                'songs' => []
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Canciones obtenidas correctamente.',
+            'songs' => $songs
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al obtener canciones.',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+
  /**
      * @OA\Post(
      *     path="/api/songs",
@@ -134,75 +168,81 @@ class SongsController extends Controller
 
     /**
      * @OA\Get(
-     *   path="/api/songs/{id}",
-     *   summary="Obtener detalles de una canción por ID",
-     *   security={{"bearerAuth":{}}},
-     *   tags={"Songs"},
-     *
-     *   @OA\Parameter(
-     *     name="id",
-     *     in="path",
-     *     description="ID de la canción",
-     *     required=true,
-     *     @OA\Schema(type="integer")
-     *   ),
-     *
-     *   @OA\Response(
-     *     response=200,
-     *     description="Detalles de la canción obtenidos correctamente",
-     *     @OA\JsonContent(
-     *       @OA\Property(property="status", type="string", example="success"),
-     *       @OA\Property(
-     *         property="song",
-     *         type="object",
-     *         @OA\Property(property="id", type="integer", example=1),
-     *         @OA\Property(property="url_song", type="string", format="url", example="https://example.com/song.mp3"),
-     *         @OA\Property(property="name_song", type="string", example="Nombre de la canción"),
-     *         @OA\Property(property="genre_song", type="string", example="Género de la canción"),
-     *         @OA\Property(property="artist_song", type="string", example="Artista de la canción"),
-     *         @OA\Property(property="album_song", type="string", example="Álbum de la canción"),
-     *         @OA\Property(property="art_work_song", type="string", format="url", example="https://example.com/artwork.jpg"),
-     *         @OA\Property(property="created_at", type="string", format="date-time", example="2023-10-01T12:00:00Z"),
-     *         @OA\Property(property="updated_at", type="string", format="date-time", example="2023-10-01T12:00:00Z")
-     *       )
-     *     )
-     *   ),
-     *
-     *   @OA\Response(
-     *     response=401,
-     *     description="No autorizado - Token ausente o inválido",
-     *     @OA\JsonContent(
-     *       @OA\Property(property="error", type="string", example="No autenticado o token inválido")
-     *     )
-     *   ),
-     *
-     *   @OA\Response(
-     *     response=404,
-     *     description="Canción no encontrada",
-     *     @OA\JsonContent(
-     *       @OA\Property(property="status", type="string", example="error"),
-     *       @OA\Property(property="message", type="string", example="Canción no encontrada.")
-     *     )
-     *   )
+     *     path="/api/songs/random/{limit}",
+     *     summary="Obtener canciones aleatorias",
+     *     tags={"Songs"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="path",
+     *         description="Número de canciones aleatorias a obtener",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de canciones aleatorias obtenida correctamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="count", type="integer", example=6),
+     *             @OA\Property(property="min_id", type="integer", example=1),
+     *             @OA\Property(property="max_id", type="integer", example=150),
+     *             @OA\Property(
+     *                 property="songs",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="url_song", type="string", example="https://example.com/song.mp3"),
+     *                     @OA\Property(property="name_song", type="string", example="Nombre de la canción"),
+     *                     @OA\Property(property="genre_song", type="string", example="Rock"),
+     *                     @OA\Property(property="artist_song", type="string", example="Artista X"),
+     *                     @OA\Property(property="album_song", type="string", example="Álbum Y"),
+     *                     @OA\Property(property="art_work_song", type="string", example="https://example.com/artwork.jpg"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-10-03T20:30:00Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-10-03T20:30:00Z")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="No autenticado"),
+     *     @OA\Response(response=404, description="No se encontraron canciones")
      * )
      */
-
-
-    public function show(string $id)
+    public function getRandomSongs($limit = 6)
     {
-        $song = SongSavedDB::find($id);
-
-        if (!$song) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Canción no encontrada.'
-            ], 404, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        // Forzar que empiece desde ID 1
+        $minId = 1;
+        $maxId = SongSavedDB::max('id');
+        
+        // Si no hay canciones o el máximo ID es menor que 1
+        if (is_null($maxId) || $maxId < 1) {
+            return response()->json(
+                [
+                    'status' => 'success',
+                    'count' => 0,
+                    'min_id' => 1,
+                    'max_id' => 0,
+                    'message' => 'No hay canciones en la base de datos',
+                    'songs' => []
+                ],
+                200,
+                [],
+                JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
+            );
         }
+
+        $randomSongs = SongSavedDB::whereBetween('id', [$minId, $maxId])
+                                ->inRandomOrder()
+                                ->limit($limit)
+                                ->get();
 
         return response()->json(
             [
                 'status' => 'success',
-                'song'   => $song
+                'count' => $randomSongs->count(),
+                'min_id' => $minId,
+                'max_id' => $maxId,
+                'songs' => $randomSongs
             ],
             200,
             [],
@@ -210,3 +250,5 @@ class SongsController extends Controller
         );
     }
 }
+
+

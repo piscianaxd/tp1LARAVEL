@@ -1,0 +1,260 @@
+<!-- Vista principal de playlists (siempre presente, pero oculta cuando hay detalle) -->
+<section class="auto-playlists-section" [class.d-none]="showPlaylistDetail()">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="h3 fw-bold mb-0">Cargas para tí</h2>
+    </div>
+    <button class="round-btn" (click)="generateAutoPlaylists()" title="Regenerar playlists">
+      <i class="bi bi-arrow-clockwise"></i>
+    </button>
+  </div>
+
+  <!-- Loader -->
+  <div *ngIf="loading()" class="row g-4">
+    <div class="col-6 col-md-4 col-lg-3 col-xl-2" *ngFor="let _ of [0,1,2,3,4,5,6,7]">
+      <div class="playlist-card">
+        <div class="sk-cover-square mb-3"></div>
+        <div class="placeholder-glow mb-2">
+          <span class="placeholder col-10"></span>
+        </div>
+        <div class="placeholder-glow">
+          <span class="placeholder col-7"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="!loading() && error()" class="alert alert-danger mt-3">
+    {{ error() }}
+  </div>
+
+  <!-- Mix Popular (Persistente con paginación) -->
+  <div *ngIf="!loading() && popularPlaylist()" class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h3 class="h4 fw-bold mb-0">Mix de Populares</h3>
+        <p class="text-muted mb-0">Las canciones más populares</p>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="round-btn" (click)="playPopularPlaylist()" title="Reproducir todo">
+          <i class="bi bi-play-fill"></i>
+        </button>
+        <button class="round-btn" 
+                (click)="prevPopularPage()" 
+                [disabled]="!canGoPrevPopular()" 
+                title="Anterior">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button class="round-btn" 
+                (click)="nextPopularPage()" 
+                [disabled]="!canGoNextPopular()" 
+                title="Siguiente">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-6 col-md-4 col-lg-3 col-xl-2" *ngFor="let song of getCurrentPopularSongs()">
+        <div class="playlist-card" (click)="openPopularPlaylist()">
+          <div class="cover-wrap-square">
+            <ng-container *ngIf="getPopularCoverImage() && !noImg.has(song.id); else iconFallback">
+              <img
+                [src]="(song.art_work_song | mediaUrl) + bust(song.id)"
+                [alt]="song.name_song"
+                class="cover-img-square"
+                loading="lazy"
+                (error)="onImgError($event, song)"
+              />
+            </ng-container>
+
+            <ng-template #iconFallback>
+              <div class="cover-fallback-square">
+                <i class="bi bi-music-note-beamed"></i>
+              </div>
+            </ng-template>
+
+            <div class="playlist-overlay">
+              <button class="overlay-btn-square play" 
+                      (click)="playPopularPlaylist($event)" 
+                      title="Reproducir playlist">
+                <i class="bi bi-play-fill"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="playlist-card-info">
+            <h3 class="playlist-title text-truncate" [title]="song.name_song">
+              {{ song.name_song }}
+            </h3>
+            <p class="playlist-desc text-truncate" [title]="song.artist_song">
+              {{ song.artist_song }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Playlists por género (Regenerables) -->
+  <div *ngIf="!loading() && !error() && playlists().length > 0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h3 class="h4 fw-bold mb-0">Descubrí nuevas playlists</h3>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-6 col-md-4 col-lg-3 col-xl-2" *ngFor="let playlist of playlists()">
+        <div class="playlist-card" (click)="openPlaylist(playlist)">
+          <div class="cover-wrap-square">
+            <ng-container *ngIf="getCoverImage(playlist); else iconFallback">
+              <img
+                [src]="(getCoverImage(playlist) | mediaUrl) + bust(playlist.songs[0]?.id || 0)"
+                [alt]="playlist.name"
+                class="cover-img-square"
+                loading="lazy"
+                (error)="playlist.songs[0] && onImgError($event, playlist.songs[0])"
+              />
+            </ng-container>
+
+            <ng-template #iconFallback>
+              <div class="cover-fallback-square">
+                <i class="bi bi-collection-play"></i>
+              </div>
+            </ng-template>
+
+            <div class="playlist-overlay">
+              <button class="overlay-btn-square play" 
+                      (click)="playPlaylist(playlist, $event)" 
+                      title="Reproducir playlist">
+                <i class="bi bi-play-fill"></i>
+              </button>
+              <button class="overlay-btn-square save" 
+                      (click)="saveAsPlaylist(playlist, $event)" 
+                      [disabled]="getPlaylistSaveState(playlist.name) === 'saving' || getPlaylistSaveState(playlist.name) === 'saved'"
+                      [title]="getPlaylistSaveState(playlist.name) === 'saved' ? 'Ya guardada' : 'Guardar como playlist'"
+                      [class.saved]="getPlaylistSaveState(playlist.name) === 'saved'">
+                <i class="bi" 
+                   [class]="getSaveButtonIcon(playlist.name)"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="playlist-card-info">
+            <h3 class="playlist-title text-truncate" [title]="playlist.name">
+              {{ playlist.name }}
+            </h3>
+            <p class="playlist-desc text-truncate" [title]="playlist.description">
+              {{ playlist.description }}
+            </p>
+            <p class="playlist-meta">
+              {{ getSongCount(playlist) }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty -->
+  <div *ngIf="!loading() && !error() && playlists().length === 0" class="alert alert-info mt-3">
+    No se pudieron generar playlists automáticas.
+  </div>
+</section>
+
+<!-- Vista detallada de playlist (superpuesta) -->
+<section class="playlist-detail-section" *ngIf="showPlaylistDetail() && selectedPlaylist()">
+  <div class="playlist-detail-header">
+    <button class="back-btn" (click)="closePlaylist()" title="Volver">
+      <i class="bi bi-arrow-left"></i>
+    </button>
+    
+    <div class="playlist-header-content">
+      <div class="playlist-cover-large">
+        <img
+          [src]="(getCoverImage(selectedPlaylist()!) | mediaUrl) + bust(selectedPlaylist()!.songs[0]?.id || 0)"
+          [alt]="selectedPlaylist()!.name"
+          class="cover-img-large"
+          (error)="selectedPlaylist()!.songs[0] && onImgError($event, selectedPlaylist()!.songs[0])"
+        />
+        <div class="cover-fallback-large" *ngIf="!getCoverImage(selectedPlaylist()!)">
+          <i class="bi bi-collection-play"></i>
+        </div>
+      </div>
+      
+      <div class="playlist-header-info">
+        <h1 class="playlist-detail-title">{{ selectedPlaylist()!.name }}</h1>
+        <p class="playlist-detail-desc">{{ selectedPlaylist()!.description }}</p>
+        <p class="playlist-detail-meta">
+          {{ getSongCount(selectedPlaylist()!) }} • Playlist generada automáticamente
+        </p>
+        
+        <div class="playlist-header-actions">
+          <button class="play-all-btn" (click)="playPlaylist(selectedPlaylist()!)">
+            <i class="bi bi-play-fill"></i>
+            Reproducir
+          </button>
+          <button class="save-playlist-btn" 
+                  (click)="saveAsPlaylist(selectedPlaylist()!, $event)"
+                  [disabled]="getPlaylistSaveState(selectedPlaylist()!.name) === 'saving' || getPlaylistSaveState(selectedPlaylist()!.name) === 'saved'"
+                  [class.saved]="getPlaylistSaveState(selectedPlaylist()!.name) === 'saved'">
+            <i class="bi" 
+               [class]="getSaveButtonIcon(selectedPlaylist()!.name)"></i>
+            {{ getSaveButtonText(selectedPlaylist()!.name) }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="playlist-tracks-container">
+    <div class="tracks-header">
+      <span class="track-number">#</span>
+      <span class="track-title-header">Título</span>
+      <span class="track-album">Álbum</span>
+      <span class="track-duration">Duración</span>
+    </div>
+
+    <div class="tracks-list">
+      <div class="track-item" 
+           *ngFor="let song of selectedPlaylist()!.songs; let i = index"
+           (click)="playSong(song, $event)">
+        <div class="track-number">
+          <span class="track-index">{{ i + 1 }}</span>
+          <button class="track-play-btn" (click)="playSong(song, $event)">
+            <i class="bi bi-play-fill"></i>
+          </button>
+        </div>
+        
+        <div class="track-info">
+          <div class="track-cover-small">
+            <img
+              [src]="(song.art_work_song | mediaUrl) + bust(song.id)"
+              [alt]="song.name_song"
+              class="cover-img-small"
+              (error)="onImgError($event, song)"
+            />
+            <div class="cover-fallback-small" *ngIf="noImg.has(song.id)">
+              <i class="bi bi-music-note-beamed"></i>
+            </div>
+          </div>
+          
+          <div class="track-details">
+            <span class="track-name">{{ song.name_song }}</span>
+            <span class="track-artist">{{ song.artist_song }}</span>
+          </div>
+        </div>
+        
+        <div class="track-album">
+          {{ song.album_song }}
+        </div>
+        
+        <div class="track-duration">
+          {{ formatDuration(180) }}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,7 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
+import { Track } from '../models/track/track.model'; // ← modelo base reproducible
 
+export interface HistoryTrack extends Track {
+  historyId: number;
+  playedAt: Date;
+  genre?: string;
+}
+
+/** DTOs que vienen del backend */
 export interface HistoryItemDto {
   historial_id: number;
   fecha: string; // "YYYY-MM-DD HH:mm:ss"
@@ -21,45 +29,44 @@ export interface HistoryResponse {
   data: HistoryItemDto[];
 }
 
-export interface Track {
-  historyId: number;
-  playedAt: Date;
-  id: number;
-  title: string;
-  artist: string;
-  album: string;
-  genre: string;
-  url: string;
-  artwork: string;
-}
-
 @Injectable({ providedIn: 'root' })
 export class HistoryService {
-  private API = 'http://localhost:8000/api'; 
+  // Sugerencia: mover a environment y/o usar proxy /api
+  private API = 'http://localhost:8000/api';
 
   constructor(private http: HttpClient) {}
 
-  getHistory(): Observable<Track[]> {
+  /** Mapea un item del back a HistoryTrack (extiende de Track base) */
+  private toHistoryTrack(it: HistoryItemDto): HistoryTrack {
+    // Fecha robusta: reemplazamos espacio por 'T' para Date ISO-like
+    const playedAt = new Date((it.fecha || '').replace(' ', 'T'));
+    return {
+      historyId: it.historial_id,
+      playedAt: isNaN(playedAt.getTime()) ? new Date() : playedAt,
+      id: it.cancion.id,
+      title: it.cancion.nombre,
+      artist: it.cancion.artista,
+      album: it.cancion.album,
+      artwork: it.cancion.artwork, // e.g. /media/artworks/...
+      url: it.cancion.url,         // e.g. /media/audio/...
+      genre: it.cancion.genero,
+    };
+  }
+
+  /** Lista completa (ordenada desc por el back) */
+  getHistory(): Observable<HistoryTrack[]> {
     return this.http.get<HistoryResponse>(`${this.API}/history`).pipe(
-      map(res => (res.data ?? []).map(it => ({
-        historyId: it.historial_id,
-        playedAt: new Date(it.fecha.replace(' ', 'T')),
-        id: it.cancion.id,
-        title: it.cancion.nombre,
-        artist: it.cancion.artista,
-        album: it.cancion.album,
-        genre: it.cancion.genero,
-        url: it.cancion.url,
-        artwork: it.cancion.artwork
-      })))
+      map(res => (res.data ?? []).map(this.toHistoryTrack.bind(this)))
     );
   }
 
-  addToHistory(songId: number) {
-    return this.http.post(`${this.API}/history`, { song_id: songId });
+  /** Agrega una canción reproducida al historial */
+  addToHistory(songId: number): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.API}/history`, { song_id: songId });
   }
 
-  deleteFromHistory(historyId: number) {
-    return this.http.delete(`${this.API}/history/${historyId}`);
+  /** Elimina una entrada específica del historial */
+  deleteFromHistory(historyId: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.API}/history/${historyId}`);
   }
 }

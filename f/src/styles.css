@@ -34,12 +34,7 @@ html, body{
 /* Cards/“paneles” oscuros */
 .card,
 .recent-section,
-.panel {
-  background: var(--bg1) !important;
-  color: var(--txt);
-  border: 1px solid var(--line) !important;
-  border-radius: 16px;
-}
+
 
 /* Listas */
 .list-group-item{
@@ -161,3 +156,5 @@ button:hover{ background: #2a2a2a; }
 @media (prefers-color-scheme: dark){
   :root{ color-scheme: dark; }
 }
+
+.main-shell{ padding-bottom: 96px; } /* altura de la barra aprox. */
