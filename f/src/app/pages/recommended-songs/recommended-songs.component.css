@@ -1,0 +1,428 @@
+.recommendations-container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.section-title {
+    color: var(--title);
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+/* Loading, Error, No History */
+.loading,
+.error,
+.no-history {
+    text-align: center;
+    padding: 2rem;
+}
+
+.no-history-content {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.music-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.explore-btn {
+    background: var(--brand);
+    color: var(--bg0);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1rem;
+}
+
+/* Recomendaciones section */
+.recommendations-section {
+    margin-top: 2rem;
+}
+
+.recommendations-subtitle {
+    text-align: center;
+    color: var(--muted);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+/* Layout horizontal con flechas */
+.recommendations-carousel {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0 auto;
+    max-width: 90%;
+}
+
+.circular-recommendations {
+    display: flex;
+    gap: 2rem;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 1rem 0.5rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    flex: 1;
+}
+
+.circular-recommendations::-webkit-scrollbar {
+    display: none;
+}
+
+/* Flechas de navegación */
+.nav-arrow {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--bg0);
+    color: var(--brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    z-index: 2;
+}
+
+.nav-arrow:hover:not(:disabled) {
+    background: var(--bg1);
+    border-color: var(--brand);
+    transform: scale(1.1);
+}
+
+.nav-arrow:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.nav-arrow i {
+    font-size: 1.2rem;
+}
+
+/* CÍRCULOS - IMAGEN OCUPA TODO EL ESPACIO */
+.song-circle {
+    position: relative;
+    width: 180px;
+    /* Un poco más grande para mejor distribución */
+    height: 220px;
+    /* Más alto para incluir texto */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    /* Sin borde en el contenedor principal */
+    background: transparent;
+    /* Fondo transparente */
+    overflow: visible;
+    /* Permitir que el texto se vea */
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    /* Espacio entre imagen y texto */
+}
+
+/* CONTENEDOR DE IMAGEN - OCUPA TODO EL CÍRCULO */
+.image-container {
+    width: 160px;
+    /* Más grande para ocupar más espacio */
+    height: 160px;
+    /* Mismo ancho y alto para círculo perfecto */
+    border-radius: 50%;
+    /* Círculo perfecto */
+    overflow: hidden;
+    background: var(--bg1);
+    /* Fondo fijo por si la imagen falla */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid transparent;
+    /* Borde en el contenedor de imagen */
+    transition: all 0.3s ease;
+}
+
+/* IMAGEN QUE OCUPA TODO EL CÍRCULO */
+.circle-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Asegura que la imagen cubra todo el círculo */
+    display: block;
+}
+
+/* Fallback para imágenes que no cargan */
+.image-fallback {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--bg1);
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    /* Ícono más grande */
+}
+
+/* TEXTO MEJORADO - SIEMPRE VISIBLE */
+.song-text {
+    text-align: center;
+    width: 100%;
+    padding: 0 0.25rem;
+}
+
+.song-title {
+    display: block;
+    font-size: 0.9rem;
+    /* Un poco más grande */
+    font-weight: 600;
+    color: var(--title);
+    margin-bottom: 0.2rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.song-artist {
+    display: block;
+    font-size: 0.8rem;
+    /* Un poco más grande */
+    color: var(--muted);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.song-genre {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--brand);
+    margin-top: 0.1rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Efectos hover en el círculo de imagen */
+.song-circle:hover .image-container {
+    transform: scale(1.05);
+    border-color: var(--brand);
+}
+
+.song-circle.selected .image-container {
+    border-color: var(--brand);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+.song-circle.playing .image-container {
+    border-color: #00ff88;
+    box-shadow: 0 0 25px rgba(0, 255, 136, 0.3);
+}
+
+/* Playing indicator - ahora sobre la imagen */
+.playing-indicator {
+    position: absolute;
+    top: 50px;
+    /* Centrado en la imagen */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+}
+
+.playing-animation {
+    display: flex;
+    align-items: end;
+    gap: 2px;
+    height: 20px;
+}
+
+.playing-animation.playing span {
+    display: inline-block;
+    width: 3px;
+    background: #00ff88;
+    border-radius: 2px;
+    animation: bounce 1.2s infinite ease-in-out;
+}
+
+.playing-animation.playing span:nth-child(1) {
+    height: 8px;
+    animation-delay: -0.32s;
+}
+
+.playing-animation.playing span:nth-child(2) {
+    height: 12px;
+    animation-delay: -0.16s;
+}
+
+.playing-animation.playing span:nth-child(3) {
+    height: 16px;
+    animation-delay: 0s;
+}
+
+@keyframes bounce {
+
+    0%,
+    80%,
+    100% {
+        transform: scaleY(0.6);
+    }
+
+    40% {
+        transform: scaleY(1);
+    }
+}
+
+/* Debug section */
+.debug-section {
+    margin-top: 3rem;
+    padding: 1.5rem;
+    background: var(--bg1);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+.debug-controls h4 {
+    color: var(--title);
+    margin-bottom: 1rem;
+}
+
+.debug-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.test-btn {
+    padding: 0.75rem 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--title);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.test-btn.primary {
+    background: var(--brand);
+    color: var(--bg0);
+    font-weight: 600;
+}
+
+.test-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.debug-note {
+    color: var(--muted);
+    font-size: 0.8rem;
+}
+
+/* Player section */
+.player-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: var(--bg1);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+.now-playing h3 {
+    color: var(--title);
+    margin-bottom: 0.5rem;
+}
+
+.song-meta {
+    color: var(--muted);
+    margin-bottom: 1rem;
+}
+
+.player-controls {
+    display: flex;
+    gap: 1rem;
+}
+
+.control-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--title);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Variables */
+:root {
+    --bg0: #0b0f14;
+    --bg1: #0e141b;
+    --border: rgba(255, 255, 255, 0.08);
+    --title: #e8eef6;
+    --muted: #aab4be;
+    --brand: #ffffff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .recommendations-carousel {
+        max-width: 95%;
+        gap: 0.5rem;
+    }
+
+    .nav-arrow {
+        width: 40px;
+        height: 40px;
+    }
+
+    .nav-arrow i {
+        font-size: 1rem;
+    }
+
+    .circular-recommendations {
+        gap: 1.5rem;
+    }
+
+    .recommendations-container {
+        padding: 1rem;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+    }
+
+    .song-circle {
+        width: 150px;
+        height: 190px;
+    }
+
+    .image-container {
+        width: 130px;
+        height: 130px;
+    }
+
+    .song-title {
+        font-size: 0.8rem;
+    }
+
+    .song-artist {
+        font-size: 0.75rem;
+    }
+}

@@ -42,7 +42,7 @@
       onImgError(ev: Event, t: Track) {          // marcar el track y mostrar ícono
         this.noImg.add(t.id);
         // opcional: log de depuración
-         console.warn('IMG ERROR:', t.artwork, (ev.target as HTMLImageElement).currentSrc);
+        console.warn('IMG ERROR:', t.artwork, (ev.target as HTMLImageElement).currentSrc);
       }
 
 
