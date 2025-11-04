@@ -7,11 +7,12 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use App\Models\RecommendedSong;
 
 class AuthController extends Controller
 {
 
-     /**
+    /**
      * @OA\Post(
      *     path="/api/register",
      *     summary="Registrar un nuevo usuario",
@@ -66,6 +67,15 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'is_admin' => $request->is_admin ?? false
         ]);
+
+        // ✅ CREAR REGISTRO DE RECOMENDACIONES VACÍO PARA EL NUEVO USUARIO
+        $user->recommendedSongs()->create([
+        'rock' => 0,
+        'pop' => 0,
+        'tropical' => 0,
+        'blues' => 0,
+        'rap' => 0,
+    ]);
 
         // Generar un token de Sanctum para el usuario.
         $token = $user->createToken('auth_token')->plainTextToken;
