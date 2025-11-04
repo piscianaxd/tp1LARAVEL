@@ -1,0 +1,17 @@
+<div *ngIf="isVisible" 
+     class="context-menu"
+     [style.left.px]="position.x"
+     [style.top.px]="position.y">
+  <div class="context-menu-item" (click)="onPlayClick($event)">
+    <i class="bi bi-play-fill"></i>
+    <span>Reproducir</span>
+  </div>
+  <div class="context-menu-item" (click)="onDeleteClick($event)">
+    <i class="bi bi-trash"></i>
+    <span>Eliminar</span>
+  </div>
+  <div class="context-menu-item" (click)="onMoveClick($event)">
+    <i class="bi bi-folder-plus"></i>
+    <span>Mover a playlist</span>
+  </div>
+</div>

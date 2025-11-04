@@ -65,10 +65,18 @@
             </div>
           </ng-template>
 
-          <!-- Overlay de reproducción -->
-          <button class="overlay-btn-square play" (click)="play(song)" title="Reproducir">
-            <i class="bi bi-play-fill"></i>
-          </button>
+          <!-- Overlay con múltiples botones -->
+          <div class="playlist-overlay">
+            <button class="overlay-btn-square play" (click)="play(song)" title="Reproducir">
+              <i class="bi bi-play-fill"></i>
+            </button>
+            <!-- NUEVO: Botón para agregar a playlist -->
+            <button class="overlay-btn-square" 
+                    (click)="addToPlaylist(song, $event)" 
+                    title="Agregar a playlist">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          </div>
         </div>
 
         <!-- Información de la canción -->
@@ -83,5 +91,4 @@
       </div>
     </div>
   </div>
-
 </section>

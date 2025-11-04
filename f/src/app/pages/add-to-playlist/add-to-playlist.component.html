@@ -1,0 +1,94 @@
+<div class="modal-overlay" *ngIf="showModal | async" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    
+    <!-- Header del Modal -->
+    <div class="modal-header">
+      <h2 class="modal-title">Agregar a Playlist</h2>
+      <button class="close-btn" (click)="closeModal()" title="Cerrar">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Contenido del Modal -->
+    <div class="modal-body">
+      
+      <!-- Información de la canción -->
+      <div *ngIf="songToAdd | async as song" class="song-info">
+        <div class="song-cover">
+          <img *ngIf="song.art_work_song" 
+               [src]="song.art_work_song | mediaUrl" 
+               [alt]="song.name_song"
+               class="cover-img">
+          <div *ngIf="!song.art_work_song" class="cover-fallback">
+            <i class="bi bi-music-note-beamed"></i>
+          </div>
+        </div>
+        <div class="song-details">
+          <h4 class="song-name">{{ song.name_song }}</h4>
+          <p class="song-artist">{{ song.artist_song }}</p>
+          <p *ngIf="song.album_song" class="song-album">{{ song.album_song }}</p>
+        </div>
+      </div>
+
+      <!-- Mensaje de éxito -->
+      <div *ngIf="successMessage" class="alert alert-success">
+        <i class="bi bi-check-circle me-2"></i>
+        {{ successMessage }}
+      </div>
+
+      <!-- Lista de playlists del usuario -->
+      <div class="playlists-section">
+        <h5 class="section-title">Tus Playlists</h5>
+        
+        <!-- Loading state -->
+        <div *ngIf="loading()" class="loading-playlists">
+          <div class="spinner-border spinner-border-sm text-brand me-2"></div>
+          <span>Cargando playlists...</span>
+        </div>
+
+        <!-- Lista de playlists -->
+        <div *ngIf="!loading()" class="playlists-list">
+          <div *ngFor="let playlist of userPlaylists()" 
+               class="playlist-item"
+               [class.selected]="selectedPlaylistId() === playlist.id"
+               (click)="selectPlaylist(playlist.id)">
+            <div class="playlist-info">
+              <i class="bi" 
+                 [class.bi-list-ul]="!selectedPlaylistId() || selectedPlaylistId() !== playlist.id"
+                 [class.bi-check-circle-fill]="selectedPlaylistId() === playlist.id"></i>
+              <span class="playlist-name">{{ playlist.name_playlist }}</span>
+            </div>
+            <span class="playlist-meta">
+              {{ playlist.songs?.length || 0 }} canciones • 
+              {{ playlist.is_public ? 'Pública' : 'Privada' }}
+            </span>
+          </div>
+
+          <!-- Sin playlists -->
+          <div *ngIf="userPlaylists().length === 0" class="no-playlists">
+            <i class="bi bi-music-note-list"></i>
+            <p>No tienes playlists aún</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="modal-actions">
+        <button class="btn btn-outline-secondary" 
+                (click)="createNewPlaylistAndAdd()"
+                [disabled]="addingToPlaylist">
+          <i class="bi bi-plus-circle me-2"></i>
+          Crear Nueva Playlist
+        </button>
+        
+        <button class="btn btn-primary" 
+                (click)="addToPlaylist()"
+                [disabled]="!selectedPlaylistId() || addingToPlaylist">
+          <span *ngIf="addingToPlaylist" class="spinner-border spinner-border-sm me-2"></span>
+          <i *ngIf="!addingToPlaylist" class="bi bi-plus-lg me-2"></i>
+          {{ addingToPlaylist ? 'Agregando...' : 'Agregar a Playlist' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
