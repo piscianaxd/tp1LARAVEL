@@ -164,20 +164,12 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
   }
 
   onContextMenuMove() {
-    console.log('📁 Mover a playlist desde menú contextual');
-    const track = this.selectedTrackForContextMenu();
-    if (track) {
-      // Guardar la canción para el modal ANTES de cerrar el menú
-      this.trackForMoveModal = track;
-      console.log('💾 Canción guardada para modal de mover:', track.song?.name_song);
-      this.closeContextMenu();
-      this.openMoveToPlaylistModal();
-    } else {
-      console.error('❌ No hay canción seleccionada para mover');
-      this.closeContextMenu();
-    }
+    console.log('📁 6. Evento MOVE recibido del menú contextual');
+    console.log('📁 Track seleccionado:', this.selectedTrackForContextMenu());
+    
+    // NO cerrar el menú aquí todavía - mantener la referencia
+    this.openMoveToPlaylistModal();
   }
-
   private removeTrackFromPlaylist() {
     const track = this.selectedTrackForContextMenu();
     const playlist = this.selectedPlaylist();
@@ -205,51 +197,47 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
   }
 
   // NUEVO: Métodos para mover canciones entre playlists
-  openMoveToPlaylistModal() {
-    console.log('📋 Abriendo modal para mover canción');
-    
-    // Verificar que tenemos la canción guardada
-    if (!this.trackForMoveModal) {
-      console.error('❌ No hay canción guardada para el modal de mover');
-      return;
-    }
-
-    console.log('🎵 Canción para mover:', this.trackForMoveModal.song?.name_song);
-    
-    this.loadingMoveModal.set(true);
-    this.showMoveToPlaylistModal.set(true);
-    document.body.classList.add('modal-active');
-    
-    // Cargar todas las playlists excepto la actual
-    this.playlistService.getPlaylists().subscribe({
-      next: (response: any) => {
-        console.log('✅ Playlists cargadas para mover:', response);
-        
-        let allPlaylists: any[] = [];
-        
-        if (Array.isArray(response)) {
-          allPlaylists = response;
-        } else if (response && Array.isArray(response.data)) {
-          allPlaylists = response.data;
-        } else if (response && Array.isArray(response.playlists)) {
-          allPlaylists = response.playlists;
-        }
-
-        // Filtrar la playlist actual
-        const currentPlaylistId = this.selectedPlaylist()?.id;
-        const availablePlaylists = allPlaylists.filter(p => p.id !== currentPlaylistId);
-        
-        console.log(`📊 Playlists disponibles para mover: ${availablePlaylists.length}`);
-        this.availablePlaylistsForMove.set(availablePlaylists);
-        this.loadingMoveModal.set(false);
-      },
-      error: (err) => {
-        console.error('❌ Error cargando playlists:', err);
-        this.loadingMoveModal.set(false);
-        this.error.set('Error al cargar las playlists');
+ openMoveToPlaylistModal() {
+  console.log('📋 Abriendo modal para mover canción');
+  console.log('📋 Track disponible:', this.selectedTrackForContextMenu());
+  
+  // Solo establecer el estado del modal, NO cerrar el menú todavía
+  this.loadingMoveModal.set(true);
+  this.showMoveToPlaylistModal.set(true);
+  document.body.classList.add('modal-active');
+  
+  // El menú se cerrará automáticamente cuando se haga click fuera
+  
+  // Cargar todas las playlists excepto la actual
+  this.playlistService.getPlaylists().subscribe({
+    next: (response: any) => {
+      console.log('✅ Playlists cargadas para mover:', response);
+      
+      let allPlaylists: any[] = [];
+      
+      if (Array.isArray(response)) {
+        allPlaylists = response;
+      } else if (response && Array.isArray(response.data)) {
+        allPlaylists = response.data;
+      } else if (response && Array.isArray(response.playlists)) {
+        allPlaylists = response.playlists;
       }
-    });
-  }
+
+      // Filtrar la playlist actual
+      const currentPlaylistId = this.selectedPlaylist()?.id;
+      const availablePlaylists = allPlaylists.filter(p => p.id !== currentPlaylistId);
+      
+      console.log(`📊 Playlists disponibles para mover: ${availablePlaylists.length}`);
+      this.availablePlaylistsForMove.set(availablePlaylists);
+      this.loadingMoveModal.set(false);
+    },
+    error: (err) => {
+      console.error('❌ Error cargando playlists:', err);
+      this.loadingMoveModal.set(false);
+      this.error.set('Error al cargar las playlists');
+    }
+  });
+}
 
   closeMoveToPlaylistModal() {
     console.log('❌ Cerrando modal de mover');
@@ -268,24 +256,27 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
   }
 
   createNewPlaylistForMove() {
-    if (!this.trackForMoveModal) {
-      console.error('❌ No hay canción guardada para crear nueva playlist');
+    // Guardar la referencia ANTES de cerrar el modal
+    const track = this.selectedTrackForContextMenu();
+    
+    if (!track) {
+      console.error('❌ Error: No hay canción seleccionada para mover');
       return;
     }
 
-    console.log('📝 Creando nueva playlist para mover canción:', this.trackForMoveModal.song?.name_song);
-    
+    console.log('🎵 Creando nueva playlist para canción:', track.song?.name_song);
+
     // Cerrar modal actual
     this.closeMoveToPlaylistModal();
     
     // Usar el mismo sistema que en add-to-playlist
     this.playlistEventService.openCreatePlaylistWithSong({
-      id: this.trackForMoveModal.song.id,
-      name_song: this.trackForMoveModal.song.name_song,
-      artist_song: this.trackForMoveModal.song.artist_song,
-      album_song: this.trackForMoveModal.song.album_song,
-      art_work_song: this.trackForMoveModal.song.art_work_song,
-      duration: this.trackForMoveModal.song.duration
+      id: track.song.id,
+      name_song: track.song.name_song,
+      artist_song: track.song.artist_song,
+      album_song: track.song.album_song,
+      art_work_song: track.song.art_work_song,
+      duration: track.song.duration
     });
   }
 
