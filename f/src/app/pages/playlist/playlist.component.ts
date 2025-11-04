@@ -1,8 +1,10 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { FormsModule } from '@angular/forms'; // Importar FormsModule
+import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { PlaylistService } from '../../services/playlist.service';
+import { PlaylistEventService } from '../../services/playlist-event.service';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { HttpErrorResponse } from '@angular/common/http';
 
@@ -19,66 +21,242 @@ interface Playlist {
 @Component({
   selector: 'app-playlists',
   standalone: true,
-  imports: [CommonModule, MediaUrlPipe, RouterModule, FormsModule], // Agregar FormsModule
+  imports: [CommonModule, MediaUrlPipe, RouterModule, FormsModule],
   templateUrl: './playlist.component.html',
   styleUrls: ['./playlist.component.css']
 })
-export class PlaylistsComponent implements OnInit {
+export class PlaylistsComponent implements OnInit, OnDestroy {
+  @Output() close = new EventEmitter<void>();
+
   loading = signal(true);
   error = signal<string | null>(null);
   playlists = signal<Playlist[]>([]);
   
-  // Estado para el modal de canciones
   selectedPlaylist = signal<Playlist | null>(null);
-  showPlaylistModal = signal(false);
+  showPlaylistDetail = signal(false);
 
-  // Estado para el modal de crear nueva playlist
   showCreatePlaylistModal = signal(false);
   creatingNewPlaylist = signal(false);
-  newPlaylistName = signal('');
-  newPlaylistIsPublic = signal(true);
+  newPlaylistName: string = '';
+  newPlaylistIsPublic: boolean = true;
 
-  constructor(private playlistService: PlaylistService) {}
+  // NUEVO: Señales para paginación
+  playlistPage = signal(0);
+  playlistMaxPages = signal(3);
 
-  ngOnInit(): void {
-    this.loadPlaylists();
+  private playlistEventSubscription!: Subscription;
+
+  private playlistService = inject(PlaylistService);
+  private playlistEventService = inject(PlaylistEventService);
+
+  constructor() {
+    console.log('🎵 PlaylistsComponent inicializado');
   }
 
-  loadPlaylists() {
+  ngOnInit(): void {
+    console.log('🎵 PlaylistsComponent ngOnInit ejecutado');
+    this.loadPlaylists();
+
+    this.playlistEventSubscription = this.playlistEventService.playlistSaved$.subscribe(() => {
+      console.log('🔄 Evento recibido: recargando playlists...');
+      this.refreshPlaylists();
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.playlistEventSubscription) {
+      this.playlistEventSubscription.unsubscribe();
+    }
+  }
+
+  // NUEVO: Métodos para paginación
+  nextPage() {
+    const nextPage = this.playlistPage() + 1;
+    if (nextPage < this.playlistMaxPages()) {
+      this.playlistPage.set(nextPage);
+    }
+  }
+
+  prevPage() {
+    const prevPage = this.playlistPage() - 1;
+    if (prevPage >= 0) {
+      this.playlistPage.set(prevPage);
+    }
+  }
+
+  getCurrentPlaylists(): Playlist[] {
+    const allPlaylists = this.playlists();
+    const startIndex = this.playlistPage() * 6;
+    return allPlaylists.slice(startIndex, startIndex + 6);
+  }
+
+  canGoNext(): boolean {
+    return this.playlistPage() < this.playlistMaxPages() - 1;
+  }
+
+  canGoPrev(): boolean {
+    return this.playlistPage() > 0;
+  }
+
+  refreshPlaylists() {
+    console.log('🔄 Refrescando lista de playlists...');
     this.loading.set(true);
     this.error.set(null);
 
     this.playlistService.getPlaylists().subscribe({
       next: (response: any) => {
-        console.log('Playlists cargadas:', response);
-        this.playlists.set(response);
+        console.log('✅ Playlists actualizadas:', response);
+        
+        let playlistsData: any[] = [];
+        
+        if (Array.isArray(response)) {
+          playlistsData = response;
+        } else if (response && Array.isArray(response.data)) {
+          playlistsData = response.data;
+        } else if (response && Array.isArray(response.playlists)) {
+          playlistsData = response.playlists;
+        } else {
+          console.warn('⚠️ Formato de respuesta inesperado:', response);
+          playlistsData = [];
+        }
+
+        console.log(`📊 Se encontraron ${playlistsData.length} playlists después de actualizar`);
+        this.playlists.set(playlistsData);
         this.loading.set(false);
       },
       error: (err: HttpErrorResponse) => {
-        console.error('Error loading playlists:', err);
-        this.error.set('No se pudieron cargar las playlists.');
+        console.error('❌ Error actualizando playlists:', err);
+        this.error.set('Error al actualizar las playlists');
         this.loading.set(false);
       }
     });
   }
 
-  // Abrir modal para crear nueva playlist
-  openCreatePlaylistModal() {
-    this.newPlaylistName.set('');
-    this.newPlaylistIsPublic.set(true);
-    this.showCreatePlaylistModal.set(true);
+  loadPlaylists() {
+    console.log('🔄 Cargando playlists del usuario...');
+    this.loading.set(true);
+    this.error.set(null);
+    // NUEVO: Resetear a página 0 cuando se cargan nuevas playlists
+    this.playlistPage.set(0);
+
+    this.playlistService.getPlaylists().subscribe({
+      next: (response: any) => {
+        console.log('✅ Playlists cargadas exitosamente:', response);
+        
+        let playlistsData: any[] = [];
+        
+        if (Array.isArray(response)) {
+          playlistsData = response;
+        } else if (response && Array.isArray(response.data)) {
+          playlistsData = response.data;
+        } else if (response && Array.isArray(response.playlists)) {
+          playlistsData = response.playlists;
+        } else {
+          console.warn('⚠️ Formato de respuesta inesperado:', response);
+          playlistsData = [];
+        }
+
+        console.log(`📊 Se encontraron ${playlistsData.length} playlists`);
+        this.playlists.set(playlistsData);
+        this.loading.set(false);
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error('❌ Error cargando playlists:', err);
+        
+        let errorMessage = 'No se pudieron cargar las playlists.';
+        if (err.status === 401) {
+          errorMessage = 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.';
+        } else if (err.status === 404) {
+          errorMessage = 'No se encontraron playlists.';
+        } else if (err.error?.message) {
+          errorMessage = err.error.message;
+        }
+        
+        this.error.set(errorMessage);
+        this.loading.set(false);
+        
+        this.loadMockPlaylists();
+      }
+    });
   }
 
-  // Cerrar modal de crear playlist
+  private loadMockPlaylists() {
+    console.log('🔄 Cargando playlists de prueba...');
+    const mockPlaylists: Playlist[] = [
+      {
+        id: 1,
+        name_playlist: 'Mis Favoritas',
+        is_public: true,
+        user_id: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        songs: [
+          {
+            song: {
+              id: 101,
+              name_song: 'Canción Ejemplo 1',
+              artist_song: 'Artista 1',
+              album_song: 'Álbum 1',
+              art_work_song: 'cover1.jpg',
+              duration: 180
+            }
+          }
+        ]
+      },
+      {
+        id: 2,
+        name_playlist: 'Para Estudiar',
+        is_public: false,
+        user_id: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        songs: [
+          {
+            song: {
+              id: 102,
+              name_song: 'Música Relajante',
+              artist_song: 'Artista 2', 
+              album_song: 'Álbum 2',
+              art_work_song: 'cover2.jpg',
+              duration: 240
+            }
+          }
+        ]
+      },
+      {
+        id: 3,
+        name_playlist: 'Party Time',
+        is_public: true,
+        user_id: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        songs: []
+      }
+    ];
+    
+    this.playlists.set(mockPlaylists);
+    console.log('✅ Playlists de prueba cargadas:', mockPlaylists.length);
+  }
+
+  // 🔥 NUEVO: Métodos para controlar el modal con desenfoque
+  openCreatePlaylistModal() {
+    this.newPlaylistName = '';
+    this.newPlaylistIsPublic = true;
+    this.showCreatePlaylistModal.set(true);
+    // Agregar clase al body para el desenfoque
+    document.body.classList.add('modal-active');
+  }
+
   closeCreatePlaylistModal() {
     this.showCreatePlaylistModal.set(false);
-    this.newPlaylistName.set('');
-    this.newPlaylistIsPublic.set(true);
+    this.newPlaylistName = '';
+    this.newPlaylistIsPublic = true;
+    // Remover clase del body
+    document.body.classList.remove('modal-active');
   }
 
-  // Crear nueva playlist vacía
   createNewPlaylist() {
-    const name = this.newPlaylistName().trim();
+    const name = this.newPlaylistName.trim();
     
     if (!name) {
       this.error.set('El nombre de la playlist es requerido');
@@ -89,54 +267,53 @@ export class PlaylistsComponent implements OnInit {
     
     this.playlistService.createPlaylist({
       name_playlist: name,
-      is_public: this.newPlaylistIsPublic()
+      is_public: this.newPlaylistIsPublic
     }).subscribe({
       next: (response: any) => {
-        console.log('Nueva playlist creada:', response);
+        console.log('✅ Nueva playlist creada:', response);
         this.creatingNewPlaylist.set(false);
         this.closeCreatePlaylistModal();
-        this.loadPlaylists(); // Recargar la lista
+        this.loadPlaylists();
         this.error.set(null);
       },
       error: (err: HttpErrorResponse) => {
-        console.error('Error creando playlist:', err);
+        console.error('❌ Error creando playlist:', err);
         this.creatingNewPlaylist.set(false);
         this.error.set('Error al crear la playlist');
       }
     });
   }
 
-  // Abrir modal con las canciones de la playlist
-  openPlaylistModal(playlist: Playlist) {
+  openPlaylist(playlist: Playlist) {
     this.selectedPlaylist.set(playlist);
-    this.showPlaylistModal.set(true);
+    this.showPlaylistDetail.set(true);
   }
 
-  // Cerrar modal de canciones
-  closePlaylistModal() {
-    this.showPlaylistModal.set(false);
+  closePlaylist() {
+    this.showPlaylistDetail.set(false);
     this.selectedPlaylist.set(null);
   }
 
-  // Eliminar playlist
   deletePlaylist(playlist: Playlist, event: Event) {
     event.stopPropagation();
     
     if (confirm(`¿Estás seguro de que quieres eliminar "${playlist.name_playlist}"?`)) {
       this.playlistService.deletePlaylist(playlist.id).subscribe({
         next: () => {
-          console.log('Playlist eliminada:', playlist.name_playlist);
-          this.loadPlaylists(); // Recargar la lista
+          console.log('🗑️ Playlist eliminada:', playlist.name_playlist);
+          this.loadPlaylists();
+          if (this.selectedPlaylist()?.id === playlist.id) {
+            this.closePlaylist();
+          }
         },
         error: (err) => {
-          console.error('Error eliminando playlist:', err);
+          console.error('❌ Error eliminando playlist:', err);
           this.error.set('Error al eliminar la playlist');
         }
       });
     }
   }
 
-  // Obtener imagen de portada de la playlist (primera canción)
   getPlaylistCover(playlist: Playlist): string {
     if (playlist.songs && playlist.songs.length > 0 && playlist.songs[0].song?.art_work_song) {
       return playlist.songs[0].song.art_work_song;
@@ -144,13 +321,11 @@ export class PlaylistsComponent implements OnInit {
     return '';
   }
 
-  // Contar canciones
   getSongCount(playlist: Playlist): string {
     const count = playlist.songs ? playlist.songs.length : 0;
     return count === 1 ? '1 canción' : `${count} canciones`;
   }
 
-  // Cache busting para imágenes
   noImg = new Set<number>();
   
   bust(id: number) {
@@ -161,14 +336,25 @@ export class PlaylistsComponent implements OnInit {
     if (song && song.id) {
       this.noImg.add(song.id);
     }
-    console.warn('IMG ERROR:', (ev.target as HTMLImageElement).currentSrc);
+    console.warn('🖼️ IMG ERROR:', (ev.target as HTMLImageElement).currentSrc);
   }
 
-  // Formatear duración
   formatDuration(seconds: number): string {
     if (!seconds) return '0:00';
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  playPlaylist(playlist: Playlist, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    console.log('▶️ Reproducir playlist:', playlist.name_playlist, playlist.songs);
+  }
+
+  playSong(song: any, event: Event) {
+    event.stopPropagation();
+    console.log('▶️ Reproducir canción:', song);
   }
 }

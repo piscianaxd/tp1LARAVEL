@@ -10,6 +10,7 @@ export interface Song {
   artist_song: string;
   album_song: string;
   art_work_song: string;
+  duration: number;
   created_at: string;
   updated_at: string;
 }
