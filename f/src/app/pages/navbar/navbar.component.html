@@ -27,23 +27,33 @@
               <i class="bi bi-x-lg"></i>
             </button>
           }
-            
         </div>
         <app-search-results></app-search-results>
       </div>
     </div>
 
-    <!-- Usuario a la derecha -->
-    <div class="d-flex align-items-center">
+    <!-- Botones a la derecha -->
+    <div class="d-flex align-items-center gap-3">
+      
+      <!-- NO agregar botón de crear playlist aquí -->
+      <!-- Tus playlists se crean desde AutoPlaylistsComponent -->
+
+      <!-- Información de usuario - ahora abre modal de perfil -->
       <div class="user-info d-flex align-items-center">
         <div class="user-avatar bg-primary rounded-circle d-flex align-items-center justify-content-center me-2"
             style="width: 32px; height: 32px;">
           <i class="bi bi-person-fill text-white"></i>
         </div>
-        <a routerLink="/perfil" class="user-link text-white text-decoration-none">
+        <button class="user-link text-white text-decoration-none border-0 bg-transparent"
+                (click)="openProfileModal()">
           {{ usuarioActual }}
-        </a>
+        </button>
       </div>
     </div>
   </div>
 </nav>
+
+<!-- Solo agregar el modal de perfil -->
+@if (showProfileModal) {
+  <app-profile-modal (close)="closeProfileModal()"></app-profile-modal>
+}

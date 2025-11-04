@@ -1,6 +1,4 @@
 <div class="recommendations-container">
-    <h2 class="section-title">Recomendaciones para ti</h2>
-
     <!-- Loading -->
     <div *ngIf="loading()" class="loading">
         <p>🎵 Analizando tus gustos musicales...</p>
@@ -24,103 +22,55 @@
     </div>
 
     <!-- Recomendaciones con layout horizontal y flechas -->
-    <div *ngIf="!loading() && !error() && recommendations().length > 0" class="recommendations-section">
-        <p class="recommendations-subtitle">Basado en tu historial de escucha</p>
+    <section *ngIf="!loading() && !error() && recommendations().length > 0" class="recommendations-section container-xxl px-3 px-md-4 py-4">
+        <!-- HEADER UNIFORME COMO RECENT-TRACKS -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="h3 fw-bold mb-0">Recomendaciones para ti</h2>
+                <p class="text-muted mb-0 mt-1">Basado en tu historial de escucha</p>
+            </div>
 
-        <!-- Contenedor con flechas de navegación -->
-        <div class="recommendations-carousel">
-            <button class="nav-arrow nav-arrow-left" (click)="scrollLeft()" [disabled]="!canScrollLeft()">
-                <i class="bi bi-chevron-left"></i>
-            </button>
+            <div class="d-flex align-items-center gap-2">
+                <button class="nav-arrow nav-arrow-left" (click)="scrollLeft()" [disabled]="!canScrollLeft()" title="Anterior">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
 
-            <div class="circular-recommendations" #scrollContainer (scroll)="onScroll()">
-                <div *ngFor="let song of recommendations()" class="song-circle" (click)="selectSong(song)"
-                    [class.selected]="isSelected(song)" [class.playing]="isSelected(song) && isPlaying"
-                    [title]="song.title + ' - ' + song.artist">
+                <button class="nav-arrow nav-arrow-right" (click)="scrollRight()" [disabled]="!canScrollRight()" title="Siguiente">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
 
-                    <!-- Contenedor de imagen con fallback -->
-                    <div class="image-container">
-                        <ng-container *ngIf="!failedImages.has(song.cover); else iconFallback">
-                            <img 
-                                [src]="song.cover | mediaUrl" 
-                                [alt]="'Portada de ' + song.title" 
-                                class="circle-image"
-                                (error)="handleImageError($event, song)"
-                                loading="lazy">
-                        </ng-container>
-                        
-                        <ng-template #iconFallback>
-                            <div class="image-fallback">
-                                <i class="bi bi-music-note-beamed"></i>
-                            </div>
-                        </ng-template>
-                    </div>
+        <!-- CONTENEDOR DE CÍRCULOS (MANTIENE IDENTIDAD ÚNICA) -->
+        <div class="circular-recommendations" #scrollContainer (scroll)="onScroll()">
+            <div *ngFor="let song of recommendations()" class="song-circle" (click)="selectSong(song)"
+                [class.selected]="isSelected(song)" [title]="song.title + ' - ' + song.artist">
 
-                    <!-- TEXTO SIEMPRE VISIBLE -->
-                    <div class="song-text">
-                        <strong class="song-title">{{ song.title }}</strong>
-                        <span class="song-artist">{{ song.artist }}</span>
-                        <small class="song-genre">{{ song.genre }}</small>
-                    </div>
-
-                    <div *ngIf="isSelected(song)" class="playing-indicator">
-                        <div class="playing-animation" [class.playing]="isPlaying">
-                            <span></span>
-                            <span></span>
-                            <span></span>
+                <!-- Contenedor de imagen con fallback -->
+                <div class="image-container">
+                    <ng-container *ngIf="!failedImages.has(song.cover); else iconFallback">
+                        <img 
+                            [src]="song.cover | mediaUrl" 
+                            [alt]="'Portada de ' + song.title" 
+                            class="circle-image"
+                            (error)="handleImageError($event, song)"
+                            loading="lazy">
+                    </ng-container>
+                    
+                    <ng-template #iconFallback>
+                        <div class="image-fallback">
+                            <i class="bi bi-music-note-beamed"></i>
                         </div>
-                    </div>
+                    </ng-template>
+                </div>
+
+                <!-- TEXTO SIEMPRE VISIBLE -->
+                <div class="song-text">
+                    <strong class="song-title">{{ song.title }}</strong>
+                    <span class="song-artist">{{ song.artist }}</span>
+                    <small class="song-genre">{{ song.genre }}</small>
                 </div>
             </div>
-
-            <button class="nav-arrow nav-arrow-right" (click)="scrollRight()" [disabled]="!canScrollRight()">
-                <i class="bi bi-chevron-right"></i>
-            </button>
         </div>
-    </div>
-
-    <!-- === SECCIÓN DE CONTROLES DE PRUEBA (TEMPORAL) === -->
-    <div *ngIf="!loading()" class="debug-section">
-        <div class="debug-controls">
-            <h4>🔧 Controles de Prueba</h4>
-
-            <!-- Para usuarios sin historial -->
-            <div *ngIf="recommendations().length === 0" class="debug-buttons">
-                <p>¿Quieres probar las recomendaciones?</p>
-                <button (click)="addTestSongsToHistory()" class="test-btn primary">
-                    🎵 Agregar 3 canciones de prueba
-                </button>
-            </div>
-
-            <!-- Para usuarios con historial -->
-            <div *ngIf="recommendations().length > 0" class="debug-buttons">
-                <p>Pruebas:</p>
-                <button (click)="clearRecommendations()" class="test-btn secondary">
-                    🗑️ Limpiar (simular usuario nuevo)
-                </button>
-                <button (click)="reloadRecommendations()" class="test-btn secondary">
-                    🔄 Recargar
-                </button>
-            </div>
-
-            <small class="debug-note">
-                Estos controles son temporales para pruebas. Usa IDs de canciones reales de tu base de datos.
-            </small>
-        </div>
-    </div>
-
-    <!-- Reproductor -->
-    <div *ngIf="selectedSong" class="player-section">
-        <div class="now-playing">
-            <h3>{{ isPlaying ? '▶️ Reproduciendo:' : '⏸️ Pausado:' }} {{ selectedSong.title }}</h3>
-            <p class="song-meta">{{ selectedSong.artist }} • {{ selectedSong.album }} • {{ selectedSong.genre }}</p>
-
-            <div class="player-controls">
-                <button (click)="selectSong(selectedSong)" class="control-btn play-pause">
-                    {{ isPlaying ? '⏸️ Pausar' : '▶️ Reproducir' }}
-                </button>
-                <button (click)="stopCurrentSong()" class="control-btn stop">⏹️ Detener</button>
-            </div>
-        </div>
-    </div>
+    </section>
 </div>

@@ -25,9 +25,4 @@ export class RecommendedSongsService {
   incrementGenre(userId: number, genre: string): Observable<any> {
     return this.http.patch(`${this.baseUrl}/recommended-songs/${userId}`, { genre });
   }
-
-  // AGREGAR ESTE NUEVO MÉTODO para añadir canciones al historial
-  addSongToHistory(songId: number): Observable<any> {
-    return this.http.post(`${this.baseUrl}/history`, { song_id: songId });
-  }
 }

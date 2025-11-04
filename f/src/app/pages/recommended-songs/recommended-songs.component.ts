@@ -5,6 +5,8 @@ import { RecommendedSongsService } from '../../services/recommended-songs.servic
 import { AuthService } from '../../services/auth.service';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { HttpClient } from '@angular/common/http';
+import { PlayerService } from '../../services/player.service';
+import { Track } from '../../models/track/track.model';
 
 @Component({
   selector: 'app-recommendations',
@@ -21,11 +23,6 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
   recommendations = signal<any[]>([]);
   currentUser = signal<any>(null);
 
-  // Propiedades para el reproductor
-  selectedSong: any = null;
-  isPlaying = false;
-  currentAudio: HTMLAudioElement | null = null;
-
   // Control de flechas de navegación
   canScrollLeft = signal(false);
   canScrollRight = signal(false);
@@ -37,7 +34,8 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
     private recommendedSongsService: RecommendedSongsService,
     private authService: AuthService,
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    private playerService: PlayerService
   ) {}
 
   ngOnInit(): void {
@@ -51,7 +49,6 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // Verificar scroll después de que la vista se inicialice
     setTimeout(() => this.checkScroll(), 100);
   }
 
@@ -140,7 +137,7 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
       return !heardSongIds.includes(song.id) && topGenres.includes(songGenre);
     });
 
-    // 5. Mezclar y limitar a 8 canciones
+    // 5. Mezclar y limitar a 10 canciones
     recommendedSongs = this.shuffleArray(recommendedSongs).slice(0, 10);
 
     // 6. Formatear para el frontend
@@ -165,7 +162,7 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
     return newArray;
   }
 
-  // ===== NUEVOS MÉTODOS PARA NAVEGACIÓN HORIZONTAL =====
+  // ===== MÉTODOS PARA NAVEGACIÓN HORIZONTAL =====
 
   scrollLeft(): void {
     if (this.scrollContainer) {
@@ -199,107 +196,38 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
     this.canScrollRight.set(scrollLeft < scrollWidth - clientWidth - 10);
   }
 
-  // === MÉTODOS DEL REPRODUCTOR ===
+  // ===== FUNCIÓN DE CONVERSIÓN =====
+  private songToTrack(song: any): Track {
+    return {
+      id: song.id,
+      title: song.title,
+      artist: song.artist,
+      album: song.album,
+      artwork: song.cover,
+      url: song.audioFile
+    };
+  }
 
+  // ===== MÉTODO PARA SELECCIONAR CANCIÓN =====
   selectSong(song: any): void {
-    // Si ya está seleccionada, pausar o reanudar
-    if (this.selectedSong?.id === song.id) {
-      if (this.isPlaying) {
-        this.pauseCurrentSong();
-      } else {
-        this.resumeCurrentSong();
-      }
-      return;
-    }
-
-    // Nueva canción seleccionada
-    this.selectedSong = song;
-    
-    // Detener reproducción anterior
-    this.stopCurrentSong();
-    
-    // Reproducir nueva canción
-    this.playSelectedSong();
-
-    // Aquí podrías llamar a incrementGenre si quieres trackear lo que escucha
-    this.trackSongPlay(song);
-  }
-
-  playSelectedSong(): void {
-    if (!this.selectedSong?.audioFile) return;
-
-    const audioUrl = this.getAudioUrl(this.selectedSong.audioFile);
-    this.currentAudio = new Audio(audioUrl);
-    
-    this.currentAudio.play()
-      .then(() => {
-        this.isPlaying = true;
-        console.log('Reproduciendo:', this.selectedSong.title);
-      })
-      .catch(error => {
-        console.error('Error al reproducir:', error);
-        this.isPlaying = false;
-      });
-
-    this.currentAudio.addEventListener('ended', () => {
-      this.isPlaying = false;
-      this.currentAudio = null;
-    });
-  }
-
-  pauseCurrentSong(): void {
-    if (this.currentAudio) {
-      this.currentAudio.pause();
-      this.isPlaying = false;
+    // Usar el PlayerService real
+    if (this.isSelected(song)) {
+      // Si ya está seleccionada, pausar o reanudar
+      this.playerService.togglePlayPause();
+    } else {
+      // Nueva canción seleccionada - convertir al formato Track
+      const track = this.songToTrack(song);
+      
+      // Reproducir con PlayerService
+      this.playerService.playNow(track);
     }
   }
 
-  resumeCurrentSong(): void {
-    if (this.currentAudio) {
-      this.currentAudio.play()
-        .then(() => this.isPlaying = true)
-        .catch(error => console.error('Error al reanudar:', error));
-    }
-  }
-
-  stopCurrentSong(): void {
-    if (this.currentAudio) {
-      this.currentAudio.pause();
-      this.currentAudio = null;
-      this.isPlaying = false;
-    }
-  }
-
-  // Trackear canción escuchada (opcional - para estadísticas)
-  trackSongPlay(song: any): void {
-    const user = this.currentUser();
-    if (!user) return;
-
-    // Incrementar el género de la canción en las estadísticas
-    this.recommendedSongsService.incrementGenre(user.id, song.genre.toLowerCase())
-      .subscribe({
-        next: () => console.log('Género incrementado:', song.genre),
-        error: (error) => console.error('Error incrementando género:', error)
-      });
-  }
-
-  private getAudioUrl(audioFile: string): string {
-    // La pipe se encarga de esto en el template, pero por si acaso
-    if (!audioFile) return '';
-    
-    let url = audioFile.trim();
-    url = url.replace(/\s/g, '%20').replace(/([^:])\/{2,}/g, '$1/');
-
-    if (url.startsWith('/')) {
-      return `http://localhost:8000${url}`;
-    }
-    if (/^https?:\/\//i.test(url)) return url;
-
-    return '';
-  }
-
+  // ===== MÉTODO PARA VERIFICAR SELECCIÓN =====
   isSelected(song: any): boolean {
-    return this.selectedSong?.id === song.id;
+    // Verificar contra el reproductor real
+    const currentSong = this.playerService.current();
+    return currentSong?.id === song.id;
   }
 
   handleImageError(event: any, song: any): void {
@@ -309,52 +237,5 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
     const img = event.target;
     img.style.display = 'none';
     console.warn('Error cargando imagen:', song.cover);
-  }
-
-  // === MÉTODOS DE PRUEBA TEMPORALES ===
-
-  // Método para agregar canciones de prueba al historial
-  addTestSongsToHistory(): void {
-    // Usa IDs reales de tu base de datos - cambia estos números por IDs que existan
-    const testSongIds = [1, 2, 3]; 
-    
-    console.log('🎵 Agregando canciones de prueba al historial...', testSongIds);
-    
-    let completed = 0;
-    
-    // Agregar cada canción al historial
-    testSongIds.forEach(songId => {
-      this.recommendedSongsService.addSongToHistory(songId).subscribe({
-        next: (response) => {
-          console.log(`✅ Canción ${songId} agregada:`, response);
-          completed++;
-          
-          // Cuando todas se completen, recargar recomendaciones
-          if (completed === testSongIds.length) {
-            console.log('🔄 Todas las canciones agregadas, recargando recomendaciones...');
-            setTimeout(() => {
-              this.loadUserRecommendations();
-            }, 1000);
-          }
-        },
-        error: (error) => {
-          console.error(`❌ Error agregando canción ${songId}:`, error);
-          completed++;
-        }
-      });
-    });
-  }
-
-  // Método para limpiar y probar como usuario nuevo
-  clearRecommendations(): void {
-    this.recommendations.set([]);
-    console.log('🧹 Recomendaciones limpiadas - simulando usuario nuevo');
-    this.loading.set(false);
-  }
-
-  // Método para forzar recarga
-  reloadRecommendations(): void {
-    console.log('🔄 Recargando recomendaciones...');
-    this.loadUserRecommendations();
   }
 }

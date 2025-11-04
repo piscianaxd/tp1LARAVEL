@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,13 +6,15 @@ import { ProfileService } from '../../services/profile.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
-  selector: 'app-profile',
+  selector: 'app-profile-modal',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
-export class ProfileComponent implements OnInit {
+export class ProfileModalComponent implements OnInit {
+  @Output() close = new EventEmitter<void>();
+
   profileForm: FormGroup;
   deleteForm: FormGroup;
   user: any = null;
@@ -22,6 +24,7 @@ export class ProfileComponent implements OnInit {
   message = '';
   errorMessage = '';
   deleteError = '';
+  activeTab: 'profile' | 'security' = 'profile';
 
   constructor(
     private fb: FormBuilder,
@@ -56,12 +59,6 @@ export class ProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Verificar si está logueado
-    if (!this.authService.isLoggedIn()) {
-      this.router.navigate(['/login']);
-      return;
-    }
-
     this.loadProfile();
   }
 
@@ -70,7 +67,6 @@ export class ProfileComponent implements OnInit {
     this.profileService.getProfile().subscribe({
       next: (response) => {
         this.user = response.user;
-        // Llenar el formulario con los datos del usuario
         this.profileForm.patchValue({
           name: this.user.name,
           email: this.user.email
@@ -94,10 +90,8 @@ export class ProfileComponent implements OnInit {
     this.saving = true;
     this.errorMessage = '';
 
-    // Preparar datos para enviar (solo enviar campos con valores)
     const formData = { ...this.profileForm.value };
     
-    // Si no se está cambiando la contraseña, eliminar campos de contraseña
     if (!formData.password) {
       delete formData.current_password;
       delete formData.password;
@@ -110,10 +104,8 @@ export class ProfileComponent implements OnInit {
         this.message = 'Perfil actualizado correctamente';
         this.saving = false;
         
-        // Actualizar usuario en localStorage
         localStorage.setItem('user', JSON.stringify(response.user));
         
-        // Limpiar mensaje después de 3 segundos
         setTimeout(() => this.message = '', 3000);
       },
       error: (error) => {
@@ -142,6 +134,7 @@ export class ProfileComponent implements OnInit {
         this.deleting = false;
         this.authService.clearSession();
         this.router.navigate(['/login']);
+        this.closeModal();
       },
       error: (error) => {
         console.error('Error eliminando cuenta:', error);
@@ -149,6 +142,14 @@ export class ProfileComponent implements OnInit {
         this.deleting = false;
       }
     });
+  }
+
+  closeModal(): void {
+    this.close.emit();
+  }
+
+  setActiveTab(tab: 'profile' | 'security'): void {
+    this.activeTab = tab;
   }
 
   // Helper para acceder fácilmente a los controles del formulario

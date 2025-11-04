@@ -4,11 +4,18 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { SearchService } from '../../services/search.service';
 import { SearchResultsComponent } from '../search-results/search-results.component';
+import { ProfileModalComponent } from '../profile/profile.component';
 
 @Component({
   selector: 'app-nav-bar',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SearchResultsComponent],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    RouterModule, 
+    SearchResultsComponent, 
+    ProfileModalComponent
+  ],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css']
 })
@@ -20,24 +27,25 @@ export class NavBar implements OnInit {
   searchTerm: string = '';
   usuarioActual: string = 'Usuario';
   isSearchFocused: boolean = false;
+  
+  // Solo para modal de perfil
+  showProfileModal: boolean = false;
 
   constructor(public searchService: SearchService, public router: Router) {}
 
   ngOnInit() {
     this.setPlaceholderByRoute();
 
-    // Obtener nombre del usuario guardado
-    const usuarioGuardado = localStorage.getItem('usuario');
+    const usuarioGuardado = localStorage.getItem('user');
     if (usuarioGuardado) {
       try {
         const usuario = JSON.parse(usuarioGuardado);
-        this.usuarioActual = usuario.nombre || 'Usuario';
+        this.usuarioActual = usuario.name || 'Usuario';
       } catch {
         this.usuarioActual = 'Usuario';
       }
     }
 
-    // Sincronizar con búsqueda global cuando cambia
     this.searchService.globalSearchTerm$.subscribe(term => {
       if (term !== this.searchTerm) {
         this.searchTerm = term;
@@ -87,29 +95,25 @@ export class NavBar implements OnInit {
         return 'Buscar canciones, playlists, artistas...';
     }
   }
+
   onSearch() {
-    // Usar búsqueda global
     this.searchService.setGlobalSearchTerm(this.searchTerm);
     
-    // Si estamos en dashboard, también actualizar la búsqueda del dashboard
     if (this.esDashboard()) {
       this.searchService.setDashboardSearchTerm(this.searchTerm);
     } else {
-      // Para otras páginas, usar la búsqueda normal
       this.searchService.setSearchTerm(this.searchTerm);
     }
   }
 
   onSearchFocus() {
     this.isSearchFocused = true;
-    // Si ya hay término de búsqueda, disparar la búsqueda al enfocar
     if (this.searchTerm) {
       this.onSearch();
     }
   }
 
   onSearchBlur() {
-    // Pequeño delay para permitir clicks en los resultados
     setTimeout(() => {
       this.isSearchFocused = false;
     }, 200);
@@ -118,13 +122,33 @@ export class NavBar implements OnInit {
   clearSearch() {
     this.searchTerm = '';
     this.isSearchFocused = false;
-    // Limpiar todas las búsquedas
     this.searchService.clearGlobalSearch();
     this.searchService.clearSearch();
     this.searchService.clearDashboardSearch();
   }
 
-  // Detectar si está en dashboard
+  // === SOLO PARA MODAL DE PERFIL ===
+  openProfileModal(): void {
+    this.showProfileModal = true;
+  }
+
+  closeProfileModal(): void {
+    this.showProfileModal = false;
+    this.updateUserName();
+  }
+
+  private updateUserName(): void {
+    const usuarioGuardado = localStorage.getItem('user');
+    if (usuarioGuardado) {
+      try {
+        const usuario = JSON.parse(usuarioGuardado);
+        this.usuarioActual = usuario.name || 'Usuario';
+      } catch {
+        this.usuarioActual = 'Usuario';
+      }
+    }
+  }
+
   esDashboard(): boolean {
     return this.router.url === '/dashboard' || this.router.url === '/';
   }
