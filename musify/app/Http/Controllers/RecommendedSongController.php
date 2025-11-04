@@ -5,10 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\RecommendedSong;
 
-
 class RecommendedSongController extends Controller
 {
-  /**
+    /**
      * @OA\Get(
      *     path="/api/recommended-songs",
      *     summary="Obtener todas las listas de generos de canciones mas escuchadas",
@@ -39,12 +38,9 @@ class RecommendedSongController extends Controller
      *     @OA\Response(response=401, description="No autenticado"),
      *     @OA\Response(response=500, description="Error interno del servidor")
      * )
-    */
-
+     */
     public function index()
     {
-
-            
         if (!auth()->user() || !auth()->user()->is_admin) {
             return response()->json(['message' => 'No autorizado. Solo administradores pueden acceder.'], 403);
         }
@@ -56,8 +52,6 @@ class RecommendedSongController extends Controller
             'data' => $songs
         ], 200, [], JSON_PRETTY_PRINT);
     }
-
-
 
     /**
      * @OA\Post(
@@ -102,12 +96,9 @@ class RecommendedSongController extends Controller
      *     @OA\Response(response=401, description="No autenticado"),
      *     @OA\Response(response=500, description="Error interno del servidor")
      * )
-    */
-
+     */
     public function store(Request $request)
     {
-        //     protected $fillable = ['user_id', 'rock', 'pop', 'tropical', 'blues', 'rap'];
-
         $data = RecommendedSong::create([
             'user_id' => $request->user_id,
             'rock' => $request->rock,
@@ -185,8 +176,7 @@ class RecommendedSongController extends Controller
      * 
      *     @OA\Response(response=401, description="No autenticado")
      * )
-    */
-
+     */
     public function show(string $id)
     {
         $song = RecommendedSong::find($id);
@@ -201,11 +191,84 @@ class RecommendedSongController extends Controller
         ], 200, [], JSON_PRETTY_PRINT);
     }
 
+    /**
+     * @OA\Patch(
+     *     path="/api/recommended-songs/{id}",
+     *     summary="Actualizar una lista de géneros por ID",
+     *     description="Actualiza los contadores de géneros por ID del registro",
+     *     tags={"Recommended Songs"},
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID del registro en recommended_songs",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="rock", type="integer", example=6),
+     *             @OA\Property(property="pop", type="integer", example=2),
+     *             @OA\Property(property="tropical", type="integer", example=1),
+     *             @OA\Property(property="blues", type="integer", example=0),
+     *             @OA\Property(property="rap", type="integer", example=3)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Registro actualizado correctamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Registro actualizado correctamente."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="user_id", type="integer", example=5),
+     *                 @OA\Property(property="rock", type="integer", example=6),
+     *                 @OA\Property(property="pop", type="integer", example=2),
+     *                 @OA\Property(property="tropical", type="integer", example=1),
+     *                 @OA\Property(property="blues", type="integer", example=0),
+     *                 @OA\Property(property="rap", type="integer", example=3),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-10-01T10:30:00Z"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-10-07T14:00:00Z")
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="Registro no encontrado",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Registro no encontrado.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="No autenticado")
+     * )
+     */
+    public function update(Request $request, string $id)
+    {
+        $song = RecommendedSong::find($id);
 
+        if (! $song) {
+            return response()->json(['error' => 'Registro no encontrado.'], 404);
+        }
+
+        $song->update($request->all());
+
+        return response()->json([
+            'message' => 'Registro actualizado correctamente.',
+            'data' => $song
+        ], 200, [], JSON_PRETTY_PRINT);
+    }
 
     /**
      * @OA\Patch(
-     *     path="/api/recommended-songs/{userId}",
+     *     path="/api/recommended-songs/user/{userId}/increment-genre",
      *     summary="Incrementar el contador de un género para un usuario",
      *     description="Aumenta en 1 el contador del género especificado para el usuario indicado.",
      *     tags={"Recommended Songs"},
@@ -215,7 +278,7 @@ class RecommendedSongController extends Controller
      *         name="userId",
      *         in="path",
      *         required=true,
-     *         description="ID del usuario asociado a las canciones recomendadas",
+     *         description="ID del usuario",
      *         @OA\Schema(type="integer", example=5)
      *     ),
      *
@@ -272,15 +335,22 @@ class RecommendedSongController extends Controller
      *
      *     @OA\Response(response=401, description="No autenticado")
      * )
-    */
-
-    public function update(Request $request, string $userId)
+     */
+    public function incrementGenreByUser(Request $request, string $userId)
     {
-        // Buscar el registro del usuario en la tabla
+        // Buscar o crear el registro del usuario en la tabla
         $song = RecommendedSong::where('user_id', $userId)->first();
 
         if (! $song) {
-            return response()->json(['error' => 'Usuario no encontrado.'], 404);
+            // Crear registro automáticamente si no existe
+            $song = RecommendedSong::create([
+                'user_id' => $userId,
+                'rock' => 0,
+                'pop' => 0,
+                'tropical' => 0,
+                'blues' => 0,
+                'rap' => 0
+            ]);
         }
 
         // Validar que venga el género en la request
@@ -295,16 +365,95 @@ class RecommendedSongController extends Controller
 
         return response()->json([
             'message' => "Se incrementó correctamente el género {$genre} para el usuario {$userId}.",
-            'data' => $song->fresh() // devuelve el registro actualizado
+            'data' => $song->fresh()
         ], 200, [], JSON_PRETTY_PRINT);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/recommended-songs/user/{userId}/top-genres",
+     *     summary="Obtener los géneros más escuchados de un usuario",
+     *     tags={"Recommended Songs"},
+     *     security={{"bearerAuth":{}}},
+     *     
+     *     @OA\Parameter(
+     *         name="userId",
+     *         in="path",
+     *         required=true,
+     *         description="ID del usuario",
+     *         @OA\Schema(type="integer", example=5)
+     *     ),
+     * 
+     *     @OA\Response(
+     *         response=200,
+     *         description="Géneros top obtenidos correctamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Géneros top obtenidos correctamente."),
+     *             @OA\Property(
+     *                 property="topGenres",
+     *                 type="array",
+     *                 @OA\Items(type="string", example="rock")
+     *             )
+     *         )
+     *     ),
+     * 
+     *     @OA\Response(
+     *         response=404,
+     *         description="Usuario no encontrado",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Usuario no encontrado.")
+     *         )
+     *     )
+     * )
+     */
+    public function getTopGenres(string $userId)
+    {
+        $song = RecommendedSong::where('user_id', $userId)->first();
+
+        if (!$song) {
+            return response()->json(['error' => 'Usuario no encontrado.'], 404);
+        }
+
+        // Obtener todos los géneros y sus conteos
+        $genres = [
+            'rock' => $song->rock,
+            'pop' => $song->pop,
+            'tropical' => $song->tropical,
+            'blues' => $song->blues,
+            'rap' => $song->rap
+        ];
+
+        // Filtrar géneros con conteo > 0 y ordenar por conteo descendente
+        $filteredGenres = array_filter($genres, function($count) {
+            return $count > 0;
+        });
+
+        arsort($filteredGenres);
+
+        // Obtener solo los nombres de los géneros (máximo 2)
+        $topGenres = array_keys(array_slice($filteredGenres, 0, 2, true));
+
+        return response()->json([
+            'message' => 'Géneros top obtenidos correctamente.',
+            'topGenres' => $topGenres
+        ], 200, [], JSON_PRETTY_PRINT);
+    }
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
     {
-        //
+        $song = RecommendedSong::find($id);
+
+        if (! $song) {
+            return response()->json(['error' => 'Registro no encontrado.'], 404);
+        }
+
+        $song->delete();
+
+        return response()->json([
+            'message' => 'Registro eliminado correctamente.'
+        ], 200, [], JSON_PRETTY_PRINT);
     }
 }

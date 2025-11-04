@@ -1,6 +1,7 @@
 import { Injectable, signal, effect } from '@angular/core';
 import { Track } from '../models/track/track.model';
 import { HistoryService } from './history.service';
+import { RecommendedSongsService } from './recommended-songs.service'; // ✅ NUEVO IMPORT
 
 type RepeatMode = 'off' | 'all' | 'one';
 
@@ -36,7 +37,10 @@ export class PlayerService {
   private _time    = signal<number>(0);     // seconds
   private _dur     = signal<number>(0);     // seconds
 
-  constructor(private history: HistoryService) {
+  constructor(
+    private history: HistoryService,
+    private recommendedSongsService: RecommendedSongsService // ✅ NUEVO
+  ) {
     this.restore();
 
     // Listeners del <audio>
@@ -101,6 +105,9 @@ export class PlayerService {
   }
 
   playNow(track: Track, queue?: Track[]) {
+    // ✅ NUEVO: Incrementar género ANTES de cualquier otra lógica
+    this.incrementGenreForTrack(track);
+
     // Si se pasa una lista, la usamos como cola visible
     if (queue && queue.length) {
       this._queue.set(queue);
@@ -225,6 +232,7 @@ export class PlayerService {
   // ---------- Internas ----------
 
   private loadAndPlay(t: Track) {
+    console.log("sonando")
     this._dur.set(0);
     this._time.set(0);
     this.audio.src = this.resolve(t.url);
@@ -258,6 +266,68 @@ export class PlayerService {
     // si en dev usás proxy, podrías devolver url tal cual:
     // return url;
     return `${this.BASE}${url.startsWith('/') ? '' : '/'}${url}`;
+  }
+
+  // ✅ NUEVO: Método para incrementar género
+  private incrementGenreForTrack(track: any): void {
+    console.log('🎵 PlayerService: Procesando género para track:', track.title);
+    
+    // Obtener usuario actual
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      console.error('❌ PlayerService: Usuario no disponible para incrementar género');
+      return;
+    }
+
+    const user = JSON.parse(userData);
+    const genre = track.genre; // Usar el género del track
+
+    if (!user.id || !genre) {
+      console.warn('⚠️ PlayerService: Datos insuficientes - user.id:', user.id, 'genre:', genre);
+      return;
+    }
+
+    // Formatear género
+    const formattedGenre = this.formatGenre(genre);
+    
+    if (!formattedGenre) {
+      console.warn('⚠️ PlayerService: Género no válido para incrementar:', genre);
+      return;
+    }
+
+    console.log('📈 PlayerService: Incrementando género:', formattedGenre, 'para usuario:', user.id);
+    
+    this.recommendedSongsService.incrementGenre(user.id, formattedGenre).subscribe({
+      next: (response) => {
+        console.log('✅ PlayerService: Género incrementado exitosamente');
+      },
+      error: (error) => {
+        console.error('❌ PlayerService: Error incrementando género:', error);
+      }
+    });
+  }
+
+  // ✅ NUEVO: Método para formatear géneros
+  private formatGenre(genre: string): string | null {
+    const genreMap: { [key: string]: string } = {
+      'rock': 'rock',
+      'pop': 'pop', 
+      'tropical': 'tropical',
+      'blues': 'blues',
+      'rap': 'rap',
+      'hip hop': 'rap',
+      'hip-hop': 'rap',
+      'punk': 'rock',
+      'electronic': 'pop',
+      'r&b': 'blues',
+      'jazz': 'blues',
+      'classical': 'blues',
+      'reggae': 'tropical',
+      'metal': 'rock'
+    };
+    
+    const lowerGenre = genre.toLowerCase().trim();
+    return genreMap[lowerGenre] || null;
   }
 
   private persist() {
