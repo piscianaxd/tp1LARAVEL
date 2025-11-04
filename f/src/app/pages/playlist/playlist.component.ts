@@ -7,6 +7,7 @@ import { PlaylistService } from '../../services/playlist.service';
 import { PlaylistEventService, SongForPlaylist } from '../../services/playlist-event.service';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { HttpErrorResponse } from '@angular/common/http';
+import { TrackContextComponent } from '../track-context/track-context.component';
 
 interface Playlist {
   id: number;
@@ -21,7 +22,7 @@ interface Playlist {
 @Component({
   selector: 'app-playlists',
   standalone: true,
-  imports: [CommonModule, MediaUrlPipe, RouterModule, FormsModule],
+  imports: [CommonModule, MediaUrlPipe, RouterModule, FormsModule, TrackContextComponent],
   templateUrl: './playlist.component.html',
   styleUrls: ['./playlist.component.css']
 })
@@ -46,6 +47,21 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
   // Señales para paginación
   playlistPage = signal(0);
   playlistMaxPages = signal(3);
+
+  // NUEVO: Señales para el menú contextual y mover canciones
+  showContextMenu = signal(false);
+  contextMenuPosition = signal({ x: 0, y: 0 });
+  selectedTrackForContextMenu = signal<any>(null);
+  selectedTrackIndex = signal<number>(-1);
+
+  showMoveToPlaylistModal = signal(false);
+  selectedPlaylistForMove = signal<number | null>(null);
+  availablePlaylistsForMove = signal<Playlist[]>([]);
+  loadingMoveModal = signal(false);
+  movingTrack = signal(false);
+
+  // NUEVA: Propiedad para guardar la canción específicamente para el modal de mover
+  private trackForMoveModal: any = null;
 
   private playlistEventSubscription!: Subscription;
   private createPlaylistWithSongSubscription!: Subscription;
@@ -83,7 +99,274 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // NUEVO: Métodos para paginación
+  // NUEVO: Métodos para el menú contextual
+
+  onTrackContextMenu(event: MouseEvent, playlistSong: any, index: number) {
+    console.log('🖱️ Click derecho detectado en canción:', playlistSong.song?.name_song);
+    event.preventDefault();
+    event.stopPropagation();
+    
+    this.selectedTrackForContextMenu.set(playlistSong);
+    this.selectedTrackIndex.set(index);
+    this.contextMenuPosition.set({ x: event.clientX, y: event.clientY });
+    this.showContextMenu.set(true);
+    console.log('📋 Menú contextual mostrado');
+    
+    // Agregar listener para cerrar el menú al hacer click fuera
+    setTimeout(() => {
+      document.addEventListener('click', this.closeContextMenuOnClickOutside.bind(this));
+      document.addEventListener('contextmenu', this.closeContextMenuOnRightClick.bind(this));
+    });
+  }
+
+  private closeContextMenuOnClickOutside(event: MouseEvent) {
+    const contextMenu = document.querySelector('.context-menu');
+    if (contextMenu && !contextMenu.contains(event.target as Node)) {
+      console.log('👆 Click fuera del menú detectado, cerrando menú');
+      this.closeContextMenu();
+      this.removeEventListeners();
+    }
+  }
+
+  private closeContextMenuOnRightClick(event: MouseEvent) {
+    console.log('🖱️ Click derecho detectado, cerrando menú');
+    this.closeContextMenu();
+    this.removeEventListeners();
+  }
+
+  private removeEventListeners() {
+    document.removeEventListener('click', this.closeContextMenuOnClickOutside.bind(this));
+    document.removeEventListener('contextmenu', this.closeContextMenuOnRightClick.bind(this));
+  }
+
+  closeContextMenu() {
+    console.log('❌ Cerrando menú contextual');
+    this.showContextMenu.set(false);
+    this.selectedTrackForContextMenu.set(null);
+    this.selectedTrackIndex.set(-1);
+    this.removeEventListeners();
+  }
+
+  onContextMenuPlay() {
+    console.log('🎵 Reproducir desde menú contextual');
+    if (this.selectedTrackForContextMenu()) {
+      this.playSong(this.selectedTrackForContextMenu().song, new Event('click'));
+    }
+    this.closeContextMenu();
+  }
+
+  onContextMenuDelete() {
+    console.log('🗑️ Eliminar desde menú contextual');
+    if (this.selectedTrackForContextMenu() && this.selectedPlaylist()) {
+      this.removeTrackFromPlaylist();
+    }
+    this.closeContextMenu();
+  }
+
+  onContextMenuMove() {
+    console.log('📁 Mover a playlist desde menú contextual');
+    const track = this.selectedTrackForContextMenu();
+    if (track) {
+      // Guardar la canción para el modal ANTES de cerrar el menú
+      this.trackForMoveModal = track;
+      console.log('💾 Canción guardada para modal de mover:', track.song?.name_song);
+      this.closeContextMenu();
+      this.openMoveToPlaylistModal();
+    } else {
+      console.error('❌ No hay canción seleccionada para mover');
+      this.closeContextMenu();
+    }
+  }
+
+  private removeTrackFromPlaylist() {
+    const track = this.selectedTrackForContextMenu();
+    const playlist = this.selectedPlaylist();
+    
+    if (!track || !playlist) return;
+
+    if (confirm(`¿Eliminar "${track.song.name_song}" de la playlist?`)) {
+      this.playlistService.removeSongFromPlaylist(playlist.id, track.song.id).subscribe({
+        next: () => {
+          console.log('🗑️ Canción eliminada de la playlist');
+          this.refreshPlaylists();
+          // Actualizar la playlist actual
+          if (this.selectedPlaylist()) {
+            const updatedPlaylist = { ...this.selectedPlaylist()! };
+            updatedPlaylist.songs = updatedPlaylist.songs.filter(s => s.song.id !== track.song.id);
+            this.selectedPlaylist.set(updatedPlaylist);
+          }
+        },
+        error: (err) => {
+          console.error('❌ Error eliminando canción:', err);
+          this.error.set('Error al eliminar la canción');
+        }
+      });
+    }
+  }
+
+  // NUEVO: Métodos para mover canciones entre playlists
+  openMoveToPlaylistModal() {
+    console.log('📋 Abriendo modal para mover canción');
+    
+    // Verificar que tenemos la canción guardada
+    if (!this.trackForMoveModal) {
+      console.error('❌ No hay canción guardada para el modal de mover');
+      return;
+    }
+
+    console.log('🎵 Canción para mover:', this.trackForMoveModal.song?.name_song);
+    
+    this.loadingMoveModal.set(true);
+    this.showMoveToPlaylistModal.set(true);
+    document.body.classList.add('modal-active');
+    
+    // Cargar todas las playlists excepto la actual
+    this.playlistService.getPlaylists().subscribe({
+      next: (response: any) => {
+        console.log('✅ Playlists cargadas para mover:', response);
+        
+        let allPlaylists: any[] = [];
+        
+        if (Array.isArray(response)) {
+          allPlaylists = response;
+        } else if (response && Array.isArray(response.data)) {
+          allPlaylists = response.data;
+        } else if (response && Array.isArray(response.playlists)) {
+          allPlaylists = response.playlists;
+        }
+
+        // Filtrar la playlist actual
+        const currentPlaylistId = this.selectedPlaylist()?.id;
+        const availablePlaylists = allPlaylists.filter(p => p.id !== currentPlaylistId);
+        
+        console.log(`📊 Playlists disponibles para mover: ${availablePlaylists.length}`);
+        this.availablePlaylistsForMove.set(availablePlaylists);
+        this.loadingMoveModal.set(false);
+      },
+      error: (err) => {
+        console.error('❌ Error cargando playlists:', err);
+        this.loadingMoveModal.set(false);
+        this.error.set('Error al cargar las playlists');
+      }
+    });
+  }
+
+  closeMoveToPlaylistModal() {
+    console.log('❌ Cerrando modal de mover');
+    this.showMoveToPlaylistModal.set(false);
+    this.selectedPlaylistForMove.set(null);
+    this.availablePlaylistsForMove.set([]);
+    this.loadingMoveModal.set(false);
+    this.movingTrack.set(false);
+    // Limpiar la canción guardada para el modal
+    this.trackForMoveModal = null;
+    document.body.classList.remove('modal-active');
+  }
+
+  selectPlaylistForMove(playlistId: number) {
+    this.selectedPlaylistForMove.set(playlistId);
+  }
+
+  createNewPlaylistForMove() {
+    if (!this.trackForMoveModal) {
+      console.error('❌ No hay canción guardada para crear nueva playlist');
+      return;
+    }
+
+    console.log('📝 Creando nueva playlist para mover canción:', this.trackForMoveModal.song?.name_song);
+    
+    // Cerrar modal actual
+    this.closeMoveToPlaylistModal();
+    
+    // Usar el mismo sistema que en add-to-playlist
+    this.playlistEventService.openCreatePlaylistWithSong({
+      id: this.trackForMoveModal.song.id,
+      name_song: this.trackForMoveModal.song.name_song,
+      artist_song: this.trackForMoveModal.song.artist_song,
+      album_song: this.trackForMoveModal.song.album_song,
+      art_work_song: this.trackForMoveModal.song.art_work_song,
+      duration: this.trackForMoveModal.song.duration
+    });
+  }
+
+  moveTrackToPlaylist() {
+    const targetPlaylistId = this.selectedPlaylistForMove();
+    
+    console.log('🔍 Estado actual para mover:', {
+      targetPlaylistId,
+      trackForMoveModal: this.trackForMoveModal ? this.trackForMoveModal.song?.name_song : 'null'
+    });
+
+    if (!targetPlaylistId) {
+      console.error('❌ No se seleccionó playlist destino');
+      this.error.set('Selecciona una playlist destino');
+      return;
+    }
+    
+    if (!this.trackForMoveModal) {
+      console.error('❌ No hay canción guardada para mover');
+      this.error.set('Error: No se encontró la canción seleccionada');
+      return;
+    }
+
+    const track = this.trackForMoveModal;
+    console.log('🚚 Moviendo canción a playlist:', {
+      targetPlaylistId,
+      song: track.song?.name_song,
+      songId: track.song?.id,
+      currentPlaylist: this.selectedPlaylist()?.name_playlist
+    });
+
+    this.movingTrack.set(true);
+
+    // Primero agregar a la nueva playlist
+    this.playlistService.addSongToPlaylist(targetPlaylistId, track.song.id).subscribe({
+      next: (addResponse) => {
+        console.log('✅ Canción agregada a nueva playlist:', addResponse);
+        
+        // Luego eliminar de la playlist actual
+        const currentPlaylistId = this.selectedPlaylist()?.id;
+        if (currentPlaylistId) {
+          this.playlistService.removeSongFromPlaylist(currentPlaylistId, track.song.id).subscribe({
+            next: (removeResponse) => {
+              console.log('✅ Canción eliminada de playlist original');
+              this.movingTrack.set(false);
+              this.closeMoveToPlaylistModal();
+              this.refreshPlaylists();
+              
+              // Actualizar la vista actual
+              if (this.selectedPlaylist()) {
+                const updatedPlaylist = { ...this.selectedPlaylist()! };
+                updatedPlaylist.songs = updatedPlaylist.songs.filter(s => s.song.id !== track.song.id);
+                this.selectedPlaylist.set(updatedPlaylist);
+              }
+              
+              this.error.set(null);
+            },
+            error: (removeErr) => {
+              console.error('❌ Error eliminando de playlist original:', removeErr);
+              this.movingTrack.set(false);
+              this.error.set('Canción movida pero no se pudo eliminar de la playlist original');
+              this.closeMoveToPlaylistModal();
+              this.refreshPlaylists();
+            }
+          });
+        } else {
+          console.error('❌ No se encontró la playlist actual');
+          this.movingTrack.set(false);
+          this.closeMoveToPlaylistModal();
+          this.refreshPlaylists();
+        }
+      },
+      error: (addErr) => {
+        console.error('❌ Error agregando a nueva playlist:', addErr);
+        this.movingTrack.set(false);
+        this.error.set('Error al mover la canción: ' + (addErr.error?.message || 'Error desconocido'));
+      }
+    });
+  }
+
+  // Resto de los métodos permanecen igual...
   nextPage() {
     const nextPage = this.playlistPage() + 1;
     if (nextPage < this.playlistMaxPages()) {
@@ -150,7 +433,6 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     console.log('🔄 Cargando playlists del usuario...');
     this.loading.set(true);
     this.error.set(null);
-    // NUEVO: Resetear a página 0 cuando se cargan nuevas playlists
     this.playlistPage.set(0);
 
     this.playlistService.getPlaylists().subscribe({
@@ -253,7 +535,6 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
   }
 
   openCreatePlaylistModal() {
-    // CORREGIDO: Si hay una canción para nueva playlist, usar su nombre como sugerencia
     if (this.songForNewPlaylist) {
       this.newPlaylistName = `${this.songForNewPlaylist.name_song} - Favoritas`;
     } else {
@@ -268,7 +549,7 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     this.showCreatePlaylistModal.set(false);
     this.newPlaylistName = '';
     this.newPlaylistIsPublic = true;
-    this.songForNewPlaylist = null; // Limpiar la canción
+    this.songForNewPlaylist = null;
     document.body.classList.remove('modal-active');
   }
 
@@ -290,19 +571,15 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
       next: (response: any) => {
         console.log('✅ Nueva playlist creada:', response);
         
-        // CORREGIDO: Extraer el ID correctamente de la respuesta
         const newPlaylistId = response.playlist?.id || response.id;
         console.log('🎵 ID de nueva playlist:', newPlaylistId);
         console.log('🎵 Canción para agregar:', this.songForNewPlaylist);
         
-        // CORREGIDO: Si hay una canción para agregar y tenemos un ID válido, agregarla
         if (this.songForNewPlaylist && newPlaylistId) {
           console.log('📤 Agregando canción a nueva playlist...');
           this.addSongToNewPlaylist(newPlaylistId);
         } else {
           console.log('ℹ️ No hay canción para agregar o no se obtuvo ID de playlist');
-          console.log('🔍 ID obtenido:', newPlaylistId);
-          console.log('🔍 Canción disponible:', !!this.songForNewPlaylist);
           this.creatingNewPlaylist.set(false);
           this.closeCreatePlaylistModal();
           this.loadPlaylists();
@@ -317,7 +594,6 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // CORREGIDO: Método para agregar canción a la nueva playlist
   private addSongToNewPlaylist(playlistId: number) {
     if (!this.songForNewPlaylist) {
       console.error('❌ No hay canción para agregar');
@@ -335,7 +611,6 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
       next: (response) => {
         console.log('✅ Canción agregada a nueva playlist:', response);
         
-        // Notificar que se completó la creación
         this.playlistEventService.notifyPlaylistCreated(playlistId);
         
         this.creatingNewPlaylist.set(false);
@@ -346,12 +621,10 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
       },
       error: (err: HttpErrorResponse) => {
         console.error('❌ Error agregando canción a nueva playlist:', err);
-        console.error('❌ Detalles del error:', err.error);
         this.creatingNewPlaylist.set(false);
         this.error.set('Playlist creada pero error al agregar la canción');
         this.songForNewPlaylist = null;
         
-        // Aún así cerrar el modal y recargar las playlists
         this.closeCreatePlaylistModal();
         this.loadPlaylists();
       }

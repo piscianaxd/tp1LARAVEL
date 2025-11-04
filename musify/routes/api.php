@@ -50,4 +50,5 @@ Route::middleware('auth:sanctum')->group(function () {
      Route::apiResource('playlists', PlaylistController::class);
      
     Route::post('playlists/{playlist}/songs', [PlaylistController::class, 'addSong']);
+    Route::delete('/playlists/{playlist}/songs/{song}', [PlaylistController::class, 'removeSong']);
 });

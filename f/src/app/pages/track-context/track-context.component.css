@@ -1,0 +1,34 @@
+.context-menu {
+  position: fixed;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 0.5rem 0;
+  min-width: 180px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  color: #ffffff;
+}
+
+.context-menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.context-menu-item i {
+  margin-right: 0.75rem;
+  font-size: 0.9rem;
+  width: 16px;
+  text-align: center;
+}
+
+.context-menu-item span {
+  font-size: 0.9rem;
+}

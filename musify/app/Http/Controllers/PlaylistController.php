@@ -672,4 +672,131 @@ class PlaylistController extends Controller
             return response()->json(['error' => 'Error agregando canciones'], 500);
         }
     }
+    /**
+     * @OA\Delete(
+     *     path="/api/playlists/{playlist}/songs/{song}",
+     *     summary="Eliminar una canción de una playlist",
+     *     description="Elimina una canción específica de una playlist del usuario",
+     *     operationId="removeSongFromPlaylist",
+     *     tags={"Playlists"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="playlist",
+     *         in="path",
+     *         required=true,
+     *         description="ID de la playlist de la que se eliminará la canción",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="song",
+     *         in="path",
+     *         required=true,
+     *         description="ID de la canción a eliminar (songs_saved_db_id)",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Canción eliminada exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Canción eliminada exitosamente de la playlist")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Playlist o canción no encontrada",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Playlist o canción no encontrada")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="No tienes permiso para modificar esta playlist",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="No tienes permiso para modificar esta playlist")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error del servidor",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Error al eliminar la canción")
+     *         )
+     *     )
+     * )
+     */
+    public function removeSong(Request $request, $playlistId, $songId)
+    {
+        Log::info('🎵 ========== REMOVE SONG FROM PLAYLIST START ==========');
+        Log::info('🎵 Removing song from playlist:', [
+            'playlist_id' => $playlistId,
+            'song_id' => $songId
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $userId = $request->user()?->id ?? 1;
+            
+            // Buscar la playlist y verificar que pertenece al usuario
+            $playlist = Playlist::where('id', $playlistId)
+                ->where('user_id', $userId)
+                ->first();
+
+            if (!$playlist) {
+                Log::warning('🎵 Playlist not found or not owned by user:', [
+                    'playlist_id' => $playlistId, 
+                    'user_id' => $userId
+                ]);
+                return response()->json([
+                    'message' => 'Playlist no encontrada o no tienes permisos'
+                ], 404);
+            }
+
+            // Buscar la relación en saved_songs
+            $savedSong = SavedSong::where('playlist_id', $playlist->id)
+                ->where('songs_saved_db_id', $songId)
+                ->first();
+
+            if (!$savedSong) {
+                Log::warning('🎵 Song not found in playlist:', [
+                    'playlist_id' => $playlist->id,
+                    'song_id' => $songId
+                ]);
+                return response()->json([
+                    'message' => 'La canción no está en esta playlist'
+                ], 404);
+            }
+
+            // Eliminar la relación
+            $savedSong->delete();
+
+            DB::commit();
+
+            Log::info('🎵 Song removed successfully from playlist:', [
+                'playlist_id' => $playlist->id,
+                'song_id' => $songId
+            ]);
+
+            Log::info('🎵 ========== REMOVE SONG FROM PLAYLIST END ==========');
+
+            return response()->json([
+                'message' => 'Canción eliminada exitosamente de la playlist'
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('🎵 REMOVE SONG ERROR:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'message' => 'Error al eliminar la canción de la playlist',
+                'error' => config('app.debug') ? $e->getMessage() : 'Contact administrator'
+            ], 500);
+        }
+    }
 }
