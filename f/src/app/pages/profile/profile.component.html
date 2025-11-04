@@ -1,0 +1,158 @@
+<div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <!-- Header del Modal -->
+        <div class="modal-header">
+            <h2 class="modal-title">Mi Perfil</h2>
+            <button class="close-btn" (click)="closeModal()" title="Cerrar">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <!-- Cargando -->
+        <div *ngIf="loading" class="loading">
+            <p>Cargando perfil...</p>
+        </div>
+
+        <!-- Contenido del Perfil -->
+        <div *ngIf="!loading && user" class="modal-body">
+            <!-- Navegación por pestañas -->
+            <div class="tab-navigation">
+                <button 
+                    class="tab-btn" 
+                    [class.active]="activeTab === 'profile'"
+                    (click)="setActiveTab('profile')">
+                    <i class="bi bi-person"></i>
+                    Perfil
+                </button>
+                <button 
+                    class="tab-btn" 
+                    [class.active]="activeTab === 'security'"
+                    (click)="setActiveTab('security')">
+                    <i class="bi bi-shield-lock"></i>
+                    Seguridad
+                </button>
+            </div>
+
+            <!-- Mensajes -->
+            <div *ngIf="message" class="alert alert-success">
+                {{ message }}
+            </div>
+
+            <div *ngIf="errorMessage" class="alert alert-error">
+                {{ errorMessage }}
+            </div>
+
+            <!-- Información del usuario -->
+            <div class="user-info" *ngIf="activeTab === 'profile'">
+                <div class="info-item">
+                    <span class="info-label">ID:</span>
+                    <span class="info-value">{{ user.id }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Rol:</span>
+                    <span class="info-value">{{ user.is_admin ? "Administrador" : "Usuario" }}</span>
+                </div>
+            </div>
+
+            <!-- Pestaña: Perfil -->
+            <div *ngIf="activeTab === 'profile'" class="tab-content">
+                <form [formGroup]="profileForm" (ngSubmit)="updateProfile()" class="profile-form">
+                    <div class="form-group">
+                        <label for="name">Nombre</label>
+                        <input type="text" id="name" formControlName="name" class="form-control"
+                            [class.error]="pf['name'].invalid && pf['name'].touched" 
+                            placeholder="Tu nombre completo"/>
+                        <div *ngIf="pf['name'].invalid && pf['name'].touched" class="error-message">
+                            <div *ngIf="pf['name'].errors?.['required']">El nombre es requerido</div>
+                            <div *ngIf="pf['name'].errors?.['minlength']">Mínimo 2 caracteres</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" formControlName="email" class="form-control"
+                            [class.error]="pf['email'].invalid && pf['email'].touched"
+                            placeholder="tu@email.com"/>
+                        <div *ngIf="pf['email'].invalid && pf['email'].touched" class="error-message">
+                            <div *ngIf="pf['email'].errors?.['required']">El email es requerido</div>
+                            <div *ngIf="pf['email'].errors?.['email']">Formato de email inválido</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" [disabled]="saving || profileForm.invalid">
+                        {{ saving ? "Guardando..." : "Actualizar Perfil" }}
+                    </button>
+                </form>
+            </div>
+
+            <!-- Pestaña: Seguridad -->
+            <div *ngIf="activeTab === 'security'" class="tab-content">
+                <!-- Cambio de Contraseña -->
+                <div class="security-section">
+                    <h3>Cambiar Contraseña</h3>
+                    <form [formGroup]="profileForm" (ngSubmit)="updateProfile()" class="profile-form">
+                        <div class="form-group">
+                            <label for="current_password">Contraseña Actual</label>
+                            <input type="password" id="current_password" formControlName="current_password"
+                                class="form-control" placeholder="••••••••"/>
+                            <small>Requerida solo si cambias la contraseña</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Nueva Contraseña</label>
+                            <input type="password" id="password" formControlName="password" class="form-control"
+                                [class.error]="pf['password'].invalid && pf['password'].touched"
+                                placeholder="••••••••"/>
+                            <div *ngIf="pf['password'].invalid && pf['password'].touched" class="error-message">
+                                <div *ngIf="pf['password'].errors?.['minlength']">Mínimo 8 caracteres</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password_confirmation">Confirmar Contraseña</label>
+                            <input type="password" id="password_confirmation" formControlName="password_confirmation"
+                                class="form-control" placeholder="••••••••"/>
+                        </div>
+
+                        <div *ngIf="profileForm.errors?.['passwordMismatch'] && pf['password'].touched" class="error-message">
+                            Las contraseñas no coinciden
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" [disabled]="saving">
+                            {{ saving ? "Guardando..." : "Cambiar Contraseña" }}
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Eliminar Cuenta -->
+                <div class="danger-zone">
+                    <h3>Zona Peligrosa</h3>
+                    <div class="danger-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <span>Esta acción no se puede deshacer</span>
+                    </div>
+
+                    <div *ngIf="deleteError" class="alert alert-error">
+                        {{ deleteError }}
+                    </div>
+
+                    <form [formGroup]="deleteForm" (ngSubmit)="deleteAccount()" class="delete-form">
+                        <div class="form-group">
+                            <label for="deletePassword">Confirmar con contraseña</label>
+                            <input type="password" id="deletePassword" formControlName="password" class="form-control"
+                                [class.error]="df['password'].invalid && df['password'].touched"
+                                placeholder="••••••••"/>
+                            <div *ngIf="df['password'].invalid && df['password'].touched" class="error-message">
+                                La contraseña es requerida
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-danger" [disabled]="deleting || deleteForm.invalid">
+                            {{ deleting ? "Eliminando..." : "Eliminar Cuenta" }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

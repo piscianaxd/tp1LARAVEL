@@ -12,12 +12,13 @@ import { MixesCapsuleComponent } from '../../features/mixes-capsule/mixes-capsul
 import { AutoPlaylistsComponent } from '../auto-playlist/auto-playlist.component';
 import { PlayerBarComponent } from '../player-bar/player-bar.component';
 import { NavBar } from "../navbar/navbar.component";
+import { RecommendationsComponent } from '../recommended-songs/recommended-songs.component';
 
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, RecentTracksComponent, RandomTracksComponent, MixesCapsuleComponent, AutoPlaylistsComponent, NavBar, PlayerBarComponent],
+  imports: [CommonModule, RouterModule, FormsModule, RecentTracksComponent, RandomTracksComponent, MixesCapsuleComponent, AutoPlaylistsComponent, NavBar, PlayerBarComponent, RecommendationsComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
 })

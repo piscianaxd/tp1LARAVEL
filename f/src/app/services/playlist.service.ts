@@ -115,6 +115,17 @@ export class PlaylistService {
 
   private handleError(error: any) {
     console.error('Error en PlaylistService:', error);
-    return throwError(() => new Error(error.message || 'Error del servidor'));
+    //return throwError(() => new Error(error.message || 'Error del servidor'));
+
+    //Mensajes de error más específicos
+    let errorMsg = 'Error del servidor';
+    if (error.status === 401) {
+      errorMsg = "No autorizado - Sesión expirada";
+    }else if (error.status === 404) {
+      errorMsg = "Recurso no encontrado";
+    }else if (error.error?.message) {
+      errorMsg = error.error.message;
+    }
+    return throwError(() => new Error(errorMsg));
   }
 }
