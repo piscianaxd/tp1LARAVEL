@@ -37,23 +37,26 @@
                 <div *ngFor="let song of recommendations()" class="song-circle" (click)="selectSong(song)"
                     [class.selected]="isSelected(song)" [title]="song.title + ' - ' + song.artist">
 
-                    <!-- Contenedor de imagen con fallback -->
-                    <div class="image-container">
-                        <ng-container *ngIf="!failedImages.has(song.cover); else iconFallback">
-                            <img 
-                                [src]="song.cover | mediaUrl" 
-                                [alt]="'Portada de ' + song.title" 
-                                class="circle-image"
-                                (error)="handleImageError($event, song)"
-                                loading="lazy">
-                        </ng-container>
-                        
-                        <ng-template #iconFallback>
-                            <div class="image-fallback">
-                                <i class="bi bi-music-note-beamed"></i>
-                            </div>
-                        </ng-template>
-                    </div>
+                <!-- Contenedor de imagen con fallback -->
+                <div class="image-container">
+                    <ng-container *ngIf="!failedImages.has(song.cover); else iconFallback">
+                        <img 
+                            [src]="song.cover | mediaUrl" 
+                            [alt]="'Portada de ' + song.title" 
+                            width="224" height="224"
+                            decoding="async"
+                            class="circle-image"
+                            (error)="handleImageError($event, song)"
+                            loading="lazy">
+                            
+                    </ng-container>
+                    
+                    <ng-template #iconFallback>
+                        <div class="image-fallback">
+                            <i class="bi bi-music-note-beamed"></i>
+                        </div>
+                    </ng-template>
+                </div>
 
                     <!-- TEXTO SIEMPRE VISIBLE -->
                     <div class="song-text">
