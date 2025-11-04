@@ -1,52 +1,79 @@
 <div class="search-results-container" *ngIf="showResults">
-  <!-- Solo la card interna tiene fondo blanco -->
   <div class="search-results-card">
     
-    <!-- Estado de carga -->
+    <!-- Cargando -->
     <div class="results-loading" *ngIf="isLoading">
       <i class="bi bi-search"></i>
       <span>Buscando "{{ currentSearchTerm }}"...</span>
     </div>
 
-    <!-- Resultados de canciones -->
+    <!-- Canciones -->
     <div class="results-section" *ngIf="!isLoading && songResults.length > 0">
-      <h6 class="section-title">
-        <i class="bi bi-music-note-beamed me-1"></i>
-        Canciones ({{ songResults.length }})
-      </h6>
-      <div class="result-item" 
-           *ngFor="let song of songResults" 
-           [routerLink]="['/songs', song.id]" 
-           (click)="onResultClick()">
-        <div class="item-icon">
-          <i class="bi bi-music-note-beamed"></i>
-        </div>
-        <div class="item-info">
-          <div class="item-name">{{ song.name_song || 'Sin nombre' }}</div>
-          <div class="item-details">
-            {{ song.artist_song || 'Artista desconocido' }} 
-            <span *ngIf="song.album_song">• {{ song.album_song }}</span>
+      <div class="d-flex align-items-center justify-content-between">
+        <h6 class="section-title mb-0">
+          <i class="bi bi-music-note-beamed me-1"></i>
+          Canciones ({{ songResults.length }})
+        </h6>
+        <button type="button" class="btn btn-sm btn-outline-primary"
+                (click)="playAll()">
+          <i class="bi bi-play-fill me-1"></i> Reproducir todo
+        </button>
+      </div>
+
+      <div class="mt-2">
+        <div class="result-item"
+             *ngFor="let song of songResults"
+             role="button"
+             tabindex="0"
+             (click)="play(song)"
+             (keydown.enter)="play(song)">
+          <div class="item-icon">
+            <i class="bi bi-music-note-beamed"></i>
+          </div>
+
+          <div class="item-info">
+            <div class="item-name text-truncate">{{ song.name_song || 'Sin nombre' }}</div>
+            <div class="item-details text-truncate">
+              {{ song.artist_song || 'Artista desconocido' }}
+              <span *ngIf="song.album_song">• {{ song.album_song }}</span>
+            </div>
+          </div>
+
+          <!-- Acciones al extremo derecho -->
+          <div class="ms-auto d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-light"
+                    title="Reproducir"
+                    (click)="play(song); $event.stopPropagation()">
+              <i class="bi bi-play-fill"></i>
+            </button>
+            <!-- (Opcional) Ver detalles del tema -->
+            <a class="btn btn-sm btn-outline-secondary"
+               [routerLink]="['/songs', song.id]"
+               (click)="$event.stopPropagation()"
+               title="Ver detalles">
+              <i class="bi bi-arrow-right"></i>
+            </a>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Resultados de playlists -->
+    <!-- Playlists -->
     <div class="results-section" *ngIf="!isLoading && playlistResults.length > 0">
       <h6 class="section-title">
         <i class="bi bi-list-ul me-1"></i>
         Playlists ({{ playlistResults.length }})
       </h6>
-      <div class="result-item" 
+      <div class="result-item"
            *ngFor="let playlist of playlistResults"
-           [routerLink]="['/playlists', playlist.id]" 
+           [routerLink]="['/playlists', playlist.id]"
            (click)="onResultClick()">
         <div class="item-icon">
           <i class="bi bi-list-ul"></i>
         </div>
         <div class="item-info">
-          <div class="item-name">{{ playlist.name_playlist || 'Sin nombre' }}</div>
-          <div class="item-details">
+          <div class="item-name text-truncate">{{ playlist.name_playlist || 'Sin nombre' }}</div>
+          <div class="item-details text-truncate">
             {{ playlist.is_public ? 'Pública' : 'Privada' }}
             <span *ngIf="playlist.song_count">• {{ playlist.song_count }} canciones</span>
           </div>
@@ -54,21 +81,24 @@
       </div>
     </div>
 
-    <!-- Resultados de artistas -->
+    <!-- Artistas -->
     <div class="results-section" *ngIf="!isLoading && artistResults.length > 0">
       <h6 class="section-title">
         <i class="bi bi-person me-1"></i>
         Artistas ({{ artistResults.length }})
       </h6>
-      <div class="result-item" 
+      <div class="result-item"
            *ngFor="let artist of artistResults"
-           (click)="searchByArtist(artist.name); onResultClick()">
+           role="button"
+           tabindex="0"
+           (click)="searchByArtist(artist.name); onResultClick()"
+           (keydown.enter)="searchByArtist(artist.name); onResultClick()">
         <div class="item-icon">
           <i class="bi bi-person"></i>
         </div>
         <div class="item-info">
-          <div class="item-name">{{ artist.name || 'Artista desconocido' }}</div>
-          <div class="item-details">{{ artist.songCount || 0 }} canciones</div>
+          <div class="item-name text-truncate">{{ artist.name || 'Artista desconocido' }}</div>
+          <div class="item-details text-truncate">{{ artist.songCount || 0 }} canciones</div>
         </div>
       </div>
     </div>
@@ -80,11 +110,11 @@
       <small>Intenta con otros términos de búsqueda</small>
     </div>
 
-    <!-- Ver todos los resultados -->
+    <!-- Ver todos -->
     <div class="view-all-section" *ngIf="!isLoading && !hasNoResults && currentSearchTerm">
-      <div class="result-item view-all" 
-           [routerLink]="['/search']" 
-           [queryParams]="{q: currentSearchTerm}"
+      <div class="result-item view-all"
+           [routerLink]="['/search']"
+           [queryParams]="{ q: currentSearchTerm }"
            (click)="onResultClick()">
         <div class="item-icon">
           <i class="bi bi-arrow-right"></i>

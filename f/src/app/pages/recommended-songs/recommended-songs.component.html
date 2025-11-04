@@ -52,9 +52,12 @@
                         <img 
                             [src]="song.cover | mediaUrl" 
                             [alt]="'Portada de ' + song.title" 
+                            width="224" height="224"
+                            decoding="async"
                             class="circle-image"
                             (error)="handleImageError($event, song)"
                             loading="lazy">
+                            
                     </ng-container>
                     
                     <ng-template #iconFallback>
