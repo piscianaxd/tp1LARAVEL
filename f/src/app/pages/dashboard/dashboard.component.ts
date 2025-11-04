@@ -8,7 +8,7 @@ import { SearchService, DashboardComponent as DashboardComponentInterface } from
 
 import { RecentTracksComponent } from '../recent-track/recent-track.component';
 import { RandomTracksComponent } from '../random-track/random-track.component';
-import { MixesCapsuleComponent } from '../../features/mixes-capsule/mixes-capsule.component';
+import { MixesCapsuleComponent } from '../mixes-capsule/mixes-capsule.component';
 import { AutoPlaylistsComponent } from '../auto-playlist/auto-playlist.component';
 import { PlayerBarComponent } from '../player-bar/player-bar.component';
 import { NavBar } from "../navbar/navbar.component";

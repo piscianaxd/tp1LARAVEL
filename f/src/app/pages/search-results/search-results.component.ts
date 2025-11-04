@@ -3,6 +3,10 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { SearchService } from '../../services/search.service';
 import { Subscription } from 'rxjs';
+import { PlayerService } from '../../services/player.service';
+import { Track } from '../../models/track/track.model';
+import { songToTrack, isSongDto, SongDto } from '../../helpers/adapters';
+import { SearchableItem } from '../../services/search.service';
 
 @Component({
   selector: 'app-search-results',
@@ -12,7 +16,7 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./search-results.component.css']
 })
 export class SearchResultsComponent implements OnInit, OnDestroy {
-  songResults: any[] = [];
+  songResults: SearchableItem[] = []; // tipado correcto
   playlistResults: any[] = [];
   artistResults: any[] = [];
   showResults = false;
@@ -20,9 +24,33 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
   isLoading = false;
   currentSearchTerm: string = '';
 
+
+
   private searchSubscription: Subscription = new Subscription();
 
-  constructor(public searchService: SearchService) {}
+  constructor(public searchService: SearchService, private player: PlayerService
+   ) {}
+
+
+  play(item: SearchableItem) {
+    // solo canciones válidas (descarta playlists/artistas o canciones incompletas)
+    const songs: SongDto[] = this.songResults.filter(isSongDto);
+
+    // si el click fue sobre una canción válida:
+    if (isSongDto(item)) {
+      const t: Track = songToTrack(item);
+      const queue: Track[] = songs.map(songToTrack);
+      this.player.playNow(t, queue);
+    } else {
+      console.warn('El item clickeado no es una canción reproducible.', item);
+    }
+  }
+
+  playAll() {
+    const songs: SongDto[] = this.songResults.filter(isSongDto);
+    const q: Track[] = songs.map(songToTrack);
+    if (q.length) this.player.playNow(q[0], q);
+  }
 
   ngOnInit() {
     // Escuchar cambios en el término de búsqueda global
