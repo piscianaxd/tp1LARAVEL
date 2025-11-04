@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { PlaylistService } from '../../services/playlist.service';
-import { PlaylistEventService } from '../../services/playlist-event.service';
+import { PlaylistEventService, SongForPlaylist } from '../../services/playlist-event.service';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { HttpErrorResponse } from '@angular/common/http';
 
@@ -40,11 +40,15 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
   newPlaylistName: string = '';
   newPlaylistIsPublic: boolean = true;
 
-  // NUEVO: Señales para paginación
+  // CORREGIDO: Propiedad para guardar la canción
+  private songForNewPlaylist: SongForPlaylist | null = null;
+
+  // Señales para paginación
   playlistPage = signal(0);
   playlistMaxPages = signal(3);
 
   private playlistEventSubscription!: Subscription;
+  private createPlaylistWithSongSubscription!: Subscription;
 
   private playlistService = inject(PlaylistService);
   private playlistEventService = inject(PlaylistEventService);
@@ -61,11 +65,21 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
       console.log('🔄 Evento recibido: recargando playlists...');
       this.refreshPlaylists();
     });
+
+    // CORREGIDO: Suscribirse al evento de crear playlist con canción
+    this.createPlaylistWithSongSubscription = this.playlistEventService.createPlaylistWithSong$.subscribe((song) => {
+      console.log('🎵 Evento recibido: crear playlist con canción:', song);
+      this.songForNewPlaylist = song;
+      this.openCreatePlaylistModal();
+    });
   }
 
   ngOnDestroy() {
     if (this.playlistEventSubscription) {
       this.playlistEventSubscription.unsubscribe();
+    }
+    if (this.createPlaylistWithSongSubscription) {
+      this.createPlaylistWithSongSubscription.unsubscribe();
     }
   }
 
@@ -238,12 +252,15 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     console.log('✅ Playlists de prueba cargadas:', mockPlaylists.length);
   }
 
-  // 🔥 NUEVO: Métodos para controlar el modal con desenfoque
   openCreatePlaylistModal() {
-    this.newPlaylistName = '';
+    // CORREGIDO: Si hay una canción para nueva playlist, usar su nombre como sugerencia
+    if (this.songForNewPlaylist) {
+      this.newPlaylistName = `${this.songForNewPlaylist.name_song} - Favoritas`;
+    } else {
+      this.newPlaylistName = '';
+    }
     this.newPlaylistIsPublic = true;
     this.showCreatePlaylistModal.set(true);
-    // Agregar clase al body para el desenfoque
     document.body.classList.add('modal-active');
   }
 
@@ -251,7 +268,7 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     this.showCreatePlaylistModal.set(false);
     this.newPlaylistName = '';
     this.newPlaylistIsPublic = true;
-    // Remover clase del body
+    this.songForNewPlaylist = null; // Limpiar la canción
     document.body.classList.remove('modal-active');
   }
 
@@ -265,21 +282,78 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
 
     this.creatingNewPlaylist.set(true);
     
+    console.log('📤 Creando nueva playlist...');
     this.playlistService.createPlaylist({
       name_playlist: name,
       is_public: this.newPlaylistIsPublic
     }).subscribe({
       next: (response: any) => {
         console.log('✅ Nueva playlist creada:', response);
-        this.creatingNewPlaylist.set(false);
-        this.closeCreatePlaylistModal();
-        this.loadPlaylists();
-        this.error.set(null);
+        
+        // CORREGIDO: Extraer el ID correctamente de la respuesta
+        const newPlaylistId = response.playlist?.id || response.id;
+        console.log('🎵 ID de nueva playlist:', newPlaylistId);
+        console.log('🎵 Canción para agregar:', this.songForNewPlaylist);
+        
+        // CORREGIDO: Si hay una canción para agregar y tenemos un ID válido, agregarla
+        if (this.songForNewPlaylist && newPlaylistId) {
+          console.log('📤 Agregando canción a nueva playlist...');
+          this.addSongToNewPlaylist(newPlaylistId);
+        } else {
+          console.log('ℹ️ No hay canción para agregar o no se obtuvo ID de playlist');
+          console.log('🔍 ID obtenido:', newPlaylistId);
+          console.log('🔍 Canción disponible:', !!this.songForNewPlaylist);
+          this.creatingNewPlaylist.set(false);
+          this.closeCreatePlaylistModal();
+          this.loadPlaylists();
+          this.error.set(null);
+        }
       },
       error: (err: HttpErrorResponse) => {
         console.error('❌ Error creando playlist:', err);
         this.creatingNewPlaylist.set(false);
         this.error.set('Error al crear la playlist');
+      }
+    });
+  }
+
+  // CORREGIDO: Método para agregar canción a la nueva playlist
+  private addSongToNewPlaylist(playlistId: number) {
+    if (!this.songForNewPlaylist) {
+      console.error('❌ No hay canción para agregar');
+      this.creatingNewPlaylist.set(false);
+      return;
+    }
+
+    console.log('🎵 Agregando canción a playlist:', {
+      playlistId: playlistId,
+      songId: this.songForNewPlaylist.id,
+      songName: this.songForNewPlaylist.name_song
+    });
+
+    this.playlistService.addSongToPlaylist(playlistId, this.songForNewPlaylist.id).subscribe({
+      next: (response) => {
+        console.log('✅ Canción agregada a nueva playlist:', response);
+        
+        // Notificar que se completó la creación
+        this.playlistEventService.notifyPlaylistCreated(playlistId);
+        
+        this.creatingNewPlaylist.set(false);
+        this.closeCreatePlaylistModal();
+        this.loadPlaylists();
+        this.error.set(null);
+        this.songForNewPlaylist = null;
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error('❌ Error agregando canción a nueva playlist:', err);
+        console.error('❌ Detalles del error:', err.error);
+        this.creatingNewPlaylist.set(false);
+        this.error.set('Playlist creada pero error al agregar la canción');
+        this.songForNewPlaylist = null;
+        
+        // Aún así cerrar el modal y recargar las playlists
+        this.closeCreatePlaylistModal();
+        this.loadPlaylists();
       }
     });
   }

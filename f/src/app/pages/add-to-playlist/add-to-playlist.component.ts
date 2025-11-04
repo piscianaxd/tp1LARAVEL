@@ -1,10 +1,11 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { AddToPlaylistService } from '../../services/add-to-playlist.service';
 import { PlaylistService } from '../../services/playlist.service';
 import { PlaylistEventService } from '../../services/playlist-event.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-add-to-playlist',
@@ -13,7 +14,7 @@ import { PlaylistEventService } from '../../services/playlist-event.service';
   templateUrl: './add-to-playlist.component.html',
   styleUrls: ['./add-to-playlist.component.css']
 })
-export class AddToPlaylistComponent {
+export class AddToPlaylistComponent implements OnInit, OnDestroy {
   private addToPlaylistService = inject(AddToPlaylistService);
   private playlistService = inject(PlaylistService);
   private playlistEventService = inject(PlaylistEventService);
@@ -28,6 +29,21 @@ export class AddToPlaylistComponent {
   addingToPlaylist = false;
   successMessage = '';
 
+  private playlistCreatedSubscription!: Subscription;
+
+  ngOnInit() {
+    // Suscribirse al evento de playlist creada
+    this.playlistCreatedSubscription = this.playlistEventService.playlistCreated$.subscribe((playlistId) => {
+      console.log('✅ Playlist creada con ID:', playlistId);
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.playlistCreatedSubscription) {
+      this.playlistCreatedSubscription.unsubscribe();
+    }
+  }
+
   closeModal() {
     this.addToPlaylistService.closeModal();
     this.addingToPlaylist = false;
@@ -38,7 +54,6 @@ export class AddToPlaylistComponent {
     this.selectedPlaylistId.set(playlistId);
   }
 
-  // En add-to-playlist-modal.component.ts
   addToPlaylist() {
     const playlistId = this.selectedPlaylistId();
     const song = this.addToPlaylistService.getCurrentSong();
@@ -64,13 +79,12 @@ export class AddToPlaylistComponent {
         this.addingToPlaylist = false;
         this.successMessage = `"${song.name_song}" agregada a la playlist exitosamente`;
         
-        // NUEVO: Notificar que se guardó una playlist
+        // Notificar que se guardó una playlist
         this.playlistEventService.notifyPlaylistSaved();
 
         setTimeout(() => {
           this.closeModal();
-        }, 0);
-        
+        }, 2000);
       },
       error: (error) => {
         console.error('❌ Error completo:', error);
@@ -100,49 +114,27 @@ export class AddToPlaylistComponent {
     });
   }
 
+  // CORREGIDO: Método para abrir modal de crear playlist
   createNewPlaylistAndAdd() {
     const song = this.addToPlaylistService.getCurrentSong();
-    if (!song) return;
+    if (!song) {
+      console.error('❌ No hay canción seleccionada');
+      return;
+    }
 
-    const playlistName = `${song.name_song} - Favoritas`;
+    console.log('🎵 Creando nueva playlist con canción:', song);
     
-    this.addingToPlaylist = true;
-    this.successMessage = '';
-
-    this.playlistService.createPlaylist({
-      name_playlist: playlistName,
-      is_public: false
-    }).subscribe({
-      next: (newPlaylist: any) => {
-        // Agregar la canción a la nueva playlist
-        this.playlistService.addSongToPlaylist(newPlaylist.id, song.id).subscribe({
-          next: (response) => {
-            console.log('✅ Nueva playlist creada y canción agregada:', response);
-            this.addingToPlaylist = false;
-            this.successMessage = `Nueva playlist creada y canción agregada`;
-            
-            // NUEVO: Notificar que se guardó una playlist
-            this.playlistEventService.notifyPlaylistSaved();
-            
-            // Recargar playlists del usuario
-            this.addToPlaylistService.loadUserPlaylists();
-            
-            setTimeout(() => {
-              this.closeModal();
-            }, 2000);
-          },
-          error: (error) => {
-            console.error('❌ Error agregando canción a nueva playlist:', error);
-            this.addingToPlaylist = false;
-            this.successMessage = 'Playlist creada pero error al agregar la canción';
-          }
-        });
-      },
-      error: (error) => {
-        console.error('❌ Error creando nueva playlist:', error);
-        this.addingToPlaylist = false;
-        this.successMessage = 'Error al crear la nueva playlist';
-      }
+    // Cerrar modal actual
+    this.closeModal();
+    
+    // Usar el PlaylistEventService para comunicarse con el componente de playlists
+    this.playlistEventService.openCreatePlaylistWithSong({
+      id: song.id,
+      name_song: song.name_song,
+      artist_song: song.artist_song,
+      album_song: song.album_song,
+      art_work_song: song.art_work_song,
+      duration: song.duration
     });
   }
 }
