@@ -15,7 +15,6 @@ export const routes: Routes = [
   { path: 'register', component: RegisterComponent },
 
   // Protegidas
-  { path: 'playlists', component: PlaylistsComponent, canActivate: [authGuard] },
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
   // (Opcional futuro)
   // { path: 'playlists/:id', component: PlaylistDetailComponent, canActivate: [authGuard] },

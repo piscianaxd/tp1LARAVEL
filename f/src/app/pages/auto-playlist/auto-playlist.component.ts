@@ -1,9 +1,11 @@
+// components/auto-playlist/auto-playlist.component.ts
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RandomTrackService, Song } from '../../services/random-track.service';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { HttpErrorResponse } from '@angular/common/http';
 import { PlaylistService } from '../../services/playlist.service';
+import { PlaylistEventService } from '../../services/playlist-event.service';
 
 interface AutoPlaylist {
   id?: number;
@@ -12,8 +14,8 @@ interface AutoPlaylist {
   songs: Song[];
   isGenerated: boolean;
   genre?: string;
-  isPersistent?: boolean; // Nueva propiedad para playlists persistentes
-  currentPage?: number;   // Paginación para playlists persistentes
+  isPersistent?: boolean;
+  currentPage?: number;
 }
 
 @Component({
@@ -29,17 +31,19 @@ export class AutoPlaylistsComponent implements OnInit {
   playlists = signal<AutoPlaylist[]>([]);
   creatingPlaylist = signal<string | null>(null);
   
-  // Estado para la vista detallada
   selectedPlaylist = signal<AutoPlaylist | null>(null);
   showPlaylistDetail = signal(false);
 
-  // Playlist persistente (Mix Popular)
   popularPlaylist = signal<AutoPlaylist | null>(null);
   popularPlaylistPage = signal(0);
-  popularPlaylistMaxPages = signal(3); // 3 páginas × 6 canciones = 18 canciones
+  popularPlaylistMaxPages = signal(3);
 
-  // Servicio inyectado para guardado instantáneo
+  // MEJORA: Señales para paginación dinámica
+  playlistPage = signal(0);
+  playlistMaxPages = signal(0); // Cambiado a 0 para cálculo dinámico
+
   private playlistService = inject(PlaylistService);
+  private playlistEventService = inject(PlaylistEventService);
 
   constructor(
     private randomTrackService: RandomTrackService
@@ -50,7 +54,41 @@ export class AutoPlaylistsComponent implements OnInit {
     this.loadPopularPlaylist();
   }
 
-  // Cargar playlist popular persistente
+  // MEJORA: Métodos para paginación dinámica
+  nextPage() {
+    const nextPage = this.playlistPage() + 1;
+    if (nextPage < this.playlistMaxPages()) {
+      this.playlistPage.set(nextPage);
+    }
+  }
+
+  prevPage() {
+    const prevPage = this.playlistPage() - 1;
+    if (prevPage >= 0) {
+      this.playlistPage.set(prevPage);
+    }
+  }
+
+  getCurrentPlaylists(): AutoPlaylist[] {
+    const allPlaylists = this.playlists();
+    const startIndex = this.playlistPage() * 6;
+    return allPlaylists.slice(startIndex, startIndex + 6);
+  }
+
+  canGoNext(): boolean {
+    return (this.playlistPage() + 1) * 6 < this.playlists().length;
+  }
+
+  canGoPrev(): boolean {
+    return this.playlistPage() > 0;
+  }
+
+  // MEJORA: Método para actualizar páginas dinámicamente
+  private updateMaxPages() {
+    const totalPlaylists = this.playlists().length;
+    this.playlistMaxPages.set(Math.ceil(totalPlaylists / 6));
+  }
+
   loadPopularPlaylist() {
     this.randomTrackService.getRandomSongs(18).subscribe({
       next: (response) => {
@@ -71,7 +109,6 @@ export class AutoPlaylistsComponent implements OnInit {
     });
   }
 
-  // Navegación para playlist popular
   nextPopularPage() {
     const nextPage = this.popularPlaylistPage() + 1;
     if (nextPage < this.popularPlaylistMaxPages()) {
@@ -86,7 +123,6 @@ export class AutoPlaylistsComponent implements OnInit {
     }
   }
 
-  // Obtener canciones de la página actual del Mix Popular
   getCurrentPopularSongs(): Song[] {
     const playlist = this.popularPlaylist();
     if (!playlist) return [];
@@ -95,7 +131,6 @@ export class AutoPlaylistsComponent implements OnInit {
     return playlist.songs.slice(startIndex, startIndex + 6);
   }
 
-  // Verificar si se puede navegar en el Mix Popular
   canGoNextPopular(): boolean {
     return this.popularPlaylistPage() < this.popularPlaylistMaxPages() - 1;
   }
@@ -137,17 +172,17 @@ export class AutoPlaylistsComponent implements OnInit {
       return ['Rock', 'Pop', 'Jazz', 'Electrónica', 'Hip Hop'];
     }
 
-    return Array.from(genres).slice(0, 6); // Reducido a 6 para dejar espacio al Mix Popular
+    return Array.from(genres).slice(0, 6);
   }
 
   private createGenrePlaylists(genres: string[], allSongs: Song[]) {
     const autoPlaylists: AutoPlaylist[] = [];
 
-    // Playlists por género
+    // 1. Crear mix por género
     genres.forEach(genre => {
       const genreSongs = allSongs.filter(song => 
         song.genre_song && song.genre_song.toLowerCase().includes(genre.toLowerCase())
-      ).slice(0, 6); // Solo 6 canciones por género
+      ).slice(0, 6);
 
       if (genreSongs.length > 0) {
         autoPlaylists.push({
@@ -160,28 +195,51 @@ export class AutoPlaylistsComponent implements OnInit {
       }
     });
 
-    // Mix Variado (no persistente)
-    const varietySongs = [...allSongs]
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 6);
+    // 2. Crear dos mix variados con canciones diferentes
+    this.createVariedMixes(allSongs, autoPlaylists);
 
+    this.playlists.set(autoPlaylists);
+    this.updateMaxPages(); // ✅ MEJORA: Actualizar páginas dinámicamente
+    console.log(`🎵 Se crearon ${autoPlaylists.length} playlists (${this.playlistMaxPages()} páginas)`);
+  }
+
+  // 🚀 MÉTODO ROBUSTO PARA CREAR DOS MIX VARIADOS
+  private createVariedMixes(allSongs: Song[], autoPlaylists: AutoPlaylist[]) {
+    // Mezclar todas las canciones
+    const shuffledSongs = [...allSongs].sort(() => Math.random() - 0.5);
+    
+    // Primer mix variado - primeras 6 canciones
+    const varietySongs1 = shuffledSongs.slice(0, 6);
+    
     autoPlaylists.push({
-      name: 'Mix Variado',
+      name: 'Mix Más Variado',
       description: 'Una selección diversa de todos los géneros',
-      songs: varietySongs,
+      songs: varietySongs1,
       isGenerated: true
     });
 
-    this.playlists.set(autoPlaylists);
+    // Segundo mix variado - siguientes 6 canciones (diferentes)
+    const varietySongs2 = shuffledSongs.slice(6, 12);
+    
+    // Si no hay suficientes canciones diferentes, completar con las primeras
+    if (varietySongs2.length < 6) {
+      const needed = 6 - varietySongs2.length;
+      varietySongs2.push(...shuffledSongs.slice(0, needed));
+    }
+
+    autoPlaylists.push({
+      name: 'Mix para Todo Momento', 
+      description: 'La combinación perfecta para cualquier ocasión',
+      songs: varietySongs2,
+      isGenerated: true
+    });
   }
 
-  // Abrir vista detallada de playlist
   openPlaylist(playlist: AutoPlaylist) {
     this.selectedPlaylist.set(playlist);
     this.showPlaylistDetail.set(true);
   }
 
-  // Abrir vista detallada del Mix Popular
   openPopularPlaylist() {
     if (this.popularPlaylist()) {
       this.selectedPlaylist.set(this.popularPlaylist()!);
@@ -189,13 +247,11 @@ export class AutoPlaylistsComponent implements OnInit {
     }
   }
 
-  // Cerrar vista detallada
   closePlaylist() {
     this.showPlaylistDetail.set(false);
     this.selectedPlaylist.set(null);
   }
 
-  // Reproducir toda la playlist
   playPlaylist(playlist: AutoPlaylist, event?: Event) {
     if (event) {
       event.stopPropagation();
@@ -203,7 +259,6 @@ export class AutoPlaylistsComponent implements OnInit {
     console.log('Reproducir playlist:', playlist.name, playlist.songs);
   }
 
-  // Reproducir Mix Popular
   playPopularPlaylist(event?: Event) {
     if (event) {
       event.stopPropagation();
@@ -214,22 +269,16 @@ export class AutoPlaylistsComponent implements OnInit {
     }
   }
 
-  // ========== MÉTODOS NUEVOS PARA GUARDADO INSTANTÁNEO ==========
-  
-  // Método modificado para guardar playlist con canciones
   saveAsPlaylist(playlist: AutoPlaylist, event: Event) {
     event.stopPropagation();
     
-    // Verificar si ya está guardada
     if (this.isPlaylistSaved(playlist.name)) {
       console.log('Playlist ya guardada:', playlist.name);
       return;
     }
 
-    // Marcar como guardando instantáneamente
     this.creatingPlaylist.set(playlist.name);
 
-    // Preparar datos con las canciones
     const playlistData = {
       name_playlist: playlist.name,
       is_public: true,
@@ -240,7 +289,7 @@ export class AutoPlaylistsComponent implements OnInit {
         album_song: song.album_song || '',
         art_work_song: song.art_work_song || '',
         genre_song: song.genre_song || '',
-        url_song: song.url_song || '' // Añadir url_song si existe
+        url_song: song.url_song || ''
       }))
     };
 
@@ -251,12 +300,16 @@ export class AutoPlaylistsComponent implements OnInit {
       console.log('Playlist guardada instantáneamente:', playlist.name);
     }, 0);
 
-    // Llamada real al servidor (en segundo plano)
+    // Llamada real al servidor
     this.playlistService.createPlaylist(playlistData).subscribe({
       next: (response: any) => {
         console.log('Playlist confirmada en servidor:', response);
         this.creatingPlaylist.set(null);
         this.error.set(null);
+        
+        // Emitir evento después de guardar exitosamente
+        this.playlistEventService.notifyPlaylistSaved();
+        console.log('🔄 Evento de playlist guardada emitido');
       },
       error: (err: HttpErrorResponse) => {
         console.error('Error creando playlist:', err);
@@ -266,13 +319,10 @@ export class AutoPlaylistsComponent implements OnInit {
     });
   }
 
-  // Verificar si una playlist ya está guardada
   isPlaylistSaved(playlistName: string): boolean {
-    // Usamos el servicio para verificar el estado
     return this.playlistService.isPlaylistSaved(playlistName);
   }
 
-  // Obtener el estado de guardado de una playlist
   getPlaylistSaveState(playlistName: string): string {
     if (this.creatingPlaylist() === playlistName) {
       return 'saving';
@@ -280,7 +330,6 @@ export class AutoPlaylistsComponent implements OnInit {
     return this.playlistService.isPlaylistSaved(playlistName) ? 'saved' : 'unsaved';
   }
 
-  // Modificar el template para usar el estado de guardado
   getSaveButtonIcon(playlistName: string): string {
     const state = this.getPlaylistSaveState(playlistName);
     
@@ -307,15 +356,11 @@ export class AutoPlaylistsComponent implements OnInit {
     }
   }
 
-  // ========== FIN MÉTODOS NUEVOS ==========
-
-  // Reproducir canción individual
   playSong(song: Song, event: Event) {
     event.stopPropagation();
     console.log('Reproducir canción:', song);
   }
 
-  // Cache busting para imágenes
   noImg = new Set<number>();
   
   bust(id: number) {
@@ -354,7 +399,6 @@ export class AutoPlaylistsComponent implements OnInit {
     return count === 1 ? '1 canción' : `${count} canciones`;
   }
 
-  // Formatear duración
   formatDuration(seconds: number): string {
     if (!seconds) return '0:00';
     const mins = Math.floor(seconds / 60);

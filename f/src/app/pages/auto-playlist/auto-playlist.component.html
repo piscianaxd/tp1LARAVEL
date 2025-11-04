@@ -1,14 +1,5 @@
 <!-- Vista principal de playlists (siempre presente, pero oculta cuando hay detalle) -->
 <section class="auto-playlists-section" [class.d-none]="showPlaylistDetail()">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h2 class="h3 fw-bold mb-0">Cargas para tí</h2>
-    </div>
-    <button class="round-btn" (click)="generateAutoPlaylists()" title="Regenerar playlists">
-      <i class="bi bi-arrow-clockwise"></i>
-    </button>
-  </div>
-
   <!-- Loader -->
   <div *ngIf="loading()" class="row g-4">
     <div class="col-6 col-md-4 col-lg-3 col-xl-2" *ngFor="let _ of [0,1,2,3,4,5,6,7]">
@@ -85,12 +76,14 @@
           </div>
 
           <div class="playlist-card-info">
-            <h3 class="playlist-title text-truncate" [title]="song.name_song">
-              {{ song.name_song }}
-            </h3>
-            <p class="playlist-desc text-truncate" [title]="song.artist_song">
-              {{ song.artist_song }}
-            </p>
+            <div>
+              <h3 class="playlist-title text-truncate" [title]="song.name_song">
+                {{ song.name_song }}
+              </h3>
+              <p class="playlist-desc text-truncate" [title]="song.artist_song">
+                {{ song.artist_song }}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -103,12 +96,28 @@
       <div>
         <h3 class="h4 fw-bold mb-0">Descubrí nuevas playlists</h3>
       </div>
+      <!-- NUEVO: Flechas de paginación para mix creados -->
+      <div class="d-flex gap-2">
+        <button class="round-btn" 
+                (click)="prevPage()" 
+                [disabled]="!canGoPrev()" 
+                title="Anterior">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button class="round-btn" 
+                (click)="nextPage()" 
+                [disabled]="!canGoNext()" 
+                title="Siguiente">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
     </div>
 
     <div class="row g-4">
-      <div class="col-6 col-md-4 col-lg-3 col-xl-2" *ngFor="let playlist of playlists()">
+      <!-- NUEVO: Cambiar playlists() por getCurrentPlaylists() -->
+      <div *ngFor="let playlist of getCurrentPlaylists()" class="col-6 col-md-4 col-lg-3 col-xl-2">
         <div class="playlist-card" (click)="openPlaylist(playlist)">
-          <div class="cover-wrap-square">
+          <div class="cover-wrap-square ">
             <ng-container *ngIf="getCoverImage(playlist); else iconFallback">
               <img
                 [src]="(getCoverImage(playlist) | mediaUrl) + bust(playlist.songs[0]?.id || 0)"
@@ -143,13 +152,15 @@
           </div>
 
           <div class="playlist-card-info">
-            <h3 class="playlist-title text-truncate" [title]="playlist.name">
-              {{ playlist.name }}
-            </h3>
-            <p class="playlist-desc text-truncate" [title]="playlist.description">
-              {{ playlist.description }}
-            </p>
-            <p class="playlist-meta">
+            <div>
+              <h3 class="playlist-title text-truncate" [title]="playlist.name">
+                {{ playlist.name }}
+              </h3>
+              <p class="playlist-desc text-truncate" [title]="playlist.description">
+                {{ playlist.description }}
+              </p>
+            </div>
+            <p class="playlist-meta mt-2">
               {{ getSongCount(playlist) }}
             </p>
           </div>
@@ -218,6 +229,7 @@
     </div>
 
     <div class="tracks-list">
+      <!-- Mostrar TODAS las canciones directamente -->
       <div class="track-item" 
            *ngFor="let song of selectedPlaylist()!.songs; let i = index"
            (click)="playSong(song, $event)">
