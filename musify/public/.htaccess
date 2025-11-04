@@ -1,25 +1,56 @@
-<IfModule mod_rewrite.c>
-    <IfModule mod_negotiation.c>
-        Options -MultiViews -Indexes
-    </IfModule>
-
-    RewriteEngine On
-
-    # Handle Authorization Header
-    RewriteCond %{HTTP:Authorization} .
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-
-    # Handle X-XSRF-Token Header
-    RewriteCond %{HTTP:x-xsrf-token} .
-    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
-
-    # Redirect Trailing Slashes If Not A Folder...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
-
-    # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [L]
+# ========= CACHÉ Y HEADERS PARA MEDIA ESTÁTICA =========
+<IfModule mod_headers.c>
+  # Evitar que algo de PHP meta no-store
+  Header unset Pragma
+  Header unset Expires
 </IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+
+  # Imágenes: cache fuerte 30 días + immutable
+  ExpiresByType image/jpeg "access plus 30 days"
+  ExpiresByType image/png  "access plus 30 days"
+  ExpiresByType image/webp "access plus 30 days"
+  ExpiresByType image/avif "access plus 30 days"
+  <FilesMatch "\.(?:jpe?g|png|webp|avif)$">
+    Header set Cache-Control "public, max-age=2592000, immutable"
+  </FilesMatch>
+
+  # Audio: 7 días + rangos para seek
+  ExpiresByType audio/mpeg "access plus 7 days"
+  <FilesMatch "\.(?:mp3)$">
+    Header set Cache-Control "public, max-age=604800"
+    Header set Accept-Ranges "bytes"
+  </FilesMatch>
+</IfModule>
+# ========= FIN MEDIA =========
+
+
+# ========= LARAVEL (TU BLOQUE ORIGINAL + pequeño fix) =========
+<IfModule mod_rewrite.c>
+  <IfModule mod_negotiation.c>
+    Options -MultiViews -Indexes
+  </IfModule>
+
+  RewriteEngine On
+
+  # Handle Authorization Header
+  RewriteCond %{HTTP:Authorization} .
+  RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+  # Handle X-XSRF-Token Header
+  RewriteCond %{HTTP:x-xsrf-token} .
+  RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+  # Redirect Trailing Slashes If Not A Folder...
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_URI} (.+)/$
+  RewriteRule ^ %1 [L,R=301]
+
+  # Send Requests To Front Controller...
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^ index.php [L]
+</IfModule>
+# ========= FIN LARAVEL =========

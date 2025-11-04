@@ -1,17 +1,115 @@
-<!-- dashboard.component.html - ELIMINAR CONTENEDORES EXTERNOS -->
-<div class="container-fluid p-0">
-  <app-nav-bar></app-nav-bar>
+<!-- Navbar fija arriba -->
+<app-nav-bar />
 
-  <!-- Widgets - mantener el contenedor aquí -->
-  <div class="container-xxl px-3 px-md-4 py-3">
-    <app-mixes-capsule></app-mixes-capsule>
-    <app-recent-tracks></app-recent-tracks>
-    <app-random-tracks></app-random-tracks>
-    <app-recommendations></app-recommendations>
-    <app-playlists></app-playlists>
-    <app-add-to-playlist></app-add-to-playlist>
-    <app-auto-playlists></app-auto-playlists>
-    <app-player-bar></app-player-bar>
-  </div>  
-
+<!-- Buscador / header del dashboard (tu contenido actual) -->
+<div class="container-xxl px-3 px-md-4 py-3">
+  <!-- … tu barra de búsqueda y header … -->
 </div>
+
+<!-- MIXES -->
+<section class="section container-xxl px-3 px-md-4">
+  <h2 class="h4 fw-bold mb-3">Mixes personalizados</h2>
+
+  @defer (on viewport; prefetch on idle) {
+    <app-mixes-capsule />
+  } @placeholder {
+    <div class="row g-4">
+      <div class="col-6 col-md-4 col-lg-2" *ngFor="let _ of [0,1,2,3,4,5]">
+        <div class="random-card">
+          <div class="sk-cover-square mb-2"></div>
+          <div class="placeholder-glow mb-1"><span class="placeholder col-8"></span></div>
+          <div class="placeholder-glow"><span class="placeholder col-5"></span></div>
+        </div>
+      </div>
+    </div>
+  } @loading {
+    <div class="text-muted small">Cargando mixes…</div>
+  }
+</section>
+<!-- RECOMENDACIONES (si la usás aparte) -->
+<section class="section container-xxl px-3 px-md-4">
+  <h2 class="h4 fw-bold mb-3">Lo que podría gustarte</h2>
+
+  @defer (on viewport; prefetch on idle) {
+    <app-recommendations />
+  } @placeholder {
+    <div class="text-muted small">Buscando recomendaciones…</div>
+  } @loading {
+    <div class="text-muted small">Cargando…</div>
+  }
+</section>
+
+<!-- RECOMENDADAS / RANDOM -->
+<section class="section container-xxl px-3 px-md-4">
+  <h2 class="h4 fw-bold mb-3">Descubre nuevas canciones</h2>
+
+  @defer (on viewport; prefetch on idle) {
+    <app-random-tracks />
+  } @placeholder {
+    <div class="row g-4">
+      <div class="col-6 col-md-4 col-lg-2" *ngFor="let _ of [0,1,2,3,4,5]">
+        <div class="random-card">
+          <div class="sk-cover-square mb-2"></div>
+          <div class="placeholder-glow mb-1"><span class="placeholder col-8"></span></div>
+          <div class="placeholder-glow"><span class="placeholder col-5"></span></div>
+        </div>
+      </div>
+    </div>
+  } @loading {
+    <div class="text-muted small">Cargando recomendaciones…</div>
+  }
+</section>
+
+<!-- ESCUCHADOS RECIENTEMENTE -->
+<section class="section container-xxl px-3 px-md-4">
+  <h2 class="h4 fw-bold mb-3">Escuchados recientemente</h2>
+
+  @defer (on viewport; prefetch on idle) {
+    <app-recent-tracks />
+  } @placeholder {
+    <div class="row g-3">
+      <div class="col-12 col-lg-4" *ngFor="let _ of [0,1,2]">
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item bg-transparent px-0" *ngFor="let __ of [0,1,2]">
+            <div class="d-flex align-items-center gap-3">
+              <span class="sk-cover"></span>
+              <div class="flex-grow-1">
+                <div class="placeholder-glow mb-1"><span class="placeholder col-7"></span></div>
+                <div class="placeholder-glow"><span class="placeholder col-4"></span></div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  } @loading {
+    <div class="text-muted small">Cargando historial…</div>
+  }
+</section>
+<!-- PLAYLISTS MANUALES (si es diferente de auto-playlists) -->
+<section class="section container-xxl px-3 px-md-4">
+  <h2 class="h4 fw-bold mb-3">Tus playlists creadas</h2>
+  @defer (on viewport; prefetch on idle) {
+    <app-playlists />
+  } @placeholder {
+    <div class="text-muted small">Cargando playlists…</div>
+  }
+</section>
+
+<!-- PLAYLISTS AUTO -->
+<section class="section container-xxl px-3 px-md-4">
+  <h2 class="h4 fw-bold mb-3">Tus playlists</h2>
+
+  @defer (on viewport; prefetch on idle) {
+    <app-auto-playlists />
+  } @placeholder {
+    <div class="text-muted small">Preparando playlists…</div>
+  } @loading {
+    <div class="text-muted small">Cargando playlists…</div>
+  }
+</section>
+
+<app-add-to-playlist></app-add-to-playlist>
+
+<!-- Barra de reproducción fija siempre montada -->
+<app-player-bar />

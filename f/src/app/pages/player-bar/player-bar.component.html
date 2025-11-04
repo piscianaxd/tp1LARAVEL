@@ -6,6 +6,8 @@
         <ng-container *ngIf="!useFallback && player.current()?.artwork; else fallback">
           <img
             [src]="player.current()?.artwork | mediaUrl"
+            width="224" height="224"
+            decoding="async"
             alt="cover"
             class="cover-img"
             (error)="onCoverError()"
