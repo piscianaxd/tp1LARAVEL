@@ -3,7 +3,7 @@ from urllib.parse import quote_plus
 
 # === CONFIG ===
 AUDIO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                          '..', 'musify', 'public', 'media', 'audio'))
+        '..', 'musify', 'public', 'media', 'audio'))
 SAMPLE_MP3 = os.path.join(os.path.dirname(__file__), 'sample.mp3')
 TIMEOUT = 15
 SLEEP_BETWEEN = 0.5  # para no pegarle tan rápido a las APIs
