@@ -21,8 +21,17 @@ export class RecommendedSongsService {
     return this.http.get(`${this.baseUrl}/songs`);
   }
 
-  // Incrementar género (cuando el usuario escucha una canción)
+  // ✅ ACTUALIZADO: Incrementar género usando la nueva ruta
   incrementGenre(userId: number, genre: string): Observable<any> {
-    return this.http.patch(`${this.baseUrl}/recommended-songs/${userId}`, { genre });
+
+  console.log('🌐 Haciendo PATCH a:', `${this.baseUrl}/recommended-songs/user/${userId}/increment-genre`);
+  console.log('📤 Datos enviados:', { genre });
+
+    return this.http.patch(`${this.baseUrl}/recommended-songs/user/${userId}/increment-genre`, { genre });
+  }
+
+  // ✅ NUEVO: Obtener géneros top desde la nueva ruta
+  getTopGenres(userId: number): Observable<any> {
+    return this.http.get(`${this.baseUrl}/recommended-songs/user/${userId}/top-genres`);
   }
 }
