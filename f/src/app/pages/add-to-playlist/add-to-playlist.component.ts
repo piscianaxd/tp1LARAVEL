@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { AddToPlaylistService } from '../../services/add-to-playlist.service';
 import { PlaylistService } from '../../services/playlist.service';
+import { PlaylistEventService } from '../../services/playlist-event.service';
 
 @Component({
   selector: 'app-add-to-playlist',
@@ -15,6 +16,7 @@ import { PlaylistService } from '../../services/playlist.service';
 export class AddToPlaylistComponent {
   private addToPlaylistService = inject(AddToPlaylistService);
   private playlistService = inject(PlaylistService);
+  private playlistEventService = inject(PlaylistEventService);
 
   // Acceso a las señales del servicio
   showModal = this.addToPlaylistService.showModal$;
@@ -62,9 +64,13 @@ export class AddToPlaylistComponent {
         this.addingToPlaylist = false;
         this.successMessage = `"${song.name_song}" agregada a la playlist exitosamente`;
         
+        // NUEVO: Notificar que se guardó una playlist
+        this.playlistEventService.notifyPlaylistSaved();
+
         setTimeout(() => {
           this.closeModal();
-        }, 2000);
+        }, 0);
+        
       },
       error: (error) => {
         console.error('❌ Error completo:', error);
@@ -114,6 +120,9 @@ export class AddToPlaylistComponent {
             console.log('✅ Nueva playlist creada y canción agregada:', response);
             this.addingToPlaylist = false;
             this.successMessage = `Nueva playlist creada y canción agregada`;
+            
+            // NUEVO: Notificar que se guardó una playlist
+            this.playlistEventService.notifyPlaylistSaved();
             
             // Recargar playlists del usuario
             this.addToPlaylistService.loadUserPlaylists();

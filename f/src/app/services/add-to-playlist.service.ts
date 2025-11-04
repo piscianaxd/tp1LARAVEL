@@ -71,37 +71,8 @@ export class AddToPlaylistService {
         this.error.set('No se pudieron cargar las playlists');
         this.loading.set(false);
         
-        // Cargar playlists mock para desarrollo
-        this.loadMockPlaylists();
       }
     });
-  }
-
-  private loadMockPlaylists() {
-    const mockPlaylists = [
-      {
-        id: 1,
-        name_playlist: 'Mis Favoritas',
-        is_public: true,
-        songs: [
-          { song: { id: 101, name_song: 'Canción Ejemplo' } }
-        ]
-      },
-      {
-        id: 2,
-        name_playlist: 'Para Estudiar', 
-        is_public: false,
-        songs: []
-      },
-      {
-        id: 3,
-        name_playlist: 'Party Time',
-        is_public: true,
-        songs: []
-      }
-    ];
-    
-    this.userPlaylists.set(mockPlaylists);
   }
 
   getCurrentSong(): SongToAdd | null {
