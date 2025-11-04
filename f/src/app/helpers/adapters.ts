@@ -32,5 +32,6 @@ export function songToTrack(s: SongDto): Track {
     album: s.album_song,
     artwork: s.art_work_song ?? '',
     url: s.url_song,
+    genre: s.genre_song ?? '',
   };
 }
