@@ -10,7 +10,63 @@
 .auto-playlists-section{
   background: var(--bg0);
   border-radius: 16px;
-  padding: 1.5rem;
+  padding: 2rem; /* Mantener padding del contenedor */
+  min-height: 400px;
+}
+
+/* ========== MEJORAS PARA CARTAS COMPLETAS ========== */
+
+/* Grid más compacto */
+.row.g-4 {
+  --bs-gutter-x: 1rem;    /* Reducido de 1.5rem */
+  --bs-gutter-y: 1rem;    /* Reducido de 1.5rem */
+}
+
+/* Asegurar que las columnas tengan altura consistente */
+/* Debug temporal */
+.col-6.col-md-4.col-lg-3.col-xl-2 {
+  border: 1px !important;
+}
+
+/* ========== NORMALIZAR TAMAÑO DE IMÁGENES ========== */
+
+/* Asegurar que todas las imágenes tengan el mismo comportamiento */
+.cover-img-square {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  display: block !important;
+}
+
+/* Forzar mismo tamaño para todos los contenedores de imagen */
+.cover-wrap-square {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 6px;     /* Reducido de 8px */
+  overflow: hidden;
+  background: #131a22;
+  margin-bottom: 0.25rem; /* Reducido de 0.5rem */
+}
+
+/* Asegurar que los fallbacks también tengan el mismo tamaño */
+.cover-fallback-square {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;     /* Reducido de 8px */
+  background: var(--bg1);
+  color: #cdd6df;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;     /* Reducido de 1.5rem */
+  border: 1px solid rgba(255, 255, 255, .06);
+}
+
+/* Reset para cualquier padding/margin que pueda afectar el tamaño */
+.cover-wrap-square * {
+  box-sizing: border-box;
 }
 
 /* Header: botones circulares */
@@ -30,38 +86,61 @@
   cursor: not-allowed;
 }
 
-/* Texto */
+/* Texto - MÁS COMPACTO */
 .playlist-title{
   color: var(--title);
   font-weight: 700;
-  font-size: 0.9rem;
-  margin: 0;
-  line-height: 1.3;
+  font-size: 0.85rem;     /* Reducido de 0.9rem */
+  margin: 0 0 0.2rem 0;   /* Reducido margen */
+  line-height: 1.2;
 }
 .playlist-title:hover{ text-decoration: underline; }
 
 .playlist-desc{
   color: var(--muted);
-  font-size: 0.8rem;
-  margin: 0.25rem 0;
-  line-height: 1.2;
+  font-size: 0.75rem;     /* Reducido de 0.8rem */
+  margin: 0 0 0.2rem 0;   /* Reducido margen */
+  line-height: 1.1;
 }
 
 .playlist-meta {
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.7rem;      /* Reducido de 0.75rem */
   margin: 0;
   opacity: 0.7;
 }
-
-/* Playlist card layout - Más compacto */
-.playlist-card {
-  padding: 0.75rem;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  background: transparent;
-  cursor: pointer;
+/* Card más compacta solo para Mix Populares */
+.playlist-card.popular-mix {
+  min-height: 220px !important; /* Menor que las demás */
+  padding: 0.75rem !important; /* Menos padding */
 }
+
+.playlist-card.popular-mix .playlist-card-info {
+  min-height: 60px !important; /* Menos espacio para texto */
+  padding: 0.5rem 0 0 !important;
+}
+
+.playlist-card.popular-mix .cover-wrap-square {
+  height: 120px !important; /* Imagen más pequeña */
+}
+
+.playlist-card.popular-mix .playlist-title {
+  font-size: 0.85rem !important; /* Texto más pequeño */
+  min-height: 1.8em !important;
+}
+
+.playlist-card.popular-mix .playlist-desc {
+  font-size: 0.75rem !important;
+  min-height: 1.6em !important;
+}
+
+/* Playlist card layout - MÁS COMPACTO */
+.playlist-card {
+  min-height: 300px; /* Aumentar altura mínima */
+  display: flex;
+  flex-direction: column;
+}
+
 
 .playlist-card:hover {
   background: var(--bg1);
@@ -69,49 +148,22 @@
 }
 
 .playlist-card-info {
-  padding: 0.5rem 0 0;
-}
-
-/* Cover más pequeño */
-.cover-wrap-square {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #131a22;
-}
-
-.cover-img-square {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.cover-fallback-square {
-  width: 100%;
-  height: 100%;
-  border-radius: 8px;
-  background: var(--bg1);
-  color: #cdd6df;
+  padding: 0.25rem 0 0;   /* Reducido de 0.5rem */
+  flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, .06);
+  flex-direction: column;
 }
 
-/* Playlist overlay con múltiples botones */
+/* Playlist overlay con múltiples botones - MÁS COMPACTO */
 .playlist-overlay {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
+  bottom: 6px;            /* Reducido de 8px */
+  right: 6px;             /* Reducido de 8px */
   display: flex;
-  gap: 4px;
+  gap: 3px;               /* Reducido de 4px */
   opacity: 0;
   transition: all 0.3s ease;
-  transform: translateY(8px);
+  transform: translateY(6px); /* Reducido de 8px */
 }
 
 .cover-wrap-square:hover .playlist-overlay {
@@ -120,8 +172,8 @@
 }
 
 .overlay-btn-square {
-  width: 32px;
-  height: 32px;
+  width: 28px;            /* Reducido de 32px */
+  height: 28px;           /* Reducido de 32px */
   border-radius: 50%;
   border: 1px solid var(--border);
   background: rgba(0, 0, 0, 0.7);
@@ -133,7 +185,7 @@
 }
 
 .overlay-btn-square i {
-  font-size: 0.9rem;
+  font-size: 0.8rem;      /* Reducido de 0.9rem */
 }
 
 .overlay-btn-square.play i {
@@ -165,15 +217,16 @@
   to { transform: rotate(360deg); }
 }
 
-/* Loader skeleton más pequeño */
+/* Loader skeleton más pequeño - MÁS COMPACTO */
 .sk-cover-square {
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 8px;
+  border-radius: 6px;     /* Reducido de 8px */
   display: inline-block;
   background: linear-gradient(90deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .12), rgba(255, 255, 255, .06));
   background-size: 200% 100%;
   animation: shimmer 1.3s linear infinite;
+  margin-bottom: 0.25rem; /* Reducido de 0.5rem */
 }
 
 @keyframes shimmer {
@@ -185,104 +238,17 @@
   }
 }
 
-/* Grid más compacto */
-.row.g-4 {
-  --bs-gutter-x: 1rem;
-  --bs-gutter-y: 1rem;
+/* Asegurar que no haya desbordamiento de texto */
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
 }
 
-/* Ajustes responsivos */
-@media (max-width: 768px) {
-  .auto-playlists-section {
-    padding: 1rem;
-  }
-  
-  .playlist-card {
-    padding: 0.5rem;
-  }
-  
-  .playlist-card-info {
-    padding: 0.25rem 0 0;
-  }
-  
-  .playlist-title {
-    font-size: 0.85rem;
-  }
-  
-  .playlist-desc {
-    font-size: 0.75rem;
-  }
-  
-  .playlist-meta {
-    font-size: 0.7rem;
-  }
-  
-  .playlist-overlay {
-    bottom: 6px;
-    right: 6px;
-  }
-  
-  .overlay-btn-square {
-    width: 28px;
-    height: 28px;
-  }
-  
-  .overlay-btn-square i {
-    font-size: 0.8rem;
-  }
-}
-
-/* Para pantallas muy grandes */
-@media (min-width: 1400px) {
-  .col-6.col-md-4.col-lg-3.col-xl-2 {
-    flex: 0 0 auto;
-    width: 16.66666667%;
-  }
-}
-
-/* Estados deshabilitados para botones */
-.round-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  border-color: rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.round-btn:disabled:hover {
-  background: transparent;
-  transform: none;
-}
-
-/* Alertas */
-.alert-warning {
-  background: rgba(255, 193, 7, 0.1);
-  border: 1px solid rgba(255, 193, 7, 0.3);
-  color: #ffc107;
-  font-size: 0.9rem;
-  padding: 0.75rem 1rem;
-}
-
-.alert-danger {
-  background: rgba(220, 53, 69, 0.1);
-  border: 1px solid rgba(220, 53, 69, 0.3);
-  color: #dc3545;
-}
-
-.alert-info {
-  background: rgba(13, 110, 253, 0.1);
-  border: 1px solid rgba(13, 110, 253, 0.3);
-  color: #0d6efd;
-}
-
-.btn-outline-warning {
-  border-color: #ffc107;
-  color: #ffc107;
-  font-size: 0.8rem;
-}
-
-.btn-outline-warning:hover {
-  background-color: #ffc107;
-  color: #000;
+/* Añadir espacio adicional entre secciones */
+.mb-5 {
+  margin-bottom: 3rem !important; /* Aumentado para mejor separación */
 }
 
 /* ========== VISTA DETALLADA DE PLAYLIST ========== */
@@ -292,6 +258,7 @@
   background: var(--bg0);
   min-height: 100vh;
   padding: 1.5rem;
+  padding-bottom: 3rem; /* Nuevo: Padding adicional abajo para evitar corte */
 }
 
 /* Header de playlist detallada */
@@ -430,6 +397,28 @@
   background: var(--bg1);
   border-radius: 12px;
   overflow: hidden;
+  max-height: 70vh;
+  overflow-y: auto;
+  margin-bottom: 1rem; /* Nuevo: Margen adicional para separación */
+}
+
+/* Personalizar scrollbar */
+.playlist-tracks-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.playlist-tracks-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.playlist-tracks-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.playlist-tracks-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .tracks-header {
@@ -564,6 +553,54 @@
   transform: none;
 }
 
+/* ========== NUEVOS ESTILOS PARA INDICADOR DE MÁS CANCIONES ========== */
+
+/* Indicador de más canciones */
+.more-tracks-indicator {
+  padding: 2rem 1.5rem;
+  text-align: center;
+  border-top: 1px solid var(--border);
+  background: linear-gradient(transparent, rgba(255, 255, 255, 0.03));
+}
+
+.more-tracks-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.more-tracks-text {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.more-tracks-content i {
+  color: var(--muted);
+  font-size: 1rem;
+  animation: bounce 2s infinite;
+}
+
+.scroll-hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-3px);
+  }
+  60% {
+    transform: translateY(-2px);
+  }
+}
+
 /* Responsive para Mix Popular */
 @media (max-width: 768px) {
   .popular-playlist-section {
@@ -572,10 +609,65 @@
   }
 }
 
+/* ========== MEJORAS RESPONSIVE ========== */
+
+/* Ajustes responsivos MEJORADOS */
+@media (max-width: 768px) {
+  .auto-playlists-section {
+    padding: 1.5rem; /* Padding reducido pero suficiente */
+  }
+  
+  .playlist-card {
+    padding: 0.4rem; /* Más compacto en móvil */
+  }
+  
+  .playlist-card-info {
+    padding: 0.2rem 0 0;
+  }
+  
+  .playlist-title {
+    font-size: 0.8rem;
+    margin-bottom: 0.15rem;
+  }
+  
+  .playlist-desc {
+    font-size: 0.7rem;
+    margin-bottom: 0.15rem;
+  }
+  
+  .playlist-meta {
+    font-size: 0.65rem;
+  }
+  
+  .playlist-overlay {
+    bottom: 4px;
+    right: 4px;
+  }
+  
+  .overlay-btn-square {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .overlay-btn-square i {
+    font-size: 0.7rem;
+  }
+  
+  .row.g-4 {
+    --bs-gutter-x: 0.75rem;
+    --bs-gutter-y: 0.75rem;
+  }
+  
+  .cover-fallback-square {
+    font-size: 1rem;
+  }
+}
+
 /* Responsive para vista detallada */
 @media (max-width: 768px) {
   .playlist-detail-section {
     padding: 1rem;
+    padding-bottom: 2rem; /* Padding reducido en móvil pero aún presente */
   }
   
   .playlist-header-content {
@@ -619,6 +711,28 @@
     width: 100%;
     justify-content: center;
   }
+
+  /* Responsive para indicador de más canciones */
+  .more-tracks-indicator {
+    padding: 1.5rem 1rem;
+  }
+  
+  .more-tracks-content {
+    gap: 0.5rem;
+  }
+  
+  .more-tracks-text {
+    font-size: 0.85rem;
+  }
+  
+  .scroll-hint {
+    font-size: 0.75rem;
+  }
+  
+  .playlist-tracks-container {
+    max-height: 60vh;
+    margin-bottom: 0.5rem; /* Margen reducido en móvil */
+  }
 }
 
 /* Para pantallas muy grandes */
@@ -636,4 +750,36 @@
   .playlist-detail-title {
     font-size: 3rem;
   }
+}
+
+/* Alertas */
+.alert-warning {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  color: #ffc107;
+  font-size: 0.9rem;
+  padding: 0.75rem 1rem;
+}
+
+.alert-danger {
+  background: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  color: #dc3545;
+}
+
+.alert-info {
+  background: rgba(13, 110, 253, 0.1);
+  border: 1px solid rgba(13, 110, 253, 0.3);
+  color: #0d6efd;
+}
+
+.btn-outline-warning {
+  border-color: #ffc107;
+  color: #ffc107;
+  font-size: 0.8rem;
+}
+
+.btn-outline-warning:hover {
+  background-color: #ffc107;
+  color: #000;
 }

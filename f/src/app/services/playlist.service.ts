@@ -10,6 +10,9 @@ export class PlaylistService {
   
   // Signal para playlists guardadas localmente (simulación instantánea)
   private localPlaylists = signal<Map<string, any>>(new Map());
+  
+  // Signal para cache de playlists del usuario
+  private userPlaylists = signal<any[]>([]);
 
   constructor(private http: HttpClient) {}
 
@@ -27,10 +30,23 @@ export class PlaylistService {
   }
 
   getPlaylists(): Observable<any> {
+    console.log('🔍 Solicitando playlists del usuario...');
     return this.http.get(this.apiUrl, this.getHeaders())
       .pipe(
+        tap((response: any) => {
+          console.log('✅ Playlists recibidas del servidor:', response);
+          // Guardar en cache
+          if (Array.isArray(response)) {
+            this.userPlaylists.set(response);
+          }
+        }),
         catchError(this.handleError)
       );
+  }
+
+  // Obtener playlists desde el cache
+  getCachedPlaylists(): any[] {
+    return this.userPlaylists();
   }
 
   // Método modificado para guardado instantáneo
@@ -55,12 +71,16 @@ export class PlaylistService {
     return this.http.post(this.apiUrl, data, this.getHeaders())
       .pipe(
         tap((response: any) => {
+          console.log('✅ Playlist creada en servidor:', response);
           // Cuando el servidor responde, reemplazar la temporal con la real
           if (response.playlist) {
             this.replaceTempPlaylist(tempId, response.playlist);
+            // Actualizar cache
+            this.refreshPlaylistsCache();
           }
         }),
         catchError((error) => {
+          console.error('❌ Error creando playlist:', error);
           // Si hay error, mantener la temporal pero marcarla como error
           this.markPlaylistAsError(tempId);
           return throwError(() => error);
@@ -71,6 +91,11 @@ export class PlaylistService {
   deletePlaylist(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`, this.getHeaders())
       .pipe(
+        tap(() => {
+          console.log('🗑️ Playlist eliminada, actualizando cache...');
+          // Actualizar cache después de eliminar
+          this.refreshPlaylistsCache();
+        }),
         catchError(this.handleError)
       );
   }
@@ -98,11 +123,39 @@ export class PlaylistService {
     }
   }
 
+  // Actualizar cache de playlists
+  private refreshPlaylistsCache() {
+    this.getPlaylists().subscribe({
+      next: () => console.log('🔄 Cache de playlists actualizado'),
+      error: (err) => console.error('❌ Error actualizando cache:', err)
+    });
+  }
+
   // Obtener todas las playlists (reales + locales)
   getAllPlaylists(): any[] {
     const local = Array.from(this.localPlaylists().values());
-    // Aquí podrías combinar con las playlists del servidor
-    return local;
+    const server = this.userPlaylists();
+    
+    // Filtrar playlists locales que no están en error
+    const validLocalPlaylists = local.filter(playlist => playlist.status !== 'error');
+    
+    // Combinar y eliminar duplicados
+    const allPlaylists = [...server, ...validLocalPlaylists];
+    const uniquePlaylists = this.removeDuplicates(allPlaylists);
+    
+    return uniquePlaylists;
+  }
+
+  private removeDuplicates(playlists: any[]): any[] {
+    const seen = new Set();
+    return playlists.filter(playlist => {
+      const identifier = playlist.is_temp ? playlist.id : playlist.id.toString();
+      if (seen.has(identifier)) {
+        return false;
+      }
+      seen.add(identifier);
+      return true;
+    });
   }
 
   // Verificar si una playlist está guardada localmente
@@ -114,18 +167,18 @@ export class PlaylistService {
   }
 
   private handleError(error: any) {
-    console.error('Error en PlaylistService:', error);
-    //return throwError(() => new Error(error.message || 'Error del servidor'));
-
-    //Mensajes de error más específicos
+    console.error('❌ Error en PlaylistService:', error);
+    
+    // Mensajes de error más específicos
     let errorMsg = 'Error del servidor';
     if (error.status === 401) {
       errorMsg = "No autorizado - Sesión expirada";
-    }else if (error.status === 404) {
+    } else if (error.status === 404) {
       errorMsg = "Recurso no encontrado";
-    }else if (error.error?.message) {
+    } else if (error.error?.message) {
       errorMsg = error.error.message;
     }
+    
     return throwError(() => new Error(errorMsg));
   }
 }
