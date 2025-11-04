@@ -48,4 +48,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //PlaylistController
      Route::apiResource('playlists', PlaylistController::class);
+     
+    Route::post('playlists/{playlist}/songs', [PlaylistController::class, 'addSong']);
 });

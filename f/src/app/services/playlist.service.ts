@@ -99,6 +99,7 @@ export class PlaylistService {
         catchError(this.handleError)
       );
   }
+  
 
   // Métodos para el guardado instantáneo
   private addToLocalPlaylists(id: string, playlist: any) {
@@ -181,4 +182,20 @@ export class PlaylistService {
     
     return throwError(() => new Error(errorMsg));
   }
+  addSongToPlaylist(playlistId: number, songId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${playlistId}/songs`, { 
+      song_id: songId 
+    });
+  }
+
+  // NUEVO: Método para remover canción de playlist
+  removeSongFromPlaylist(playlistId: number, songId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${playlistId}/songs/${songId}`);
+  }
+
+  // NUEVO: Método para obtener canciones de una playlist específica
+  getPlaylistSongs(playlistId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/${playlistId}/songs`);
+  }
 }
+

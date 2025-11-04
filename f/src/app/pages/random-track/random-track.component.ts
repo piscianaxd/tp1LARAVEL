@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 
@@ -7,6 +7,7 @@ import { PlayerService } from '../../services/player.service';
 import { Track } from '../../models/track/track.model';
 import { songToTrack } from '../../helpers/adapters'; 
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
+import { AddToPlaylistService } from '../../services/add-to-playlist.service';
 
 @Component({
   selector: 'app-random-tracks',
@@ -37,6 +38,9 @@ export class RandomTracksComponent implements OnInit {
 
   // control de fallback de imagen
   noImg = new Set<number>();
+
+  // ✅ CORREGIDO: Usar inject() para el servicio
+  private addToPlaylistService = inject(AddToPlaylistService);
 
   constructor(
     private randomTrackService: RandomTrackService,
@@ -94,6 +98,20 @@ export class RandomTracksComponent implements OnInit {
     this.loadRandomTracks();
   }
 
+  // ✅ NUEVO: Método para agregar a playlist
+  addToPlaylist(song: Song, event: Event): void {
+    event.stopPropagation(); // Importante para evitar que se propague el click
+    
+    this.addToPlaylistService.openModal({
+      id: song.id,
+      name_song: song.name_song,
+      artist_song: song.artist_song,
+      album_song: song.album_song,
+      art_work_song: song.art_work_song,
+      duration: song.duration
+    });
+  }
+
   // reproducir una
   play(song: Song): void {
     const t: Track = songToTrack(song);
@@ -107,7 +125,7 @@ export class RandomTracksComponent implements OnInit {
     if (q.length) this.player.playNow(q[0], q);
   }
 
-  // si preferís “todas las generadas hasta el momento”
+  // si preferís "todas las generadas hasta el momento"
   getAllSongs(): Song[] {
     const all: Song[] = [];
     for (let i = 0; i <= this.currentPage(); i++) {

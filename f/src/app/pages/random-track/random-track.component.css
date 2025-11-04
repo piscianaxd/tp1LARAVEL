@@ -87,11 +87,18 @@
   border: 1px solid rgba(255, 255, 255, .06);
 }
 
-/* Overlay button más pequeño */
-.overlay-btn-square {
+.playlist-overlay {
   position: absolute;
   bottom: 8px;
   right: 8px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: all 0.3s ease;
+  transform: translateY(8px);
+}
+/* Overlay button más pequeño */
+.overlay-btn-square {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -101,26 +108,27 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
   transition: all 0.3s ease;
-  transform: translateY(8px);
 }
+
 
 .overlay-btn-square i {
   font-size: 0.9rem;
-  margin-left: 1px;
 }
 
-.cover-wrap-square:hover .overlay-btn-square {
+.overlay-btn-square.play i {
+  margin-left: 1px; /* Solo para el botón de play */
+}
+
+.cover-wrap-square:hover .playlist-overlay {
   opacity: 1;
   transform: translateY(0);
 }
 
 .overlay-btn-square:hover {
   background: rgba(0, 0, 0, 0.9);
-  transform: scale(1.1) translateY(0);
+  transform: scale(1.1);
 }
-
 /* Loader skeleton más pequeño */
 .sk-cover-square {
   width: 100%;

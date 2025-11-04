@@ -361,6 +361,163 @@ class PlaylistController extends Controller
             return response()->json(['error' => 'Error eliminando playlist'], 500);
         }
     }
+        /**
+     * @OA\Post(
+     *     path="/api/playlists/{playlist}/songs",
+     *     summary="Agregar una canción a una playlist",
+     *     description="Agrega una canción específica a una playlist existente del usuario",
+     *     operationId="addSongToPlaylist",
+     *     tags={"Playlists"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="playlist",
+     *         in="path",
+     *         required=true,
+     *         description="ID de la playlist a la que se agregará la canción",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Datos de la canción a agregar",
+     *         @OA\JsonContent(
+     *             required={"song_id"},
+     *             @OA\Property(property="song_id", type="integer", example=1, description="ID de la canción en songs_saved_db")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Canción agregada exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Canción agregada exitosamente a la playlist"),
+     *             @OA\Property(property="playlist", type="object"),
+     *             @OA\Property(property="added_song", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Playlist o canción no encontrada",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Playlist o canción no encontrada")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=409,
+     *         description="La canción ya está en la playlist",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="La canción ya está en esta playlist")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="No tienes permiso para modificar esta playlist",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="No tienes permiso para modificar esta playlist")
+     *         )
+     *     )
+     * )
+     */
+    public function addSong(Request $request, $playlistId)
+    {
+        Log::info('🎵 ========== ADD SONG TO PLAYLIST START ==========');
+        Log::info('🎵 Adding song to playlist:', ['playlist_id' => $playlistId]);
+        Log::info('🎵 Request data:', $request->all());
+
+        DB::beginTransaction();
+
+        try {
+            $userId = $request->user()?->id ?? 1;
+            
+            // Validar la solicitud
+            $validator = Validator::make($request->all(), [
+                'song_id' => 'required|integer|exists:songs_saved_db,id'
+            ]);
+
+            if ($validator->fails()) {
+                Log::warning('🎵 Validation failed:', $validator->errors()->toArray());
+                return response()->json($validator->errors(), 422);
+            }
+
+            // Buscar la playlist
+            $playlist = Playlist::where('id', $playlistId)
+                ->where('user_id', $userId)
+                ->first();
+
+            if (!$playlist) {
+                Log::warning('🎵 Playlist not found or not owned by user:', [
+                    'playlist_id' => $playlistId, 
+                    'user_id' => $userId
+                ]);
+                return response()->json([
+                    'message' => 'Playlist no encontrada o no tienes permisos'
+                ], 404);
+            }
+
+            // Buscar la canción
+            $song = SongSavedDb::find($request->song_id);
+            if (!$song) {
+                Log::warning('🎵 Song not found:', ['song_id' => $request->song_id]);
+                return response()->json([
+                    'message' => 'Canción no encontrada'
+                ], 404);
+            }
+
+            // Verificar si la canción ya está en la playlist
+            $existingSong = SavedSong::where('playlist_id', $playlist->id)
+                ->where('songs_saved_db_id', $song->id)
+                ->first();
+
+            if ($existingSong) {
+                Log::warning('🎵 Song already in playlist:', [
+                    'playlist_id' => $playlist->id,
+                    'song_id' => $song->id
+                ]);
+                return response()->json([
+                    'message' => 'La canción ya está en esta playlist'
+                ], 409);
+            }
+
+            // Agregar la canción a la playlist
+            SavedSong::create([
+                'playlist_id' => $playlist->id,
+                'songs_saved_db_id' => $song->id
+            ]);
+
+            DB::commit();
+
+            Log::info('🎵 Song added successfully to playlist:', [
+                'playlist_id' => $playlist->id,
+                'song_id' => $song->id,
+                'song_name' => $song->name_song
+            ]);
+
+            // Cargar la playlist actualizada con sus canciones
+            $playlist->load(['songs.song']);
+
+            Log::info('🎵 ========== ADD SONG TO PLAYLIST END ==========');
+
+            return response()->json([
+                'message' => 'Canción agregada exitosamente a la playlist',
+                'playlist' => $playlist,
+                'added_song' => $song
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('🎵 ADD SONG ERROR:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'message' => 'Error al agregar la canción a la playlist',
+                'error' => config('app.debug') ? $e->getMessage() : 'Contact administrator'
+            ], 500);
+        }
+    }
+
 
     /**
      * @OA\Post(
