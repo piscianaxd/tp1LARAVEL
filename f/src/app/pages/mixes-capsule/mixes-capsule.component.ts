@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, NgOptimizedImage  } from '@angular/common';
 import { MixesService, Song } from '../../services/mixes.service';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -6,6 +6,7 @@ import { PlayerService } from '../../services/player.service';
 import { Track } from '../../models/track/track.model';
 import { songToTrack } from '../../helpers/adapters';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
+import { AddToPlaylistService } from '../../services/add-to-playlist.service';
 
 @Component({
   selector: 'app-mixes-capsule',
@@ -28,6 +29,8 @@ export class MixesCapsuleComponent implements OnInit {
   /** Cache por género para evitar pedir de nuevo */
   private cache = new Map<string, Song[]>();
   private inFlight = false;
+  
+  private addToPlaylistService = inject(AddToPlaylistService);
 
   constructor(
     private mixesService: MixesService,
@@ -90,6 +93,18 @@ export class MixesCapsuleComponent implements OnInit {
     const queue: Track[] = this.songs().map(songToTrack);
     if (queue.length) this.player.playNow(queue[0], queue);
   }
+
+    // NUEVO: Método para agregar a playlist
+  addToPlaylist(song: Song) {
+    this.addToPlaylistService.openModal({
+      id: song.id,
+      name_song: song.name_song,
+      artist_song: song.artist_song,
+      album_song: song.album_song,
+      art_work_song: song.art_work_song
+    });
+  }
+
 
   onImgError(_ev: Event, song: Song) {
     this.noImg.add(song.id);

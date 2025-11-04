@@ -26,10 +26,22 @@
     <div class="text-muted small">Cargando mixes…</div>
   }
 </section>
+<!-- RECOMENDACIONES (si la usás aparte) -->
+<section class="section container-xxl px-3 px-md-4">
+  <h2 class="h4 fw-bold mb-3">Lo que podría gustarte</h2>
+
+  @defer (on viewport; prefetch on idle) {
+    <app-recommendations />
+  } @placeholder {
+    <div class="text-muted small">Buscando recomendaciones…</div>
+  } @loading {
+    <div class="text-muted small">Cargando…</div>
+  }
+</section>
 
 <!-- RECOMENDADAS / RANDOM -->
 <section class="section container-xxl px-3 px-md-4">
-  <h2 class="h4 fw-bold mb-3">Canciones recomendadas</h2>
+  <h2 class="h4 fw-bold mb-3">Descubre nuevas canciones</h2>
 
   @defer (on viewport; prefetch on idle) {
     <app-random-tracks />
@@ -74,6 +86,15 @@
     <div class="text-muted small">Cargando historial…</div>
   }
 </section>
+<!-- PLAYLISTS MANUALES (si es diferente de auto-playlists) -->
+<section class="section container-xxl px-3 px-md-4">
+  <h2 class="h4 fw-bold mb-3">Tus playlists creadas</h2>
+  @defer (on viewport; prefetch on idle) {
+    <app-playlists />
+  } @placeholder {
+    <div class="text-muted small">Cargando playlists…</div>
+  }
+</section>
 
 <!-- PLAYLISTS AUTO -->
 <section class="section container-xxl px-3 px-md-4">
@@ -88,18 +109,7 @@
   }
 </section>
 
-<!-- RECOMENDACIONES (si la usás aparte) -->
-<section class="section container-xxl px-3 px-md-4">
-  <h2 class="h4 fw-bold mb-3">Más para vos</h2>
-
-  @defer (on viewport; prefetch on idle) {
-    <app-recommendations />
-  } @placeholder {
-    <div class="text-muted small">Buscando recomendaciones…</div>
-  } @loading {
-    <div class="text-muted small">Cargando…</div>
-  }
-</section>
+<app-add-to-playlist></app-add-to-playlist>
 
 <!-- Barra de reproducción fija siempre montada -->
 <app-player-bar />

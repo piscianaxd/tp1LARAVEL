@@ -64,25 +64,98 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
   loadUserRecommendations(): void {
     this.loading.set(true);
 
-    // Primero verificamos el historial del usuario
+    const user = this.currentUser();
+    if (!user || !user.id) {
+      this.error.set('Usuario no identificado');
+      this.loading.set(false);
+      return;
+    }
+
+    // PRIMERO: Intentar con recommended-songs
+    this.recommendedSongsService.getTopGenres(user.id).subscribe({
+      next: (topGenresResponse: any) => {
+        const topGenres = topGenresResponse.topGenres || [];
+        
+        if (topGenres.length === 0) {
+          // FALLBACK: si no hay géneros en recommended-songs, usar historial
+          this.fallbackToHistoryMethod();
+        } else {
+          // Usar los géneros de la tabla recommended-songs
+          this.generateRecommendationsFromTopGenres(topGenres);
+        }
+      },
+      error: (error) => {
+        // FALLBACK en caso de error
+        this.fallbackToHistoryMethod();
+      }
+    });
+  }
+
+  // Método para generar recomendaciones desde géneros top
+  private generateRecommendationsFromTopGenres(topGenres: string[]): void {
+    this.recommendedSongsService.getAllSongs().subscribe({
+      next: (songsResponse: any) => {
+        const allSongs = songsResponse.songs || [];
+        
+        // Obtener historial para excluir canciones ya escuchadas
+        this.recommendedSongsService.getUserHistory().subscribe({
+          next: (historyResponse: any) => {
+            const userHistory = historyResponse.data || [];
+            const heardSongIds = userHistory.map((item: any) => item.cancion.id);
+
+            // Filtrar canciones no escuchadas de los géneros top
+            let recommendedSongs = allSongs.filter((song: any) => {
+              const songGenre = song.genre_song.toLowerCase();
+              return !heardSongIds.includes(song.id) && topGenres.includes(songGenre);
+            });
+
+            // Mezclar y limitar a 10 canciones
+            recommendedSongs = this.shuffleArray(recommendedSongs).slice(0, 10);
+
+            // Formatear para el frontend
+            const formattedRecommendations = recommendedSongs.map((song: any) => ({
+              id: song.id,
+              title: song.name_song,
+              artist: song.artist_song,
+              genre: song.genre_song,
+              album: song.album_song,
+              audioFile: song.url_song,
+              cover: song.art_work_song
+            }));
+
+            this.recommendations.set(formattedRecommendations);
+            this.loading.set(false);
+            setTimeout(() => this.checkScroll(), 100);
+          },
+          error: (historyError) => {
+            this.error.set('Error al cargar tu historial.');
+            this.loading.set(false);
+          }
+        });
+      },
+      error: (songsError) => {
+        this.error.set('Error al cargar el catálogo de canciones.');
+        this.loading.set(false);
+      }
+    });
+  }
+
+  // Método fallback (usar historial cuando recommended-songs no tiene datos)
+  private fallbackToHistoryMethod(): void {
     this.recommendedSongsService.getUserHistory().subscribe({
       next: (historyResponse: any) => {
         const userHistory = historyResponse.data || [];
         
-        // Si no tiene historial, mostramos mensaje
         if (userHistory.length === 0) {
-          console.log('Usuario sin historial de escucha');
           this.recommendations.set([]);
           this.loading.set(false);
           return;
         }
 
-        // Si tiene historial, generamos recomendaciones
         this.generateRecommendationsFromHistory(userHistory);
       },
       error: (historyError) => {
-        console.error('Error cargando historial:', historyError);
-        this.error.set('Error al cargar tu historial de música.');
+        this.error.set('Error al cargar tus preferencias.');
         this.loading.set(false);
       }
     });
@@ -101,7 +174,6 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
         setTimeout(() => this.checkScroll(), 100);
       },
       error: (songsError) => {
-        console.error('Error cargando canciones:', songsError);
         this.error.set('Error al cargar el catálogo de canciones.');
         this.loading.set(false);
       }
@@ -128,8 +200,6 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
       .map(([genre]) => genre);
 
     const topGenres = sortedGenres.slice(0, 2); // Top 2 géneros
-
-    console.log('Géneros preferidos del usuario:', topGenres);
 
     // 4. Filtrar canciones no escuchadas de los géneros preferidos
     let recommendedSongs = allSongs.filter((song: any) => {
@@ -220,6 +290,9 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
       
       // Reproducir con PlayerService
       this.playerService.playNow(track);
+      
+      // ✅ NOTA: Ya NO necesitamos llamar a incrementUserGenre aquí
+      // porque el PlayerService ahora lo hace automáticamente
     }
   }
 
@@ -236,6 +309,5 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
     // Ocultar la imagen problemática
     const img = event.target;
     img.style.display = 'none';
-    console.warn('Error cargando imagen:', song.cover);
   }
 }

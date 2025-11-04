@@ -47,35 +47,43 @@
       <!-- Toda la card reproduce -->
       <div class="random-card" role="button" (click)="play(song)">
         <div class="cover-wrap-square">
-          <!-- Portada (sin ngSrcset) -->
-          <ng-container *ngIf="!noImg.has(song.id); else fallback">
-            <img
-              [ngSrc]="song.art_work_song | mediaUrl"
-              [alt]="song.name_song"
-              class="cover-img-square"
-              [width]="224" [height]="224"
-              [priority]="i === 0"
-              [attr.fetchpriority]="i === 0 ? 'high' : null"
-              [attr.loading]="i === 0 ? 'eager' : 'lazy'"
-              decoding="async"
-              (error)="onImgError($event, song)"
-            />
-          </ng-container>
+        <!-- Portada (sin ngSrcset) -->
+        <ng-container *ngIf="!noImg.has(song.id); else fallback">
+          <img
+            [ngSrc]="song.art_work_song | mediaUrl"
+            [alt]="song.name_song"
+            class="cover-img-square"
+            [width]="224" [height]="224"
+            [priority]="i === 0"
+            [attr.fetchpriority]="i === 0 ? 'high' : null"
+            [attr.loading]="i === 0 ? 'eager' : 'lazy'"
+            decoding="async"
+            (error)="onImgError($event, song)"
+          />
+        </ng-container>
 
-          <!-- Fallback con ícono Bootstrap -->
-          <ng-template #fallback>
-            <div class="cover-fallback-square">
-              <i class="bi bi-music-note-beamed"></i>
-            </div>
-          </ng-template>
+        <!-- Fallback con ícono Bootstrap -->
+        <ng-template #fallback>
+          <div class="cover-fallback-square">
+            <i class="bi bi-music-note-beamed"></i>
+          </div>
+        </ng-template>
 
-          <!-- Overlay play (la card ya reproduce, pero por si querés el botón) -->
-          <button class="overlay-btn-square play"
+        <!-- NUEVO: Overlay con múltiples botones -->
+        <div class="playlist-overlay">
+          <button class="overlay-btn-square play" 
                   title="Reproducir"
                   (click)="$event.stopPropagation(); play(song)">
             <i class="bi bi-play-fill"></i>
           </button>
+          <!-- NUEVO: Botón para agregar a playlist -->
+          <button class="overlay-btn-square" 
+                  title="Agregar a playlist"
+                  (click)="$event.stopPropagation(); addToPlaylist(song)">
+            <i class="bi bi-plus-lg"></i>
+          </button>
         </div>
+      </div>
 
         <div class="random-card-info">
           <h3 class="song-title text-truncate" [title]="song.name_song">

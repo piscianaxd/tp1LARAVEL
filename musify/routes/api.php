@@ -36,6 +36,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('history', HistoryController::class);
     Route::apiResource('recommended-songs', RecommendedSongController::class);
+
+     // Nuevas rutas personalizadas
+    Route::patch('/recommended-songs/user/{userId}/increment-genre', [RecommendedSongController::class, 'incrementGenreByUser']);
+    Route::get('/recommended-songs/user/{userId}/top-genres', [RecommendedSongController::class, 'getTopGenres']);
+    
     // Perfil del usuario autenticado
     Route::get('/profile', [SessionController::class, 'profile']);
     Route::put('/profile', [SessionController::class, 'updateProfile']);
@@ -48,4 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //PlaylistController
      Route::apiResource('playlists', PlaylistController::class);
+     
+    Route::post('playlists/{playlist}/songs', [PlaylistController::class, 'addSong']);
+    Route::delete('/playlists/{playlist}/songs/{song}', [PlaylistController::class, 'removeSong']);
 });

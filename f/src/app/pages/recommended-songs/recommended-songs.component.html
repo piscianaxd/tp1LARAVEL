@@ -1,4 +1,6 @@
 <div class="recommendations-container">
+    <h2 class="section-title">Recomendaciones para ti</h2>
+
     <!-- Loading -->
     <div *ngIf="loading()" class="loading">
         <p>🎵 Analizando tus gustos musicales...</p>
@@ -22,29 +24,18 @@
     </div>
 
     <!-- Recomendaciones con layout horizontal y flechas -->
-    <section *ngIf="!loading() && !error() && recommendations().length > 0" class="recommendations-section container-xxl px-3 px-md-4 py-4">
-        <!-- HEADER UNIFORME COMO RECENT-TRACKS -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <h2 class="h3 fw-bold mb-0">Recomendaciones para ti</h2>
-                <p class="text-muted mb-0 mt-1">Basado en tu historial de escucha</p>
-            </div>
+    <div *ngIf="!loading() && !error() && recommendations().length > 0" class="recommendations-section">
+        <p class="recommendations-subtitle">Basado en tu historial de escucha</p>
 
-            <div class="d-flex align-items-center gap-2">
-                <button class="nav-arrow nav-arrow-left" (click)="scrollLeft()" [disabled]="!canScrollLeft()" title="Anterior">
-                    <i class="bi bi-chevron-left"></i>
-                </button>
+        <!-- Contenedor con flechas de navegación -->
+        <div class="recommendations-carousel">
+            <button class="nav-arrow nav-arrow-left" (click)="scrollLeft()" [disabled]="!canScrollLeft()">
+                <i class="bi bi-chevron-left"></i>
+            </button>
 
-                <button class="nav-arrow nav-arrow-right" (click)="scrollRight()" [disabled]="!canScrollRight()" title="Siguiente">
-                    <i class="bi bi-chevron-right"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- CONTENEDOR DE CÍRCULOS (MANTIENE IDENTIDAD ÚNICA) -->
-        <div class="circular-recommendations" #scrollContainer (scroll)="onScroll()">
-            <div *ngFor="let song of recommendations()" class="song-circle" (click)="selectSong(song)"
-                [class.selected]="isSelected(song)" [title]="song.title + ' - ' + song.artist">
+            <div class="circular-recommendations" #scrollContainer (scroll)="onScroll()">
+                <div *ngFor="let song of recommendations()" class="song-circle" (click)="selectSong(song)"
+                    [class.selected]="isSelected(song)" [title]="song.title + ' - ' + song.artist">
 
                 <!-- Contenedor de imagen con fallback -->
                 <div class="image-container">
@@ -67,13 +58,18 @@
                     </ng-template>
                 </div>
 
-                <!-- TEXTO SIEMPRE VISIBLE -->
-                <div class="song-text">
-                    <strong class="song-title">{{ song.title }}</strong>
-                    <span class="song-artist">{{ song.artist }}</span>
-                    <small class="song-genre">{{ song.genre }}</small>
+                    <!-- TEXTO SIEMPRE VISIBLE -->
+                    <div class="song-text">
+                        <strong class="song-title">{{ song.title }}</strong>
+                        <span class="song-artist">{{ song.artist }}</span>
+                        <small class="song-genre">{{ song.genre }}</small>
+                    </div>
                 </div>
             </div>
+
+            <button class="nav-arrow nav-arrow-right" (click)="scrollRight()" [disabled]="!canScrollRight()">
+                <i class="bi bi-chevron-right"></i>
+            </button>
         </div>
-    </section>
+    </div>
 </div>

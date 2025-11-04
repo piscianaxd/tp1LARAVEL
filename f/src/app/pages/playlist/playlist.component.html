@@ -167,9 +167,11 @@
         </div>
       </div>
       
+      <!-- NUEVO: Agregado contextmenu a cada track -->
       <div *ngFor="let playlistSong of selectedPlaylist()!.songs; let i = index" 
            class="track-item"
-           (click)="playSong(playlistSong.song, $event)">
+           (click)="playSong(playlistSong.song, $event)"
+           (contextmenu)="onTrackContextMenu($event, playlistSong, i)">
         
         <div class="track-number">
           <span class="track-index">{{ i + 1 }}</span>
@@ -224,6 +226,102 @@
 
   </div>
 
+</div>
+
+<!-- NUEVO: Menú contextual para tracks -->
+<app-track-context-menu
+  [isVisible]="showContextMenu()"
+  [position]="contextMenuPosition()"
+  [track]="selectedTrackForContextMenu()"
+  (play)="onContextMenuPlay()"
+  (delete)="onContextMenuDelete()"
+  (move)="onContextMenuMove()"
+  (close)="closeContextMenu()">
+</app-track-context-menu>
+
+<!-- NUEVO: Modal para mover a otra playlist -->
+<!-- NUEVO: Modal para mover a otra playlist -->
+<div class="modal-overlay" *ngIf="showMoveToPlaylistModal()" (click)="closeMoveToPlaylistModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    
+    <div class="modal-header">
+      <h2 class="modal-title">Mover a Otra Playlist</h2>
+      <button class="close-btn" (click)="closeMoveToPlaylistModal()" title="Cerrar">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Información de la canción -->
+      <div class="song-info" *ngIf="selectedTrackForContextMenu()">
+        <div class="song-cover">
+          <img *ngIf="selectedTrackForContextMenu()?.song?.art_work_song" 
+               [src]="selectedTrackForContextMenu()?.song?.art_work_song | mediaUrl" 
+               [alt]="selectedTrackForContextMenu()?.song?.name_song"
+               class="cover-img">
+          <div *ngIf="!selectedTrackForContextMenu()?.song?.art_work_song" class="cover-fallback">
+            <i class="bi bi-music-note-beamed"></i>
+          </div>
+        </div>
+        <div class="song-details">
+          <h4 class="song-name">{{ selectedTrackForContextMenu()?.song?.name_song }}</h4>
+          <p class="song-artist">{{ selectedTrackForContextMenu()?.song?.artist_song }}</p>
+        </div>
+      </div>
+
+      <!-- Lista de playlists disponibles -->
+      <div class="playlists-section">
+        <h5 class="section-title">Selecciona una playlist destino</h5>
+        
+        <div *ngIf="loadingMoveModal()" class="loading-playlists">
+          <div class="spinner-border spinner-border-sm text-brand me-2"></div>
+          <span>Cargando playlists...</span>
+        </div>
+
+        <div *ngIf="!loadingMoveModal()" class="playlists-list">
+          <div *ngFor="let playlist of availablePlaylistsForMove()" 
+               class="playlist-item"
+               [class.selected]="selectedPlaylistForMove() === playlist.id"
+               (click)="selectPlaylistForMove(playlist.id)">
+            <div class="playlist-info">
+              <i class="bi" 
+                 [class.bi-list-ul]="!selectedPlaylistForMove() || selectedPlaylistForMove() !== playlist.id"
+                 [class.bi-check-circle-fill]="selectedPlaylistForMove() === playlist.id"></i>
+              <span class="playlist-name">{{ playlist.name_playlist }}</span>
+            </div>
+            <span class="playlist-meta">
+              {{ playlist.songs?.length || 0 }} canciones • 
+              {{ playlist.is_public ? 'Pública' : 'Privada' }}
+            </span>
+          </div>
+
+          <div *ngIf="availablePlaylistsForMove().length === 0" class="no-playlists">
+            <i class="bi bi-music-note-list"></i>
+            <p>No tienes otras playlists disponibles</p>
+            <small>Crea una nueva playlist para mover esta canción</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="modal-actions">
+        <button class="btn btn-outline-secondary" 
+                (click)="createNewPlaylistForMove()"
+                [disabled]="movingTrack()">
+          <i class="bi bi-plus-circle me-2"></i>
+          Crear Nueva Playlist
+        </button>
+        
+        <button class="btn btn-primary" 
+                (click)="moveTrackToPlaylist()"
+                [disabled]="!selectedPlaylistForMove() || movingTrack()">
+          <span *ngIf="movingTrack()" class="spinner-border spinner-border-sm me-2"></span>
+          <i *ngIf="!movingTrack()" class="bi bi-arrow-right me-2"></i>
+          {{ movingTrack() ? 'Moviendo...' : 'Mover a Playlist' }}
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Modal para crear nueva playlist - CON EFECTO DE DESENFOQUE -->
