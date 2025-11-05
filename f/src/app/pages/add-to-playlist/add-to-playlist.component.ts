@@ -32,6 +32,9 @@ export class AddToPlaylistComponent implements OnInit, OnDestroy {
   private playlistCreatedSubscription!: Subscription;
 
   ngOnInit() {
+    console.log('🎵 AddToPlaylistComponent inicializado');
+    console.log('🔍 PlaylistEventService disponible:', !!this.playlistEventService);
+    
     // Suscribirse al evento de playlist creada
     this.playlistCreatedSubscription = this.playlistEventService.playlistCreated$.subscribe((playlistId) => {
       console.log('✅ Playlist creada con ID:', playlistId);
@@ -39,18 +42,21 @@ export class AddToPlaylistComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    console.log('🧹 AddToPlaylistComponent destruyéndose');
     if (this.playlistCreatedSubscription) {
       this.playlistCreatedSubscription.unsubscribe();
     }
   }
 
   closeModal() {
+    console.log('❌ Cerrando modal de AddToPlaylist');
     this.addToPlaylistService.closeModal();
     this.addingToPlaylist = false;
     this.successMessage = '';
   }
 
   selectPlaylist(playlistId: number) {
+    console.log('📌 Playlist seleccionada:', playlistId);
     this.selectedPlaylistId.set(playlistId);
   }
 
@@ -114,7 +120,7 @@ export class AddToPlaylistComponent implements OnInit, OnDestroy {
     });
   }
 
-  // CORREGIDO: Método para abrir modal de crear playlist
+  // En add-to-playlist.component.ts - CORREGIR este método
   createNewPlaylistAndAdd() {
     const song = this.addToPlaylistService.getCurrentSong();
     if (!song) {
@@ -123,18 +129,24 @@ export class AddToPlaylistComponent implements OnInit, OnDestroy {
     }
 
     console.log('🎵 Creando nueva playlist con canción:', song);
+    console.log('🔍 PlaylistEventService:', this.playlistEventService);
+    console.log('🔍 Método openCreatePlaylistWithSong disponible:', !!this.playlistEventService.openCreatePlaylistWithSong);
     
-    // Cerrar modal actual
-    this.closeModal();
+    // 🔥 IMPORTANTE: Enviar el evento PRIMERO, luego cerrar el modal
+    console.log('🚀 EMITIENDO EVENTO openCreatePlaylistWithSong...');
     
-    // Usar el PlaylistEventService para comunicarse con el componente de playlists
     this.playlistEventService.openCreatePlaylistWithSong({
       id: song.id,
       name_song: song.name_song,
       artist_song: song.artist_song,
-      album_song: song.album_song,
-      art_work_song: song.art_work_song,
-      duration: song.duration
+      album_song: song.album_song || '',
+      art_work_song: song.art_work_song || '',
+      duration: song.duration || 180
     });
+    
+    console.log('✅ Evento emitido, cerrando modal...');
+    
+    // Cerrar el modal después de enviar el evento
+    this.closeModal();
   }
 }
