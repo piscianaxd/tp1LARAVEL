@@ -152,4 +152,13 @@ export class NavBar implements OnInit {
   esDashboard(): boolean {
     return this.router.url === '/dashboard' || this.router.url === '/';
   }
+    scrollToTop(): void {
+    // ✅ Scroll suave al inicio de la página
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
+  }
+
 }
