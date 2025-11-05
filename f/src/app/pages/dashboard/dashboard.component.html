@@ -102,7 +102,7 @@
 <!-- PLAYLISTS MANUALES (si es diferente de auto-playlists) -->
 <section class="section container-xxl px-3 px-md-4">
   <h2 class="h4 fw-bold mb-3">Tus playlists creadas</h2>
-  @defer (on viewport; prefetch on idle) {
+  @defer (on immediate) {
     <app-playlists />
   } @placeholder {
     <div class="text-muted small">Cargando playlists…</div>
