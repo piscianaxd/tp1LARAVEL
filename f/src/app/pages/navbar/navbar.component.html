@@ -2,10 +2,10 @@
   <div class="container-fluid d-flex justify-content-between align-items-center">
 
     <!-- Logo a la izquierda -->
-    <a class="navbar-brand fw-bold me-3" routerLink="/">
-      <i class="bi bi-soundwave"></i>Musify
+    <a class="navbar-brand fw-bold me-3" routerLink="/dashboard" (click)="scrollToTop()" style="text-decoration: none;">
+      <i class="bi bi-soundwave me-2"></i>Musify <!-- ✅ Agregado me-2 -->
     </a>
-
+    
     <!-- Buscador centrado -->
     <div class="d-flex justify-content-center flex-grow-1 mx-3 position-relative">
       <div class="search-container" style="min-width: 400px; max-width: 600px;">
