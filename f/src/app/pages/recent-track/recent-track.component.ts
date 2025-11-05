@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
@@ -6,7 +6,6 @@ import { HistoryService, HistoryTrack } from '../../services/history.service';
 import { Track } from '../../models/track/track.model';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { PlayerService } from '../../services/player.service';
-import { AddToPlaylistService } from '../../services/add-to-playlist.service';
 
 @Component({
   selector: 'app-recent-tracks',
@@ -18,8 +17,6 @@ import { AddToPlaylistService } from '../../services/add-to-playlist.service';
 export class RecentTracksComponent implements OnInit {
   loading = signal(true);
   error   = signal<string | null>(null);
-  
-  private addToPlaylistService = inject(AddToPlaylistService);
 
   // 🔹 Lista "cruda" (todo el historial, con posibles duplicados por canción)
   private all = signal<HistoryTrack[]>([]);
@@ -123,14 +120,5 @@ export class RecentTracksComponent implements OnInit {
     if (diff < 3600) return `${Math.floor(diff/60)} min`;
     if (diff < 86400) return `${Math.floor(diff/3600)} h`;
     return `${Math.floor(diff/86400)} d`;
-  }
-    addToPlaylist(track: HistoryTrack) {
-    this.addToPlaylistService.openModal({
-      id: track.id,
-      name_song: track.title,
-      artist_song: track.artist,
-      album_song: track.album,
-      art_work_song: track.artwork
-    });
   }
 }

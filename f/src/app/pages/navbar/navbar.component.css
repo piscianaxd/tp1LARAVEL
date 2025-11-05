@@ -1,24 +1,33 @@
-/* navbar.component.css - VERSIÓN CORREGIDA */
+/* navbar.component.css - VERSIÓN MEJORADA */
 
-/* ELIMINA estas líneas que estaban causando problemas: */
-:host-context(.dashboard) .search-results-container,
-:host-context(app-dashboard) .search-results-container {
-  z-index: 9999 !important;
-  position: relative;
+/* NAVBAR PRINCIPAL - FIJAR CORRECTAMENTE */
+.navbar {
+  z-index: 9999; /* ✅ Aumentado para mayor prioridad */
+  position: fixed !important; /* ✅ CAMBIADO de sticky a fixed */
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 56px; /* ✅ Altura fija para consistencia */
 }
 
-/* Asegura que el navbar tenga un z-index adecuado */
-.navbar {
-  z-index: 1000;
-  position: sticky !important; /* ✅ CAMBIADO de relative a sticky */
-  top: 0; /* ✅ AGREGADO: Se pega al top cuando haces scroll */
-  width: 100%;
+/* CONTENEDOR PRINCIPAL DEL DASHBOARD - COMPENSAR ALTURA NAVBAR */
+app-dashboard {
+  display: block;
+  padding-top: 56px; /* ✅ Compensa la altura de la navbar fija */
+  min-height: 100vh;
+}
+
+/* Asegurar que el body no tenga márgenes/padding que interfieran */
+body {
+  margin: 0;
+  padding: 0;
 }
 
 /* El contenedor de búsqueda necesita un stacking context */
 .search-container {
   position: relative;
-  z-index: 1001;
+  z-index: 1051;
 }
 
 .navbar-brand {
@@ -29,10 +38,6 @@
 
 .navbar-brand:hover {
   opacity: 0.8;
-}
-
-.search-container {
-  position: relative;
 }
 
 .input-group {
@@ -52,11 +57,11 @@
   background: rgba(52, 58, 64, 0.75);
   padding: 10px 15px;
   transition: all 0.3s ease;
-  color: white !important; /* ✅ AGREGADO: Texto blanco para contraste */
+  color: white !important;
 }
 
 .form-control::placeholder {
-  color: rgba(255, 255, 255, 0.7) !important; /* ✅ AGREGADO: Placeholder visible */
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 
 .form-control:focus {
@@ -77,33 +82,6 @@
   background: rgba(255, 255, 255, 0.2);
   color: white;
 }
-
-/* ELIMINA o COMENTA estas reglas que no se usan: */
-/*
-.search-results-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  max-height: 400px;
-  overflow-y: auto;
-  padding: 16px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.results-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  color: #6c757d;
-  font-style: italic;
-}
-
-.results-loading i {
-  margin-right: 8px;
-}
-*/
 
 /* Información de usuario */
 .user-info {
@@ -143,6 +121,11 @@
 @media (max-width: 768px) {
   .navbar {
     padding: 0 10px;
+    height: 60px; /* ✅ Ajustar altura en móviles si es necesario */
+  }
+  
+  app-dashboard {
+    padding-top: 60px; /* ✅ Ajustar compensación en móviles */
   }
   
   .search-container {
@@ -169,39 +152,3 @@
     padding: 4px 8px;
   }
 }
-
-/* ELIMINA o COMENTA estas animaciones que no se usan: */
-/*
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.search-results-dropdown {
-  animation: slideDown 0.3s ease;
-}
-
-.search-results-card::-webkit-scrollbar {
-  width: 6px;
-}
-
-.search-results-card::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.search-results-card::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.search-results-card::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-*/

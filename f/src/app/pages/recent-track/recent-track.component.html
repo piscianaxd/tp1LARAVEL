@@ -65,7 +65,7 @@
           <div class="d-flex align-items-center gap-3 recent-item"
                (click)="play(t)" role="button">
 
-            <!-- Cover sin overlay de reproducción -->
+            <!-- Cover con overlay SOLO Play -->
             <div class="cover-wrap">
               <!-- Imagen si no falló -->
               <ng-container *ngIf="!noImg.has(t.id); else iconFallback">
@@ -86,14 +86,12 @@
                 </div>
               </ng-template>
 
-              <!-- NUEVO: Overlay para agregar a playlist -->
-              <div class="playlist-overlay">
-                <button class="overlay-btn-square" 
-                        (click)="$event.stopPropagation(); addToPlaylist(t)"
-                        title="Agregar a playlist">
-                  <i class="bi bi-plus-lg"></i>
-                </button>
-              </div>
+              <!-- overlay: solo Play (no propaga, para que no dispare doble) -->
+              <button class="overlay-btn play"
+                      (click)="$event.stopPropagation(); play(t)"
+                      title="Reproducir">
+                <i class="bi bi-play-fill"></i>
+              </button>
             </div>
 
             <!-- Texto -->
