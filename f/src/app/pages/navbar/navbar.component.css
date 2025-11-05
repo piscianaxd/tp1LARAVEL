@@ -179,10 +179,183 @@ body {
   animation: fadeInDown 0.5s ease;
 }
 
-/* ========== RESPONSIVE MEJORADO ========== */
+/* ========== RESPONSIVE PARA PANTALLAS GRANDES ========== */
+
+/* Pantallas grandes (> 1400px) - Monitores de escritorio */
+@media (min-width: 1400px) {
+  .navbar {
+    height: 64px; /* ✅ Navbar más alta */
+    padding: 0 2rem; /* ✅ Más padding lateral */
+  }
+  
+  app-dashboard {
+    padding-top: 64px; /* ✅ Ajustar compensación */
+  }
+  
+  .navbar-brand {
+    font-size: 1.5rem; /* ✅ Logo más grande */
+    margin-right: 2rem; /* ✅ Más separación del buscador */
+  }
+  
+  .navbar-brand i {
+    font-size: 1.8rem; /* ✅ Icono más grande */
+    margin-right: 12px; /* ✅ Más separación del texto */
+  }
+  
+  /* Buscador más ancho y grande */
+  .search-container {
+    min-width: 600px !important; /* ✅ Buscador más ancho */
+    max-width: 800px !important;
+  }
+  
+  .input-group {
+    border-radius: 30px; /* ✅ Bordes más redondeados */
+  }
+  
+  .form-control {
+    padding: 12px 20px; /* ✅ Input más alto */
+    font-size: 1.1rem; /* ✅ Texto más grande */
+  }
+  
+  .input-group-text {
+    padding: 12px 20px; /* ✅ Icono con más espacio */
+  }
+  
+  .input-group-text i {
+    font-size: 1.2rem; /* ✅ Icono de lupa más grande */
+  }
+  
+  /* Perfil de usuario más destacado */
+  .user-info {
+    padding: 8px 20px; /* ✅ Más espacio interno */
+    border-radius: 30px; /* ✅ Más redondeado */
+    margin-left: 1rem; /* ✅ Separación del borde */
+  }
+  
+  .user-avatar {
+    width: 38px; /* ✅ Avatar más grande */
+    height: 38px;
+    font-size: 1.1rem; /* ✅ Icono más grande */
+  }
+  
+  .user-link {
+    font-size: 1.1rem; /* ✅ Texto más grande */
+    font-weight: 700;
+  }
+}
+
+/* Pantallas muy grandes (> 1920px) - Monitores Full HD/2K */
+@media (min-width: 1920px) {
+  .navbar {
+    height: 70px; /* ✅ Navbar aún más alta */
+    padding: 0 3rem; /* ✅ Más margen lateral */
+  }
+  
+  app-dashboard {
+    padding-top: 70px; /* ✅ Ajustar compensación */
+  }
+  
+  .navbar-brand {
+    font-size: 1.7rem; /* ✅ Logo más prominente */
+    margin-right: 3rem;
+  }
+  
+  .navbar-brand i {
+    font-size: 2rem;
+    margin-right: 15px;
+  }
+  
+  /* Buscador muy amplio */
+  .search-container {
+    min-width: 800px !important;
+    max-width: 1000px !important;
+  }
+  
+  .form-control {
+    padding: 14px 24px;
+    font-size: 1.2rem;
+  }
+  
+  .input-group-text {
+    padding: 14px 24px;
+  }
+  
+  .input-group-text i {
+    font-size: 1.3rem;
+  }
+  
+  /* Perfil de usuario muy destacado */
+  .user-info {
+    padding: 10px 24px;
+    border-radius: 35px;
+  }
+  
+  .user-avatar {
+    width: 42px;
+    height: 42px;
+    font-size: 1.2rem;
+  }
+  
+  .user-link {
+    font-size: 1.2rem;
+  }
+}
+
+/* Pantallas ultra wide (> 2560px) - Monitores 2K/4K */
+@media (min-width: 2560px) {
+  .navbar {
+    height: 80px;
+    padding: 0 4rem;
+  }
+  
+  app-dashboard {
+    padding-top: 80px;
+  }
+  
+  .navbar-brand {
+    font-size: 2rem;
+    margin-right: 4rem;
+  }
+  
+  .navbar-brand i {
+    font-size: 2.3rem;
+    margin-right: 20px;
+  }
+  
+  .search-container {
+    min-width: 1000px !important;
+    max-width: 1200px !important;
+  }
+  
+  .form-control {
+    padding: 16px 28px;
+    font-size: 1.3rem;
+  }
+  
+  .input-group-text {
+    padding: 16px 28px;
+  }
+  
+  .user-info {
+    padding: 12px 28px;
+    border-radius: 40px;
+  }
+  
+  .user-avatar {
+    width: 46px;
+    height: 46px;
+    font-size: 1.3rem;
+  }
+  
+  .user-link {
+    font-size: 1.3rem;
+  }
+}
+
+/* ========== MANTENER ESTILOS EXISTENTES PARA PANTALLAS PEQUEÑAS ========== */
 @media (max-width: 768px) {
   .navbar {
-    padding: 0 12px;
+    padding: 0 10px;
     height: 60px;
   }
   
@@ -198,14 +371,6 @@ body {
   .navbar-brand {
     font-size: 1.1rem;
   }
-  
-  .user-info {
-    padding: 5px 12px;
-  }
-  
-  .input-group {
-    border-radius: 20px;
-  }
 }
 
 @media (max-width: 576px) {
@@ -220,18 +385,6 @@ body {
   
   .user-info {
     padding: 6px 10px;
-    min-width: auto;
-  }
-  
-  .navbar-brand {
-    font-size: 1rem;
-  }
-  
-  .input-group-text,
-  .form-control,
-  .btn-outline-secondary {
-    padding: 8px 12px;
-    font-size: 0.9rem;
   }
 }
 
