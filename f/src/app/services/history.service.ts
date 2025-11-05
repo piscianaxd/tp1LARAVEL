@@ -6,7 +6,7 @@ import { Track } from '../models/track/track.model'; // ← modelo base reproduc
 export interface HistoryTrack extends Track {
   historyId: number;
   playedAt: Date;
-  genre?: string;
+  genre: string;
 }
 
 /** DTOs que vienen del backend */

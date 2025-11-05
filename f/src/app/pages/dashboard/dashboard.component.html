@@ -1,5 +1,5 @@
 <!-- Navbar fija arriba -->
-<app-nav-bar />
+<app-nav-bar></app-nav-bar>
 
 <!-- Buscador / header del dashboard (tu contenido actual) -->
 <div class="container-xxl px-3 px-md-4 py-3">
@@ -7,7 +7,9 @@
 </div>
 
 <!-- MIXES -->
-<section class="section container-xxl px-3 px-md-4">
+<!-- MIXES - CON MÁRGEN SUPERIOR -->
+<section class="section container-xxl px-3 px-md-4 mt-4">
+
   @defer (on viewport; prefetch on idle) {
     <app-mixes-capsule />
   } @placeholder {

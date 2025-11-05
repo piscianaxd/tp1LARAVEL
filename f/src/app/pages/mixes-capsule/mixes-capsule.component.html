@@ -1,5 +1,8 @@
 <section class="random-section">
-  <!-- Píldoras (siempre visibles) -->
+    <div>
+      <h2 class="h3 fw-bold mb-3">Canciones Recomendadas Por Genero</h2>
+    </div>
+  <!-- Filtros -->
   <div class="d-flex flex-wrap gap-2 mb-4">
     <button
       *ngFor="let f of filters"
@@ -11,17 +14,12 @@
     </button>
   </div>
 
-  <!-- Contenido principal: solo visible tras seleccionar una píldora -->
-  <div *ngIf="selected()">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div>
-        <div class="text-uppercase small text-muted fw-semibold">Basado en tu estado</div>
-        <h2 class="h3 fw-bold mb-0">Canciones Recomendadas</h2>
-      </div>
-      <button class="btn btn-sm btn-outline-light" (click)="playAll()">
-        <i class="bi bi-play-fill me-1"></i> Reproducir todo
-      </button>
-    </div>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+
+    <button class="btn btn-sm btn-outline-light" (click)="playAll()">
+      <i class="bi bi-play-fill me-1"></i> Reproducir todo
+    </button>
+  </div>
 
     <!-- Loader -->
     <div *ngIf="loading()" class="row g-4">
