@@ -1,12 +1,13 @@
 // components/auto-playlist/auto-playlist.component.ts
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RandomTrackService, Song } from '../../services/random-track.service';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { HttpErrorResponse } from '@angular/common/http';
 import { PlaylistService } from '../../services/playlist.service';
 import { PlaylistEventService } from '../../services/playlist-event.service';
-import { ElementRef, ViewChild } from '@angular/core';
+import { AddToPlaylistService } from '../../services/add-to-playlist.service';
+
 interface AutoPlaylist {
   id?: number;
   name: string;
@@ -34,16 +35,31 @@ export class AutoPlaylistsComponent implements OnInit {
   selectedPlaylist = signal<AutoPlaylist | null>(null);
   showPlaylistDetail = signal(false);
 
-  popularPlaylist = signal<AutoPlaylist | null>(null);
+  popularPlaylist = signal<AutoPlaylist | undefined>(undefined);
   popularPlaylistPage = signal(0);
-  popularPlaylistMaxPages = signal(3);
+  
+  // ✅ Señal computada para páginas máximas
+  popularPlaylistMaxPages = computed(() => {
+    const playlist = this.popularPlaylist();
+    if (!playlist?.songs) return 1;
+    return Math.ceil(playlist.songs.length / this.POPULAR_PAGE_SIZE);
+  });
 
-  // MEJORA: Señales para paginación dinámica
   playlistPage = signal(0);
-  playlistMaxPages = signal(0); // Cambiado a 0 para cálculo dinámico
+  playlistMaxPages = signal(0);
+
+  // ✅ CONSTANTE para el tamaño de página
+  readonly POPULAR_PAGE_SIZE = 6;
+
+  // ✅ NUEVAS señales para guardar playlist
+  popularPlaylistSaved = signal(false);
+  savingPopularPlaylist = signal(false);
 
   private playlistService = inject(PlaylistService);
   private playlistEventService = inject(PlaylistEventService);
+  private addToPlaylistService = inject(AddToPlaylistService);
+
+  @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
 
   constructor(
     private randomTrackService: RandomTrackService
@@ -54,48 +70,13 @@ export class AutoPlaylistsComponent implements OnInit {
     this.loadPopularPlaylist();
   }
 
-  // MEJORA: Métodos para paginación dinámica
-  nextPage() {
-    const nextPage = this.playlistPage() + 1;
-    if (nextPage < this.playlistMaxPages()) {
-      this.playlistPage.set(nextPage);
-    }
-  }
-
-  prevPage() {
-    const prevPage = this.playlistPage() - 1;
-    if (prevPage >= 0) {
-      this.playlistPage.set(prevPage);
-    }
-  }
-
-  getCurrentPlaylists(): AutoPlaylist[] {
-    const allPlaylists = this.playlists();
-    const startIndex = this.playlistPage() * 6;
-    return allPlaylists.slice(startIndex, startIndex + 6);
-  }
-
-  canGoNext(): boolean {
-    return (this.playlistPage() + 1) * 6 < this.playlists().length;
-  }
-
-  canGoPrev(): boolean {
-    return this.playlistPage() > 0;
-  }
-
-  // MEJORA: Método para actualizar páginas dinámicamente
-  private updateMaxPages() {
-    const totalPlaylists = this.playlists().length;
-    this.playlistMaxPages.set(Math.ceil(totalPlaylists / 6));
-  }
-
   loadPopularPlaylist() {
     this.randomTrackService.getRandomSongs(18).subscribe({
       next: (response) => {
-        const popularSongs = response.songs;
+        const popularSongs = response.songs || [];
         
         this.popularPlaylist.set({
-          name: 'Mix Popular',
+          name: 'Mix de Populares',
           description: 'Las canciones más populares de la plataforma',
           songs: popularSongs,
           isGenerated: true,
@@ -105,8 +86,139 @@ export class AutoPlaylistsComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading popular playlist:', err);
+        this.popularPlaylist.set(undefined);
       }
     });
+  }
+
+  // ✅ NUEVO: Método para abrir modal de agregar a playlist
+  openAddToPlaylist(song: Song, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    console.log('🎵 Abriendo modal para agregar a playlist:', song.name_song);
+    this.addToPlaylistService.openModal(song);
+  }
+
+  // ✅ NUEVO: Método para guardar toda la playlist de Mix Popular
+  savePopularPlaylist() {
+    const popular = this.popularPlaylist();
+    if (!popular?.songs || popular.songs.length === 0) {
+      console.error('❌ No hay canciones en el Mix Popular para guardar');
+      return;
+    }
+
+    if (this.isPopularPlaylistSaved()) {
+      console.log('ℹ️ La playlist ya está guardada');
+      return;
+    }
+
+    this.savingPopularPlaylist.set(true);
+    console.log('💾 Guardando Mix Popular como playlist...');
+
+    const playlistData = {
+      name_playlist: 'Mix Popular - Favoritas',
+      is_public: true,
+      songs: popular.songs.map(song => ({
+        id: song.id,
+        name_song: song.name_song,
+        artist_song: song.artist_song,
+        album_song: song.album_song || '',
+        art_work_song: song.art_work_song || '',
+        genre_song: song.genre_song || '',
+        url_song: song.url_song || ''
+      }))
+    };
+
+    console.log('📤 Enviando playlist con canciones:', playlistData);
+
+    // Simulación de guardado instantáneo
+    setTimeout(() => {
+      console.log('✅ Playlist guardada instantáneamente: Mix Popular');
+    }, 0);
+
+    // Llamada real al servidor
+    this.playlistService.createPlaylist(playlistData).subscribe({
+      next: (response: any) => {
+        console.log('✅ Mix Popular confirmado en servidor:', response);
+        this.savingPopularPlaylist.set(false);
+        this.popularPlaylistSaved.set(true);
+        this.error.set(null);
+        
+        // Emitir evento después de guardar exitosamente
+        this.playlistEventService.notifyPlaylistSaved();
+        console.log('🔄 Evento de playlist guardada emitido');
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error('❌ Error guardando Mix Popular:', err);
+        this.savingPopularPlaylist.set(false);
+        this.error.set('Error al guardar el Mix Popular');
+      }
+    });
+  }
+
+  // ✅ NUEVO: Método para verificar si ya está guardada
+  isPopularPlaylistSaved(): boolean {
+    return this.popularPlaylistSaved();
+  }
+
+  // ✅ NUEVO: Método para obtener el estado del botón de guardar
+  getSavePopularButtonState(): string {
+    if (this.savingPopularPlaylist()) {
+      return 'saving';
+    }
+    return this.popularPlaylistSaved() ? 'saved' : 'unsaved';
+  }
+
+  // ✅ NUEVO: Método para obtener el ícono del botón de guardar
+  getSavePopularButtonIcon(): string {
+    const state = this.getSavePopularButtonState();
+    
+    switch (state) {
+      case 'saving':
+        return 'bi-arrow-repeat loading';
+      case 'saved':
+        return 'bi-check-lg';
+      default:
+        return 'bi-plus-lg';
+    }
+  }
+
+  // ✅ NUEVO: Método para obtener columnas del Mix Popular
+  getPopularColumns(): Song[][] {
+    const list = this.getCurrentPopularSongs();
+    const COLS = 3;
+    const colSize = Math.ceil((list.length || 1) / COLS);
+    return Array.from({ length: COLS }, (_, i) => 
+      list.slice(i * colSize, (i + 1) * colSize)
+    );
+  }
+
+  // Métodos corregidos con verificaciones seguras
+  getPopularCoverImage(): string {
+    const popular = this.popularPlaylist();
+    if (popular?.songs && popular.songs.length > 0 && popular.songs[0]?.art_work_song) {
+      return popular.songs[0].art_work_song;
+    }
+    return '';
+  }
+
+  getCurrentPopularSongs(): Song[] {
+    const playlist = this.popularPlaylist();
+    if (!playlist?.songs || playlist.songs.length === 0) return [];
+    
+    const startIndex = this.popularPlaylistPage() * this.POPULAR_PAGE_SIZE;
+    return playlist.songs.slice(startIndex, startIndex + this.POPULAR_PAGE_SIZE);
+  }
+
+  canGoNextPopular(): boolean {
+    const playlist = this.popularPlaylist();
+    if (!playlist?.songs || playlist.songs.length === 0) return false;
+    return this.popularPlaylistPage() < this.popularPlaylistMaxPages() - 1;
+  }
+
+  canGoPrevPopular(): boolean {
+    return this.popularPlaylistPage() > 0;
   }
 
   nextPopularPage() {
@@ -123,20 +235,95 @@ export class AutoPlaylistsComponent implements OnInit {
     }
   }
 
-  getCurrentPopularSongs(): Song[] {
-    const playlist = this.popularPlaylist();
-    if (!playlist) return [];
-    
-    const startIndex = this.popularPlaylistPage() * 6;
-    return playlist.songs.slice(startIndex, startIndex + 6);
+  openPopularPlaylist() {
+    const popular = this.popularPlaylist();
+    if (popular?.songs && popular.songs.length > 0) {
+      this.selectedPlaylist.set(popular);
+      this.showPlaylistDetail.set(true);
+    }
   }
 
-  canGoNextPopular(): boolean {
-    return this.popularPlaylistPage() < this.popularPlaylistMaxPages() - 1;
+  playPopularPlaylist(event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    const popular = this.popularPlaylist();
+    if (popular?.songs && popular.songs.length > 0) {
+      console.log('Reproducir Mix Popular:', popular.songs);
+    }
   }
 
-  canGoPrevPopular(): boolean {
-    return this.popularPlaylistPage() > 0;
+  getPopularSongCount(): string {
+    const popular = this.popularPlaylist();
+    if (!popular?.songs || popular.songs.length === 0) return '0 canciones';
+    const count = popular.songs.length;
+    return count === 1 ? '1 canción' : `${count} canciones`;
+  }
+
+  // Método para agregar a playlist individual
+  addToPlaylist(song: Song, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    console.log('Agregar a playlist:', song);
+    // Aquí puedes implementar la lógica para agregar a playlist
+    // this.playlistService.addToPlaylistDialog(song);
+  }
+
+  playSong(song: Song, event: Event) {
+    event.stopPropagation();
+    console.log('Reproducir canción:', song);
+  }
+
+  formatDuration(seconds: number): string {
+    if (!seconds) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  noImg = new Set<number>();
+  
+  bust(id: number) {
+    return `?v=${id}`;
+  }
+
+  onImgError(ev: Event, song: Song) {
+    this.noImg.add(song.id);
+    console.warn('IMG ERROR:', song.art_work_song, (ev.target as HTMLImageElement).currentSrc);
+  }
+
+  getCoverImage(playlist: AutoPlaylist): string {
+    if (playlist.songs.length > 0 && playlist.songs[0].art_work_song) {
+      return playlist.songs[0].art_work_song;
+    }
+    return '';
+  }
+
+  getSongCount(playlist: AutoPlaylist): string {
+    const count = playlist.songs.length;
+    return count === 1 ? '1 canción' : `${count} canciones`;
+  }
+
+  scrollLeft() {
+    this.scrollContainer.nativeElement.scrollBy({ left: -300, behavior: 'smooth' });
+  }
+
+  scrollRight() {
+    this.scrollContainer.nativeElement.scrollBy({ left: 300, behavior: 'smooth' });
+  }
+
+  canScrollLeft() {
+    return this.scrollContainer?.nativeElement.scrollLeft > 0;
+  }
+
+  canScrollRight() {
+    const el = this.scrollContainer?.nativeElement;
+    return el && el.scrollLeft + el.clientWidth < el.scrollWidth;
+  }
+
+  onScroll() {
+    // Actualizar estado de botones si es necesario
   }
 
   generateAutoPlaylists() {
@@ -199,16 +386,13 @@ export class AutoPlaylistsComponent implements OnInit {
     this.createVariedMixes(allSongs, autoPlaylists);
 
     this.playlists.set(autoPlaylists);
-    this.updateMaxPages(); // ✅ MEJORA: Actualizar páginas dinámicamente
-    console.log(`🎵 Se crearon ${autoPlaylists.length} playlists (${this.playlistMaxPages()} páginas)`);
+    this.updateMaxPages();
+    console.log(`🎵 Se crearon ${autoPlaylists.length} playlists`);
   }
 
-  // 🚀 MÉTODO ROBUSTO PARA CREAR DOS MIX VARIADOS
   private createVariedMixes(allSongs: Song[], autoPlaylists: AutoPlaylist[]) {
-    // Mezclar todas las canciones
     const shuffledSongs = [...allSongs].sort(() => Math.random() - 0.5);
     
-    // Primer mix variado - primeras 6 canciones
     const varietySongs1 = shuffledSongs.slice(0, 6);
     
     autoPlaylists.push({
@@ -218,10 +402,8 @@ export class AutoPlaylistsComponent implements OnInit {
       isGenerated: true
     });
 
-    // Segundo mix variado - siguientes 6 canciones (diferentes)
     const varietySongs2 = shuffledSongs.slice(6, 12);
     
-    // Si no hay suficientes canciones diferentes, completar con las primeras
     if (varietySongs2.length < 6) {
       const needed = 6 - varietySongs2.length;
       varietySongs2.push(...shuffledSongs.slice(0, needed));
@@ -240,13 +422,6 @@ export class AutoPlaylistsComponent implements OnInit {
     this.showPlaylistDetail.set(true);
   }
 
-  openPopularPlaylist() {
-    if (this.popularPlaylist()) {
-      this.selectedPlaylist.set(this.popularPlaylist()!);
-      this.showPlaylistDetail.set(true);
-    }
-  }
-
   closePlaylist() {
     this.showPlaylistDetail.set(false);
     this.selectedPlaylist.set(null);
@@ -259,175 +434,36 @@ export class AutoPlaylistsComponent implements OnInit {
     console.log('Reproducir playlist:', playlist.name, playlist.songs);
   }
 
-  playPopularPlaylist(event?: Event) {
-    if (event) {
-      event.stopPropagation();
-    }
-    const popular = this.popularPlaylist();
-    if (popular) {
-      console.log('Reproducir Mix Popular:', popular.songs);
-    }
+  private updateMaxPages() {
+    const totalPlaylists = this.playlists().length;
+    this.playlistMaxPages.set(Math.ceil(totalPlaylists / 6));
   }
 
-  saveAsPlaylist(playlist: AutoPlaylist, event: Event) {
-    event.stopPropagation();
-    
-    if (this.isPlaylistSaved(playlist.name)) {
-      console.log('Playlist ya guardada:', playlist.name);
-      return;
-    }
-
-    this.creatingPlaylist.set(playlist.name);
-
-    const playlistData = {
-      name_playlist: playlist.name,
-      is_public: true,
-      songs: playlist.songs.map(song => ({
-        id: song.id,
-        name_song: song.name_song,
-        artist_song: song.artist_song,
-        album_song: song.album_song || '',
-        art_work_song: song.art_work_song || '',
-        genre_song: song.genre_song || '',
-        url_song: song.url_song || ''
-      }))
-    };
-
-    console.log('Enviando playlist con canciones:', playlistData);
-
-    // Simulación de guardado instantáneo
-    setTimeout(() => {
-      console.log('Playlist guardada instantáneamente:', playlist.name);
-    }, 0);
-
-    // Llamada real al servidor
-    this.playlistService.createPlaylist(playlistData).subscribe({
-      next: (response: any) => {
-        console.log('Playlist confirmada en servidor:', response);
-        this.creatingPlaylist.set(null);
-        this.error.set(null);
-        
-        // Emitir evento después de guardar exitosamente
-        this.playlistEventService.notifyPlaylistSaved();
-        console.log('🔄 Evento de playlist guardada emitido');
-      },
-      error: (err: HttpErrorResponse) => {
-        console.error('Error creando playlist:', err);
-        this.creatingPlaylist.set(null);
-        this.error.set('Error al sincronizar la playlist');
-      }
-    });
-  }
-
-  isPlaylistSaved(playlistName: string): boolean {
-    return this.playlistService.isPlaylistSaved(playlistName);
-  }
-
-  getPlaylistSaveState(playlistName: string): string {
-    if (this.creatingPlaylist() === playlistName) {
-      return 'saving';
-    }
-    return this.playlistService.isPlaylistSaved(playlistName) ? 'saved' : 'unsaved';
-  }
-
-  getSaveButtonIcon(playlistName: string): string {
-    const state = this.getPlaylistSaveState(playlistName);
-    
-    switch (state) {
-      case 'saving':
-        return 'bi-arrow-repeat loading';
-      case 'saved':
-        return 'bi-check-circle-fill';
-      default:
-        return 'bi-plus-circle';
+  nextPage() {
+    const nextPage = this.playlistPage() + 1;
+    if (nextPage < this.playlistMaxPages()) {
+      this.playlistPage.set(nextPage);
     }
   }
 
-  getSaveButtonText(playlistName: string): string {
-    const state = this.getPlaylistSaveState(playlistName);
-    
-    switch (state) {
-      case 'saving':
-        return 'Guardando...';
-      case 'saved':
-        return 'Guardada';
-      default:
-        return 'Guardar Playlist';
+  prevPage() {
+    const prevPage = this.playlistPage() - 1;
+    if (prevPage >= 0) {
+      this.playlistPage.set(prevPage);
     }
   }
 
-  playSong(song: Song, event: Event) {
-    event.stopPropagation();
-    console.log('Reproducir canción:', song);
+  getCurrentPlaylists(): AutoPlaylist[] {
+    const allPlaylists = this.playlists();
+    const startIndex = this.playlistPage() * 6;
+    return allPlaylists.slice(startIndex, startIndex + 6);
   }
 
-  noImg = new Set<number>();
-  
-  bust(id: number) {
-    return `?v=${id}`;
+  canGoNext(): boolean {
+    return (this.playlistPage() + 1) * 6 < this.playlists().length;
   }
 
-  onImgError(ev: Event, song: Song) {
-    this.noImg.add(song.id);
-    console.warn('IMG ERROR:', song.art_work_song, (ev.target as HTMLImageElement).currentSrc);
+  canGoPrev(): boolean {
+    return this.playlistPage() > 0;
   }
-
-  getCoverImage(playlist: AutoPlaylist): string {
-    if (playlist.songs.length > 0 && playlist.songs[0].art_work_song) {
-      return playlist.songs[0].art_work_song;
-    }
-    return '';
-  }
-
-  getPopularCoverImage(): string {
-    const popular = this.popularPlaylist();
-    if (popular && popular.songs.length > 0 && popular.songs[0].art_work_song) {
-      return popular.songs[0].art_work_song;
-    }
-    return '';
-  }
-
-  getSongCount(playlist: AutoPlaylist): string {
-    const count = playlist.songs.length;
-    return count === 1 ? '1 canción' : `${count} canciones`;
-  }
-
-  getPopularSongCount(): string {
-    const popular = this.popularPlaylist();
-    if (!popular) return '0 canciones';
-    const count = popular.songs.length;
-    return count === 1 ? '1 canción' : `${count} canciones`;
-  }
-
-  formatDuration(seconds: number): string {
-    if (!seconds) return '0:00';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  }
-
-@ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
-
-scrollLeft() {
-  this.scrollContainer.nativeElement.scrollBy({ left: -300, behavior: 'smooth' });
-}
-
-scrollRight() {
-  this.scrollContainer.nativeElement.scrollBy({ left: 300, behavior: 'smooth' });
-}
-
-canScrollLeft() {
-  return this.scrollContainer?.nativeElement.scrollLeft > 0;
-}
-
-canScrollRight() {
-  const el = this.scrollContainer?.nativeElement;
-  return el && el.scrollLeft + el.clientWidth < el.scrollWidth;
-}
-
-onScroll() {
-  // Podés forzar el cambio de estado de botones acá si querés actualizar su habilitación
-}
-
-
 }
