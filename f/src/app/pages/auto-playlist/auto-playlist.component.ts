@@ -6,7 +6,7 @@ import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { HttpErrorResponse } from '@angular/common/http';
 import { PlaylistService } from '../../services/playlist.service';
 import { PlaylistEventService } from '../../services/playlist-event.service';
-
+import { ElementRef, ViewChild } from '@angular/core';
 interface AutoPlaylist {
   id?: number;
   name: string;
@@ -405,4 +405,29 @@ export class AutoPlaylistsComponent implements OnInit {
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   }
+
+@ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
+
+scrollLeft() {
+  this.scrollContainer.nativeElement.scrollBy({ left: -300, behavior: 'smooth' });
+}
+
+scrollRight() {
+  this.scrollContainer.nativeElement.scrollBy({ left: 300, behavior: 'smooth' });
+}
+
+canScrollLeft() {
+  return this.scrollContainer?.nativeElement.scrollLeft > 0;
+}
+
+canScrollRight() {
+  const el = this.scrollContainer?.nativeElement;
+  return el && el.scrollLeft + el.clientWidth < el.scrollWidth;
+}
+
+onScroll() {
+  // Podés forzar el cambio de estado de botones acá si querés actualizar su habilitación
+}
+
+
 }
