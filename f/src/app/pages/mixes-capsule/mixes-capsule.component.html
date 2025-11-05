@@ -21,84 +21,80 @@
     </button>
   </div>
 
-  <!-- Loader -->
-  <div *ngIf="loading()" class="row g-4">
-    <div class="col-6 col-md-4 col-lg-2" *ngFor="let _ of [0,1,2,3,4,5]">
-      <div class="random-card">
-        <div class="sk-cover-square mb-2"></div>
-        <div class="placeholder-glow mb-1">
-          <span class="placeholder col-8"></span>
-        </div>
-        <div class="placeholder-glow">
-          <span class="placeholder col-5"></span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Error -->
-  <div *ngIf="!loading() && error()" class="alert alert-danger mt-3">
-    {{ error() }}
-  </div>
-
-  <!-- Grid -->
-  <div *ngIf="!loading() && !error() && songs().length > 0" class="row g-4">
-    <div class="col-6 col-md-4 col-lg-2" *ngFor="let song of songs(); let i = index">
-      <!-- Toda la card reproduce -->
-      <div class="random-card" role="button" (click)="play(song)">
-        <div class="cover-wrap-square">
-        <!-- Portada (sin ngSrcset) -->
-        <ng-container *ngIf="!noImg.has(song.id); else fallback">
-          <img
-            [ngSrc]="song.art_work_song | mediaUrl"
-            [alt]="song.name_song"
-            class="cover-img-square"
-            [width]="224" [height]="224"
-            [priority]="i === 0"
-            [attr.fetchpriority]="i === 0 ? 'high' : null"
-            [attr.loading]="i === 0 ? 'eager' : 'lazy'"
-            decoding="async"
-            (error)="onImgError($event, song)"
-          />
-        </ng-container>
-
-        <!-- Fallback con ícono Bootstrap -->
-        <ng-template #fallback>
-          <div class="cover-fallback-square">
-            <i class="bi bi-music-note-beamed"></i>
+    <!-- Loader -->
+    <div *ngIf="loading()" class="row g-4">
+      <div class="col-6 col-md-4 col-lg-2" *ngFor="let _ of [0,1,2,3,4,5]">
+        <div class="random-card">
+          <div class="sk-cover-square mb-2"></div>
+          <div class="placeholder-glow mb-1">
+            <span class="placeholder col-8"></span>
           </div>
-        </ng-template>
-
-        <!-- NUEVO: Overlay con múltiples botones -->
-        <div class="playlist-overlay">
-          <button class="overlay-btn-square play" 
-                  title="Reproducir"
-                  (click)="$event.stopPropagation(); play(song)">
-            <i class="bi bi-play-fill"></i>
-          </button>
-          <!-- NUEVO: Botón para agregar a playlist -->
-          <button class="overlay-btn-square" 
-                  title="Agregar a playlist"
-                  (click)="$event.stopPropagation(); addToPlaylist(song)">
-            <i class="bi bi-plus-lg"></i>
-          </button>
-        </div>
-      </div>
-
-        <div class="random-card-info">
-          <h3 class="song-title text-truncate" [title]="song.name_song">
-            {{ song.name_song }}
-          </h3>
-          <p class="song-artist text-truncate" [title]="song.artist_song">
-            {{ song.artist_song }}
-          </p>
+          <div class="placeholder-glow">
+            <span class="placeholder col-5"></span>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Sin resultados -->
-  <div *ngIf="!loading() && songs().length === 0 && !error()" class="alert alert-info mt-3">
-    No hay canciones disponibles para el género seleccionado.
+    <!-- Error -->
+    <div *ngIf="!loading() && error()" class="alert alert-danger mt-3">
+      {{ error() }}
+    </div>
+
+    <!-- Grid -->
+    <div *ngIf="!loading() && !error() && songs().length > 0" class="row g-4">
+      <div class="col-6 col-md-4 col-lg-2" *ngFor="let song of songs(); let i = index">
+        <div class="random-card" role="button" (click)="play(song)">
+          <div class="cover-wrap-square">
+            <ng-container *ngIf="!noImg.has(song.id); else fallback">
+              <img
+                [ngSrc]="song.art_work_song | mediaUrl"
+                [alt]="song.name_song"
+                class="cover-img-square"
+                [width]="224" [height]="224"
+                [priority]="i === 0"
+                [attr.fetchpriority]="i === 0 ? 'high' : null"
+                [attr.loading]="i === 0 ? 'eager' : 'lazy'"
+                decoding="async"
+                (error)="onImgError($event, song)"
+              />
+            </ng-container>
+
+            <ng-template #fallback>
+              <div class="cover-fallback-square">
+                <i class="bi bi-music-note-beamed"></i>
+              </div>
+            </ng-template>
+
+            <div class="playlist-overlay">
+              <button class="overlay-btn-square play"
+                      title="Reproducir"
+                      (click)="$event.stopPropagation(); play(song)">
+                <i class="bi bi-play-fill"></i>
+              </button>
+              <button class="overlay-btn-square"
+                      title="Agregar a playlist"
+                      (click)="$event.stopPropagation(); addToPlaylist(song)">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="random-card-info">
+            <h3 class="song-title text-truncate" [title]="song.name_song">
+              {{ song.name_song }}
+            </h3>
+            <p class="song-artist text-truncate" [title]="song.artist_song">
+              {{ song.artist_song }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sin resultados -->
+    <div *ngIf="!loading() && songs().length === 0 && !error()" class="alert alert-info mt-3">
+      No hay canciones disponibles para el género seleccionado.
+    </div>
   </div>
 </section>

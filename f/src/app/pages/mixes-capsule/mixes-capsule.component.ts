@@ -17,7 +17,7 @@ import { AddToPlaylistService } from '../../services/add-to-playlist.service';
 })
 export class MixesCapsuleComponent implements OnInit {
   filters = ['Rock', 'Pop', 'Punk', 'Hip-Hop', 'Electronic','Alternative', 'Metal'];
-  activeFilter = signal('Pop');
+  activeFilter = signal("");
 
   songs   = signal<Song[]>([]);
   loading = signal(false);
@@ -25,6 +25,7 @@ export class MixesCapsuleComponent implements OnInit {
   trackById = (_: number, s: Song) => s.id;
 
   noImg = new Set<number>();
+  selected = signal(false);
 
   /** Cache por género para evitar pedir de nuevo */
   private cache = new Map<string, Song[]>();
@@ -38,14 +39,16 @@ export class MixesCapsuleComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadSongsByGenre(this.activeFilter());
+    // no carguemos nada viejo
   }
 
   selectFilter(filter: string) {
     if (filter === this.activeFilter() || this.inFlight) return;
     this.activeFilter.set(filter);
+    this.selected.set(true);
     this.loadSongsByGenre(filter);
   }
+
 
   loadSongsByGenre(genre: string) {
     if (this.inFlight) return;

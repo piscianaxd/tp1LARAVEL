@@ -90,85 +90,56 @@
     </div>
   </div>
 
-  <!-- Playlists por género (Regenerables) -->
-  <div *ngIf="!loading() && !error() && playlists().length > 0">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div>
-        <h3 class="h4 fw-bold mb-0">Descubrí nuevas playlists</h3>
-      </div>
-      <!-- NUEVO: Flechas de paginación para mix creados -->
-      <div class="d-flex gap-2">
-        <button class="round-btn" 
-                (click)="prevPage()" 
-                [disabled]="!canGoPrev()" 
-                title="Anterior">
-          <i class="bi bi-chevron-left"></i>
-        </button>
-        <button class="round-btn" 
-                (click)="nextPage()" 
-                [disabled]="!canGoNext()" 
-                title="Siguiente">
-          <i class="bi bi-chevron-right"></i>
-        </button>
-      </div>
+<!-- Playlists por género (ESTILO CIRCULAR) -->
+<div *ngIf="!loading() && !error() && playlists().length > 0" class="recommendations-section">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="h4 fw-bold mb-0 text-light">Descubrí nuevas playlists</h3>
     </div>
-
-    <div class="row g-4">
-      <!-- NUEVO: Cambiar playlists() por getCurrentPlaylists() -->
-      <div *ngFor="let playlist of getCurrentPlaylists()" class="col-6 col-md-4 col-lg-3 col-xl-2">
-        <div class="playlist-card" (click)="openPlaylist(playlist)">
-          <div class="cover-wrap-square ">
-            <ng-container *ngIf="getCoverImage(playlist); else iconFallback">
-              <img
-                [src]="(getCoverImage(playlist) | mediaUrl) + bust(playlist.songs[0]?.id || 0)"
-                [alt]="playlist.name"
-                class="cover-img-square"
-                loading="lazy"
-                (error)="playlist.songs[0] && onImgError($event, playlist.songs[0])"
-              />
-            </ng-container>
-
-            <ng-template #iconFallback>
-              <div class="cover-fallback-square">
-                <i class="bi bi-collection-play"></i>
-              </div>
-            </ng-template>
-
-            <div class="playlist-overlay">
-              <button class="overlay-btn-square play" 
-                      (click)="playPlaylist(playlist, $event)" 
-                      title="Reproducir playlist">
-                <i class="bi bi-play-fill"></i>
-              </button>
-              <button class="overlay-btn-square save" 
-                      (click)="saveAsPlaylist(playlist, $event)" 
-                      [disabled]="getPlaylistSaveState(playlist.name) === 'saving' || getPlaylistSaveState(playlist.name) === 'saved'"
-                      [title]="getPlaylistSaveState(playlist.name) === 'saved' ? 'Ya guardada' : 'Guardar como playlist'"
-                      [class.saved]="getPlaylistSaveState(playlist.name) === 'saved'">
-                <i class="bi" 
-                   [class]="getSaveButtonIcon(playlist.name)"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="playlist-card-info">
-            <div>
-              <h3 class="playlist-title text-truncate" [title]="playlist.name">
-                {{ playlist.name }}
-              </h3>
-              <p class="playlist-desc text-truncate" [title]="playlist.description">
-                {{ playlist.description }}
-              </p>
-            </div>
-            <p class="playlist-meta mt-2">
-              {{ getSongCount(playlist) }}
-            </p>
-          </div>
-        </div>
-      </div>
+    <div class="d-flex gap-2">
+      <button class="nav-arrow" (click)="scrollLeft()" [disabled]="!canScrollLeft()" title="Anterior">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <button class="nav-arrow" (click)="scrollRight()" [disabled]="!canScrollRight()" title="Siguiente">
+        <i class="bi bi-chevron-right"></i>
+      </button>
     </div>
   </div>
 
+  <!-- Carrusel circular -->
+  <div class="circular-recommendations" #scrollContainer (scroll)="onScroll()">
+    <div class="song-circle" *ngFor="let playlist of getCurrentPlaylists()" class="song-circle" (click)="openPlaylist(playlist)">
+  <div class="image-container">
+    <!-- Cinta superior -->
+    <div class="ribbon">{{ playlist.name }}</div>
+
+    <!-- Imagen o fallback -->
+    <ng-container *ngIf="getCoverImage(playlist); else fallback">
+      <img
+        [src]="(getCoverImage(playlist) | mediaUrl) + bust(playlist.songs[0]?.id || 0)"
+        [alt]="playlist.name"
+        class="circle-image"
+        loading="lazy"
+        (error)="playlist.songs[0] && onImgError($event, playlist.songs[0])"
+      />
+    </ng-container>
+
+    <ng-template #fallback>
+      <div class="image-fallback">
+        <i class="bi bi-collection-play"></i>
+      </div>
+    </ng-template>
+  </div>
+
+  <div class="song-text">
+    <strong class="song-title text-truncate">{{ playlist.name }}</strong>
+    <span class="song-artist text-truncate">{{ playlist.description }}</span>
+    <small class="song-genre">{{ getSongCount(playlist) }}</small>
+  </div>
+</div>
+  </div>
+
+</div>
   <!-- Empty -->
   <div *ngIf="!loading() && !error() && playlists().length === 0" class="alert alert-info mt-3">
     No se pudieron generar playlists automáticas.
@@ -177,48 +148,53 @@
 
 <!-- Vista detallada de playlist (superpuesta) -->
 <section class="playlist-detail-section" *ngIf="showPlaylistDetail() && selectedPlaylist()">
-  <div class="playlist-detail-header">
-    <button class="back-btn" (click)="closePlaylist()" title="Volver">
-      <i class="bi bi-arrow-left"></i>
-    </button>
-    
-    <div class="playlist-header-content">
-      <div class="playlist-cover-large">
-        <img
-          [src]="(getCoverImage(selectedPlaylist()!) | mediaUrl) + bust(selectedPlaylist()!.songs[0]?.id || 0)"
-          [alt]="selectedPlaylist()!.name"
-          class="cover-img-large"
-          (error)="selectedPlaylist()!.songs[0] && onImgError($event, selectedPlaylist()!.songs[0])"
-        />
-        <div class="cover-fallback-large" *ngIf="!getCoverImage(selectedPlaylist()!)">
-          <i class="bi bi-collection-play"></i>
-        </div>
+ <!-- Playlists por género (estilo circular tipo recomendaciones) -->
+<div *ngIf="!loading() && !error() && playlists().length > 0" class="recommendations-section">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="h4 fw-bold mb-0 text-light">Playlists automáticas por género</h3>
+    </div>
+    <!-- Flechas -->
+    <div class="d-flex gap-2">
+      <button class="nav-arrow" (click)="scrollLeft()" [disabled]="!canScrollLeft()" title="Anterior">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <button class="nav-arrow" (click)="scrollRight()" [disabled]="!canScrollRight()" title="Siguiente">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Carrusel circular -->
+  <div class="circular-recommendations" #scrollContainer (scroll)="onScroll()">
+    <div *ngFor="let playlist of getCurrentPlaylists()" class="song-circle" (click)="openPlaylist(playlist)">
+      <div class="image-container">
+        <ng-container *ngIf="getCoverImage(playlist); else fallback">
+          <img
+            [src]="(getCoverImage(playlist) | mediaUrl) + bust(playlist.songs[0]?.id || 0)"
+            [alt]="playlist.name"
+            class="circle-image"
+            loading="lazy"
+            (error)="playlist.songs[0] && onImgError($event, playlist.songs[0])"
+          />
+        </ng-container>
+        <ng-template #fallback>
+          <div class="image-fallback">
+            <i class="bi bi-collection-play"></i>
+          </div>
+        </ng-template>
       </div>
-      
-      <div class="playlist-header-info">
-        <h1 class="playlist-detail-title">{{ selectedPlaylist()!.name }}</h1>
-        <p class="playlist-detail-desc">{{ selectedPlaylist()!.description }}</p>
-        <p class="playlist-detail-meta">
-          {{ getSongCount(selectedPlaylist()!) }} • Playlist generada automáticamente
-        </p>
-        
-        <div class="playlist-header-actions">
-          <button class="play-all-btn" (click)="playPlaylist(selectedPlaylist()!)">
-            <i class="bi bi-play-fill"></i>
-            Reproducir
-          </button>
-          <button class="save-playlist-btn" 
-                  (click)="saveAsPlaylist(selectedPlaylist()!, $event)"
-                  [disabled]="getPlaylistSaveState(selectedPlaylist()!.name) === 'saving' || getPlaylistSaveState(selectedPlaylist()!.name) === 'saved'"
-                  [class.saved]="getPlaylistSaveState(selectedPlaylist()!.name) === 'saved'">
-            <i class="bi" 
-               [class]="getSaveButtonIcon(selectedPlaylist()!.name)"></i>
-            {{ getSaveButtonText(selectedPlaylist()!.name) }}
-          </button>
-        </div>
+
+      <div class="song-text">
+        <strong class="song-title text-truncate">{{ playlist.name }}</strong>
+        <span class="song-artist text-truncate">{{ playlist.description }}</span>
+        <small class="song-genre">{{ getSongCount(playlist) }}</small>
       </div>
     </div>
   </div>
+</div>
+
+
 
   <div class="playlist-tracks-container">
     <div class="tracks-header">
