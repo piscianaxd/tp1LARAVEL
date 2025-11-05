@@ -1,5 +1,6 @@
 <!-- Vista principal de playlists (siempre presente, pero oculta cuando hay detalle) -->
 <section class="auto-playlists-section" [class.d-none]="showPlaylistDetail()">
+  
   <!-- Loader -->
   <div *ngIf="loading()" class="row g-4">
     <div class="col-6 col-md-4 col-lg-3 col-xl-2" *ngFor="let _ of [0,1,2,3,4,5,6,7]">
@@ -137,6 +138,52 @@
     </div>
   </div>
 
+  <!-- Playlists por género (estilo circular tipo recomendaciones) -->
+  <div *ngIf="!loading() && !error() && playlists().length > 0" class="recommendations-section mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h3 class="h4 fw-bold mb-0 text-light">Playlists automáticas por género</h3>
+      </div>
+      <!-- Flechas -->
+      <div class="d-flex gap-2">
+        <button class="nav-arrow" (click)="scrollLeft()" [disabled]="!canScrollLeft()" title="Anterior">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button class="nav-arrow" (click)="scrollRight()" [disabled]="!canScrollRight()" title="Siguiente">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Carrusel circular -->
+    <div class="circular-recommendations" #scrollContainer (scroll)="onScroll()">
+      <div *ngFor="let playlist of getCurrentPlaylists()" class="song-circle" (click)="openPlaylist(playlist)">
+        <div class="image-container">
+          <ng-container *ngIf="getCoverImage(playlist); else fallback">
+            <img
+              [src]="(getCoverImage(playlist) | mediaUrl) + bust(playlist.songs[0]?.id || 0)"
+              [alt]="playlist.name"
+              class="circle-image"
+              loading="lazy"
+              (error)="playlist.songs[0] && onImgError($event, playlist.songs[0])"
+            />
+          </ng-container>
+          <ng-template #fallback>
+            <div class="image-fallback">
+              <i class="bi bi-collection-play"></i>
+            </div>
+          </ng-template>
+        </div>
+
+        <div class="song-text">
+          <strong class="song-title text-truncate">{{ playlist.name }}</strong>
+          <span class="song-artist text-truncate">{{ playlist.description }}</span>
+          <small class="song-genre">{{ getSongCount(playlist) }}</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Empty -->
   <div *ngIf="!loading() && !error() && playlists().length === 0" class="alert alert-info mt-3">
     No se pudieron generar playlists automáticas.
@@ -145,54 +192,6 @@
 
 <!-- Vista detallada de playlist (superpuesta) -->
 <section class="playlist-detail-section" *ngIf="showPlaylistDetail() && selectedPlaylist()">
- <!-- Playlists por género (estilo circular tipo recomendaciones) -->
-<div *ngIf="!loading() && !error() && playlists().length > 0" class="recommendations-section">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h3 class="h4 fw-bold mb-0 text-light">Playlists automáticas por género</h3>
-    </div>
-    <!-- Flechas -->
-    <div class="d-flex gap-2">
-      <button class="nav-arrow" (click)="scrollLeft()" [disabled]="!canScrollLeft()" title="Anterior">
-        <i class="bi bi-chevron-left"></i>
-      </button>
-      <button class="nav-arrow" (click)="scrollRight()" [disabled]="!canScrollRight()" title="Siguiente">
-        <i class="bi bi-chevron-right"></i>
-      </button>
-    </div>
-  </div>
-
-  <!-- Carrusel circular -->
-  <div class="circular-recommendations" #scrollContainer (scroll)="onScroll()">
-    <div *ngFor="let playlist of getCurrentPlaylists()" class="song-circle" (click)="openPlaylist(playlist)">
-      <div class="image-container">
-        <ng-container *ngIf="getCoverImage(playlist); else fallback">
-          <img
-            [src]="(getCoverImage(playlist) | mediaUrl) + bust(playlist.songs[0]?.id || 0)"
-            [alt]="playlist.name"
-            class="circle-image"
-            loading="lazy"
-            (error)="playlist.songs[0] && onImgError($event, playlist.songs[0])"
-          />
-        </ng-container>
-        <ng-template #fallback>
-          <div class="image-fallback">
-            <i class="bi bi-collection-play"></i>
-          </div>
-        </ng-template>
-      </div>
-
-      <div class="song-text">
-        <strong class="song-title text-truncate">{{ playlist.name }}</strong>
-        <span class="song-artist text-truncate">{{ playlist.description }}</span>
-        <small class="song-genre">{{ getSongCount(playlist) }}</small>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
   <div class="playlist-tracks-container">
     <div class="tracks-header">
       <span class="track-number">#</span>

@@ -11,7 +11,7 @@
 .auto-playlists-section {
   background: var(--bg0);
   border-radius: 16px;
-  padding: 2rem;
+  padding: 1rem;
   min-height: 400px;
 }
 
@@ -317,8 +317,8 @@
 .playlist-detail-section {
   background: var(--bg0);
   min-height: 100vh;
-  padding: 1.5rem;
-  padding-bottom: 3rem;
+  padding: 1rem;
+  padding-bottom: 1rem;
 }
 
 .playlist-detail-header {
