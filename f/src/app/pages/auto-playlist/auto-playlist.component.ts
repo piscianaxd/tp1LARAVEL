@@ -38,6 +38,10 @@ export class AutoPlaylistsComponent implements OnInit {
   popularPlaylist = signal<AutoPlaylist | undefined>(undefined);
   popularPlaylistPage = signal(0);
   
+  // ✅ Señales para guardar playlists automáticas
+  savingPlaylist = signal(false);
+  savedPlaylists = signal<Set<string>>(new Set());
+
   // ✅ Señal computada para páginas máximas
   popularPlaylistMaxPages = computed(() => {
     const playlist = this.popularPlaylist();
@@ -70,6 +74,142 @@ export class AutoPlaylistsComponent implements OnInit {
     this.loadPopularPlaylist();
   }
 
+  // ✅ NUEVO: Método para guardar playlist automática
+  saveAutoPlaylist(playlist: AutoPlaylist): void {
+    if (this.savingPlaylist() || this.isPlaylistSaved(playlist)) {
+      return;
+    }
+
+    this.savingPlaylist.set(true);
+    console.log('💾 Guardando playlist automática:', playlist.name);
+
+    const playlistData = {
+      name_playlist: playlist.name,
+      is_public: true,
+      songs: playlist.songs.map(song => ({
+        id: song.id,
+        name_song: song.name_song,
+        artist_song: song.artist_song,
+        album_song: song.album_song || '',
+        art_work_song: song.art_work_song || '',
+        genre_song: song.genre_song || '',
+        url_song: song.url_song || ''
+      }))
+    };
+
+    // Simulación de guardado instantáneo
+    setTimeout(() => {
+      console.log('✅ Playlist guardada instantáneamente:', playlist.name);
+    }, 0);
+
+    // Llamada real al servidor
+    this.playlistService.createPlaylist(playlistData).subscribe({
+      next: (response: any) => {
+        console.log('✅ Playlist confirmada en servidor:', response);
+        this.savingPlaylist.set(false);
+        
+        // Marcar como guardada usando el nombre como identificador único
+        const currentSaved = new Set(this.savedPlaylists());
+        currentSaved.add(playlist.name);
+        this.savedPlaylists.set(currentSaved);
+        
+        this.error.set(null);
+        
+        // Emitir evento después de guardar exitosamente
+        this.playlistEventService.notifyPlaylistSaved();
+        console.log('🔄 Evento de playlist guardada emitido');
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error('❌ Error guardando playlist:', err);
+        this.savingPlaylist.set(false);
+        this.error.set(`Error al guardar la playlist ${playlist.name}`);
+      }
+    });
+  }
+
+  // ✅ NUEVO: Verificar si playlist está guardada
+  isPlaylistSaved(playlist: AutoPlaylist): boolean {
+    return this.savedPlaylists().has(playlist.name);
+  }
+
+  // ✅ NUEVO: Obtener ícono para botón de guardar
+  getSaveButtonIcon(playlist: AutoPlaylist): string {
+    if (this.savingPlaylist()) {
+      return 'bi-arrow-repeat loading';
+    }
+    return this.isPlaylistSaved(playlist) ? 'bi-check-lg' : 'bi-plus-lg';
+  }
+
+  // ✅ NUEVO: Obtener texto para botón de guardar
+  getSaveButtonText(playlist: AutoPlaylist): string {
+    if (this.savingPlaylist()) {
+      return 'Guardando...';
+    }
+    return this.isPlaylistSaved(playlist) ? 'Guardada' : 'Guardar';
+  }
+
+  // ✅ NUEVO: Método para formatear duración de canciones
+  formatDuration(seconds: number): string {
+    if (!seconds) return '0:00';
+    
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  }
+
+  // ✅ NUEVO: Obtener imagen de cover para vista detallada
+  getCoverImageForDetail(playlist: AutoPlaylist): string | null {
+    return this.getCoverImage(playlist);
+  }
+
+  // ✅ NUEVO: Obtener conteo de canciones para vista detallada
+  getSongCountForDetail(playlist: AutoPlaylist): string {
+    return this.getSongCount(playlist);
+  }
+
+  // ✅ NUEVO: Reproducir canción desde vista detallada
+  playSongFromDetail(song: Song, event?: Event): void {
+    this.playSong(song, event || new Event('click'));
+  }
+
+  // ✅ NUEVO: Reproducir playlist desde vista detallada
+  playPlaylistFromDetail(playlist: AutoPlaylist, event?: Event): void {
+    this.playPlaylist(playlist, event);
+  }
+
+  // ✅ NUEVO: Cerrar vista detallada
+  closePlaylistDetail(): void {
+    this.closePlaylist();
+  }
+
+  // ✅ NUEVO: Verificar si hay canciones en playlist seleccionada
+  hasSongsInSelectedPlaylist(): boolean {
+    const playlist = this.selectedPlaylist();
+    return !!(playlist?.songs && playlist.songs.length > 0);
+  }
+
+  // ✅ NUEVO: Obtener canciones de playlist seleccionada
+  getSelectedPlaylistSongs(): Song[] {
+    const playlist = this.selectedPlaylist();
+    return playlist?.songs || [];
+  }
+
+  // ✅ NUEVO: Verificar si hay muchas canciones para mostrar indicador
+  shouldShowMoreTracksIndicator(): boolean {
+    const playlist = this.selectedPlaylist();
+    return !!(playlist?.songs && playlist.songs.length > 8);
+  }
+
+  // ✅ NUEVO: Obtener metadata de playlist seleccionada
+  getSelectedPlaylistMeta(): string {
+    const playlist = this.selectedPlaylist();
+    if (!playlist) return '';
+    
+    const count = this.getSongCount(playlist);
+    return `${count} • Playlist automática • Generada por IA`;
+  }
+
+  // ✅ MÉTODOS EXISTENTES (se mantienen igual)
   loadPopularPlaylist() {
     this.randomTrackService.getRandomSongs(18).subscribe({
       next: (response) => {
@@ -91,7 +231,6 @@ export class AutoPlaylistsComponent implements OnInit {
     });
   }
 
-  // ✅ NUEVO: Método para abrir modal de agregar a playlist
   openAddToPlaylist(song: Song, event?: Event) {
     if (event) {
       event.stopPropagation();
@@ -100,7 +239,6 @@ export class AutoPlaylistsComponent implements OnInit {
     this.addToPlaylistService.openModal(song);
   }
 
-  // ✅ NUEVO: Método para guardar toda la playlist de Mix Popular
   savePopularPlaylist() {
     const popular = this.popularPlaylist();
     if (!popular?.songs || popular.songs.length === 0) {
@@ -157,12 +295,10 @@ export class AutoPlaylistsComponent implements OnInit {
     });
   }
 
-  // ✅ NUEVO: Método para verificar si ya está guardada
   isPopularPlaylistSaved(): boolean {
     return this.popularPlaylistSaved();
   }
 
-  // ✅ NUEVO: Método para obtener el estado del botón de guardar
   getSavePopularButtonState(): string {
     if (this.savingPopularPlaylist()) {
       return 'saving';
@@ -170,7 +306,6 @@ export class AutoPlaylistsComponent implements OnInit {
     return this.popularPlaylistSaved() ? 'saved' : 'unsaved';
   }
 
-  // ✅ NUEVO: Método para obtener el ícono del botón de guardar
   getSavePopularButtonIcon(): string {
     const state = this.getSavePopularButtonState();
     
@@ -184,7 +319,6 @@ export class AutoPlaylistsComponent implements OnInit {
     }
   }
 
-  // ✅ NUEVO: Método para obtener columnas del Mix Popular
   getPopularColumns(): Song[][] {
     const list = this.getCurrentPopularSongs();
     const COLS = 3;
@@ -194,7 +328,6 @@ export class AutoPlaylistsComponent implements OnInit {
     );
   }
 
-  // Métodos corregidos con verificaciones seguras
   getPopularCoverImage(): string {
     const popular = this.popularPlaylist();
     if (popular?.songs && popular.songs.length > 0 && popular.songs[0]?.art_work_song) {
@@ -260,26 +393,9 @@ export class AutoPlaylistsComponent implements OnInit {
     return count === 1 ? '1 canción' : `${count} canciones`;
   }
 
-  // Método para agregar a playlist individual
-  addToPlaylist(song: Song, event?: Event) {
-    if (event) {
-      event.stopPropagation();
-    }
-    console.log('Agregar a playlist:', song);
-    // Aquí puedes implementar la lógica para agregar a playlist
-    // this.playlistService.addToPlaylistDialog(song);
-  }
-
   playSong(song: Song, event: Event) {
     event.stopPropagation();
     console.log('Reproducir canción:', song);
-  }
-
-  formatDuration(seconds: number): string {
-    if (!seconds) return '0:00';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   }
 
   noImg = new Set<number>();
