@@ -9,6 +9,7 @@ use App\Models\SongSavedDb;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class PlaylistController extends Controller
 {
@@ -799,4 +800,109 @@ class PlaylistController extends Controller
             ], 500);
         }
     }
+    public function update(Request $request, $id)
+    {
+        Log::info('🎵 ========== PLAYLIST UPDATE START ==========');
+        Log::info('🎵 Updating playlist:', ['id' => $id]);
+        Log::info('🎵 Request data:', $request->all());
+        Log::info('🎵 User:', ['user' => $request->user()]);
+
+        try {
+            // Validar los datos
+            $validated = $request->validate([
+                'name_playlist' => 'required|string|max:255',
+                'is_public' => 'required|boolean'
+            ]);
+
+            Log::info('🎵 Validation passed:', $validated);
+
+            // Buscar la playlist
+            $playlist = Playlist::find($id);
+
+            if (!$playlist) {
+                Log::warning('🎵 Playlist not found:', ['id' => $id]);
+                return response()->json([
+                    'message' => 'Playlist no encontrada'
+                ], 404);
+            }
+
+            // Verificar que el usuario es el propietario
+            $userId = $request->user()?->id ?? 1;
+            if ($playlist->user_id !== $userId) {
+                Log::warning('🎵 Unauthorized playlist update attempt:', [
+                    'playlist_user_id' => $playlist->user_id,
+                    'current_user_id' => $userId
+                ]);
+                return response()->json([
+                    'message' => 'No autorizado para editar esta playlist'
+                ], 403);
+            }
+
+            Log::info('🎵 Playlist before update:', [
+                'name' => $playlist->name_playlist,
+                'is_public' => $playlist->is_public
+            ]);
+
+            // Actualizar la playlist
+            $playlist->update([
+                'name_playlist' => $validated['name_playlist'],
+                'is_public' => $validated['is_public']
+            ]);
+
+            Log::info('🎵 Playlist after update:', [
+                'name' => $playlist->name_playlist,
+                'is_public' => $playlist->is_public
+            ]);
+
+            Log::info('🎵 ========== PLAYLIST UPDATE END ==========');
+
+            return response()->json([
+                'message' => 'Playlist actualizada exitosamente',
+                'playlist' => $playlist
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('🎵 PLAYLIST UPDATE ERROR:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'message' => 'Error al actualizar la playlist',
+                'error' => config('app.debug') ? $e->getMessage() : 'Contact administrator'
+            ], 500);
+        }
+    }
+
+    /**
+     * Alternativa usando PATCH
+     */
+    public function patchUpdate(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'name_playlist' => 'sometimes|string|max:255',
+            'is_public' => 'sometimes|boolean'
+        ]);
+
+        $playlist = Playlist::find($id);
+
+        if (!$playlist) {
+            return response()->json(['message' => 'Playlist no encontrada'], 404);
+        }
+
+        if ($playlist->user_id !== Auth::id()) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        $playlist->update($validated);
+
+        return response()->json([
+            'message' => 'Playlist actualizada',
+            'playlist' => $playlist
+        ]);
+    }
 }
+
+

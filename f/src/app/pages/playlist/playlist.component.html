@@ -409,3 +409,131 @@
     </div>
   </div>
 </div>
+  <!-- Modal para editar playlist CON LISTA DE CANCIONES -->
+<!-- Modal para editar playlist CON NUEVO LAYOUT -->
+<div class="modal-overlay" *ngIf="showEditPlaylistModal()" (click)="closeEditPlaylistModal()">
+  <div class="modal-content large-modal" (click)="$event.stopPropagation()">
+    
+    <!-- Header del Modal -->
+    <div class="modal-header">
+      <h2 class="modal-title">Editar Playlist</h2>
+      <button class="close-btn" (click)="closeEditPlaylistModal()" 
+              [disabled]="editingPlaylist()"
+              title="Cerrar">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Contenido principal CON NUEVO LAYOUT -->
+    <div class="modal-body edit-playlist-modal">
+
+      <!-- FILA 1: Formulario de edición -->
+      <div class="edit-playlist-form">
+        <form (ngSubmit)="updatePlaylist()" class="profile-form">
+          <!-- Nombre de la playlist -->
+          <div class="form-group">
+            <label for="editPlaylistName">Nombre de la playlist</label>
+            <input type="text"
+                  id="editPlaylistName"
+                  class="form-control"
+                  [(ngModel)]="editPlaylistName"
+                  name="editPlaylistName"
+                  placeholder="Nombre de la playlist"
+                  required
+                  [disabled]="editingPlaylist()">
+          </div>
+
+          <!-- Visibilidad -->
+          <div class="form-group">
+            <label class="form-label fw-bold">Visibilidad</label>
+            <div class="visibility-options-simple">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" id="editPublicPlaylist" [(ngModel)]="editPlaylistIsPublic" name="editPlaylistVisibility" [value]="true">
+                <label class="form-check-label" for="editPublicPlaylist">
+                  <div class="label-row"><i class="bi bi-globe"></i><span> Pública</span></div>
+                  <small class="d-block text-muted">Todos pueden ver esta playlist</small>
+                </label>
+              </div>
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="radio" id="editPrivatePlaylist" [(ngModel)]="editPlaylistIsPublic" name="editPlaylistVisibility" [value]="false">
+                <label class="form-check-label" for="editPrivatePlaylist">
+                  <div class="label-row"><i class="bi bi-lock"></i><span> Privada</span></div>
+                  <small class="d-block text-muted">Solo tú puedes ver esta playlist</small>
+                </label>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- FILA 2: Lista de canciones -->
+      <div class="edit-playlist-songs-list">
+        <div class="songs-list-container">
+          <div *ngFor="let playlistSong of selectedPlaylist()!.songs; let i = index" class="song-item-editable">
+
+            <span class="song-number">{{ i + 1 }}</span>
+
+            <div class="song-cover-small">
+              <img *ngIf="playlistSong.song?.art_work_song && !noImg.has(playlistSong.song.id)"
+                  [src]="playlistSong.song.art_work_song | mediaUrl"
+                  [alt]="playlistSong.song.name_song"
+                  class="cover-img-tiny"
+                  (error)="onImgError($event, playlistSong.song)">
+              <div *ngIf="!playlistSong.song?.art_work_song || noImg.has(playlistSong.song.id)" class="cover-fallback-tiny">
+                <i class="bi bi-music-note-beamed"></i>
+              </div>
+            </div>
+
+            <div class="song-text-block">
+              <div class="song-name" [title]="getSafeSongInfo(playlistSong).name">
+                {{ getSafeSongInfo(playlistSong).name }}
+              </div>
+              <div class="song-artist" [title]="getSafeSongInfo(playlistSong).artist">
+                {{ getSafeSongInfo(playlistSong).artist }}
+              </div>
+              <div class="song-album" [title]="getSafeSongInfo(playlistSong).album">
+                {{ getSafeSongInfo(playlistSong).album }}
+              </div>
+            </div>
+
+            <div class="song-duration">{{ getSafeSongInfo(playlistSong).duration }}</div>
+
+            <div class="song-actions">
+              <button class="btn btn-outline-danger btn-sm"
+                      (click)="removeTrackFromPlaylistModal(playlistSong)"
+                      [disabled]="selectedTrackForDeletion()?.song?.id === playlistSong.song.id"
+                      title="Eliminar de la playlist">
+                <span *ngIf="selectedTrackForDeletion()?.song?.id === playlistSong.song.id" class="spinner-border spinner-border-sm me-1"></span>
+                <i class="bi bi-trash" *ngIf="selectedTrackForDeletion()?.song?.id !== playlistSong.song.id"></i>
+                {{ selectedTrackForDeletion()?.song?.id === playlistSong.song.id ? 'Eliminando...' : 'Eliminar' }}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- FILA 3: Botones de acción -->
+      <!-- Botones en modal de crear playlist -->
+      <div class="form-actions">
+        <button type="button" 
+                class="btn btn-outline-secondary" 
+                (click)="closeCreatePlaylistModal()"
+                [disabled]="creatingNewPlaylist()">
+          Cancelar
+        </button>
+        <button type="button"
+                class="btn btn-primary"
+                (click)="updatePlaylist()"
+                [disabled]="!editPlaylistName.trim() || editingPlaylist()">
+          <span *ngIf="editingPlaylist()" class="spinner-border spinner-border-sm me-2"></span>
+          <i class="bi"
+            [class.bi-check-circle]="!editingPlaylist()"
+            [class.bi-arrow-repeat]="editingPlaylist()"></i>
+          {{ editingPlaylist() ? 'Guardando...' : 'Guardar Cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+  <!-- END: contenido interno reemplazado del modal edit-playlist -->

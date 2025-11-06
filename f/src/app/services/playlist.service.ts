@@ -10,7 +10,7 @@ export class PlaylistService {
   
   // Signal para playlists guardadas localmente (simulación instantánea)
   private localPlaylists = signal<Map<string, any>>(new Map());
-  
+
   // Signal para cache de playlists del usuario
   private userPlaylists = signal<any[]>([]);
 
@@ -165,6 +165,10 @@ export class PlaylistService {
     return Array.from(local.values()).some(playlist => 
       playlist.name_playlist === playlistName && playlist.status !== 'error'
     );
+  }
+
+  updatePlaylist(playlistId: number, data: { name_playlist: string; is_public: number }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${playlistId}`, data);
   }
 
   private handleError(error: any) {

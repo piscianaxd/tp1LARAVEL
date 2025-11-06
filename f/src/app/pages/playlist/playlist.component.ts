@@ -15,7 +15,7 @@ import { dtoToTrack } from '../../helpers/adapters';
 interface Playlist {
   id: number;
   name_playlist: string;
-  is_public: boolean;
+  is_public: number; // ← Siempre number del backend (0 o 1)
   user_id: number;
   created_at: string;
   updated_at: string;
@@ -32,8 +32,6 @@ interface Playlist {
 export class PlaylistsComponent implements OnInit, OnDestroy {
   @Output() close = new EventEmitter<void>();
 
-
-  
   // Señales de estado
   loading = signal(true);
   error = signal<string | null>(null);
@@ -46,6 +44,13 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
   creatingNewPlaylist = signal(false);
   newPlaylistName: string = '';
   newPlaylistIsPublic: boolean = true;
+  
+  // Modal editar playlist
+  showEditPlaylistModal = signal(false);
+  editingPlaylist = signal(false);
+  editPlaylistName: string = '';
+  editPlaylistIsPublic: boolean = true;
+  selectedTrackForDeletion = signal<any>(null);
 
   // Menú contextual y mover canciones
   showContextMenu = signal(false);
@@ -72,8 +77,6 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
   // Servicios
   private playlistService = inject(PlaylistService);
   private playlistEventService = inject(PlaylistEventService);
-
-
   private player: PlayerService = inject(PlayerService);
 
   ngOnInit(): void {
@@ -95,7 +98,6 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     });
   }
 
-
   ngOnDestroy() {
     if (this.playlistEventSubscription) {
       this.playlistEventSubscription.unsubscribe();
@@ -105,16 +107,158 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     }
   }
 
-
-  
-  // ========== GESTIÓN DE PLAYLLISTS ==========
+  // ========== GESTIÓN DE PLAYLISTS ==========
 
   openEditPlaylistModal(playlist: Playlist, event: Event) {
     event.stopPropagation();
-    // Lógica para abrir el modal de edición de playlist
+    
+    this.editPlaylistName = playlist.name_playlist || '';
+    
+    // Conversión CORRECTA: 0 = false, 1 = true
+    this.editPlaylistIsPublic = playlist.is_public === 1;
+    
+    console.log('🎯 DEBUG Conversión:', {
+      valorOriginal: playlist.is_public,
+      tipoOriginal: typeof playlist.is_public,
+      valorConvertido: this.editPlaylistIsPublic,
+      tipoConvertido: typeof this.editPlaylistIsPublic
+    });
+    
+    this.showEditPlaylistModal.set(true);
+    document.body.classList.add('modal-active');
   }
-  
 
+  updatePlaylist() {
+    const playlist = this.selectedPlaylist();
+    if (!playlist) {
+      this.error.set('No hay playlist seleccionada');
+      return;
+    }
+
+    const name = this.editPlaylistName.trim();
+    
+    if (!name) {
+      this.error.set('El nombre de la playlist es requerido');
+      return;
+    }
+
+    // Si no hay cambios, simplemente cierra el modal
+    const currentIsPublicBoolean = playlist.is_public === 1;
+    if (name === playlist.name_playlist && this.editPlaylistIsPublic === currentIsPublicBoolean) {
+      this.closeEditPlaylistModal();
+      return;
+    }
+
+    this.editingPlaylist.set(true);
+    this.error.set(null);
+
+    // Convertir a número para el backend (1 = true, 0 = false)
+    const isPublicNumber = this.editPlaylistIsPublic ? 1 : 0;
+
+    const updateData = {
+      name_playlist: name,
+      is_public: isPublicNumber
+    };
+
+    console.log('Enviando datos de actualización:', {
+      playlistId: playlist.id,
+      data: updateData,
+      url: `/api/playlists/${playlist.id}`
+    });
+
+    this.playlistService.updatePlaylist(playlist.id, updateData).subscribe({
+      next: (response: any) => {
+        console.log('Respuesta exitosa:', response);
+        this.editingPlaylist.set(false);
+        this.closeEditPlaylistModal();
+        
+        // Actualizar la playlist seleccionada
+        const updatedPlaylist = { 
+          ...playlist, 
+          name_playlist: name,
+          is_public: isPublicNumber,
+          updated_at: new Date().toISOString()
+        };
+        this.selectedPlaylist.set(updatedPlaylist);
+        
+        // Actualizar la lista de playlists
+        this.refreshPlaylists();
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error('Error completo:', err);
+        console.error('Status:', err.status);
+        console.error('Mensaje:', err.message);
+        console.error('Error body:', err.error);
+        
+        this.editingPlaylist.set(false);
+        
+        let errorMessage = 'Error al actualizar la playlist';
+        
+        if (err.status === 500) {
+          errorMessage = 'Error interno del servidor. Por favor, intenta más tarde.';
+        } else if (err.status === 400) {
+          errorMessage = 'Datos inválidos para actualizar la playlist';
+        } else if (err.status === 401) {
+          errorMessage = 'No autorizado para editar esta playlist';
+        } else if (err.status === 404) {
+          errorMessage = 'Playlist no encontrada';
+        } else if (err.error?.message) {
+          errorMessage = err.error.message;
+        }
+        
+        this.error.set(errorMessage);
+      }
+    });
+  }
+
+  closeEditPlaylistModal() {
+    this.showEditPlaylistModal.set(false);
+    this.editingPlaylist.set(false);
+    document.body.classList.remove('modal-active');
+  }
+
+  removeTrackFromPlaylistModal(track: any) {
+    this.selectedTrackForDeletion.set(track);
+    
+    const songName = track.song?.name_song || 'esta canción';
+    const playlistName = this.selectedPlaylist()?.name_playlist || 'la playlist';
+    
+    if (confirm(`¿Eliminar "${songName}" de la playlist "${playlistName}"?`)) {
+      const playlist = this.selectedPlaylist();
+      if (!playlist) return;
+
+      this.playlistService.removeSongFromPlaylist(playlist.id, track.song.id).subscribe({
+        next: () => {
+          // Actualizar la playlist localmente
+          const updatedSongs = playlist.songs.filter(s => s.song.id !== track.song.id);
+          const updatedPlaylist = { ...playlist, songs: updatedSongs };
+          this.selectedPlaylist.set(updatedPlaylist);
+          
+          // También actualizar la lista general de playlists
+          this.updatePlaylistInList(updatedPlaylist);
+          
+          this.selectedTrackForDeletion.set(null);
+          this.error.set(null);
+        },
+        error: (err) => {
+          console.error('Error al eliminar canción:', err);
+          this.error.set('Error al eliminar la canción de la playlist');
+          this.selectedTrackForDeletion.set(null);
+        }
+      });
+    } else {
+      this.selectedTrackForDeletion.set(null);
+    }
+  }
+
+  // Método auxiliar para actualizar una playlist en la lista
+  private updatePlaylistInList(updatedPlaylist: Playlist) {
+    const currentPlaylists = this.playlists();
+    const updatedPlaylists = currentPlaylists.map(p => 
+      p.id === updatedPlaylist.id ? updatedPlaylist : p
+    );
+    this.playlists.set(updatedPlaylists);
+  }
 
   loadPlaylists() {
     this.loading.set(true);
@@ -486,6 +630,31 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
 
   // ========== MÉTODOS AUXILIARES ==========
 
+  getSafeSongInfo(playlistSong: any): { name: string, artist: string, album: string, duration: string } {
+    // Manejar diferentes estructuras de datos
+    const song = playlistSong?.song || playlistSong || {};
+    
+    return {
+      name: song.name_song || song.name || song.title || 'Canción desconocida',
+      artist: song.artist_song || song.artist || song.artist_name || 'Artista desconocido',
+      album: song.album_song || song.album || song.album_name || 'Álbum desconocido',
+      duration: this.formatDuration(song.duration || song.duration_seconds || song.length)
+    };
+  }
+
+  // Método para obtener información de playlist segura
+  getSafePlaylistInfo(playlist: Playlist | null): { name: string, songCount: number, isPublic: boolean } {
+    if (!playlist) {
+      return { name: 'Playlist no disponible', songCount: 0, isPublic: true };
+    }
+    
+    return {
+      name: playlist.name_playlist || 'Playlist sin nombre',
+      songCount: playlist.songs ? playlist.songs.length : 0,
+      isPublic: playlist.is_public === 1 // ← Convertir number a boolean
+    };
+  }
+
   openPlaylist(playlist: Playlist) {
     this.selectedPlaylist.set(playlist);
     this.showPlaylistDetail.set(true);
@@ -526,14 +695,17 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     return count === 1 ? '1 canción' : `${count} canciones`;
   }
 
-  formatDuration(seconds: number): string {
+  // Método para formatear la duración de forma más robusta
+  formatDuration(seconds: number | string | undefined): string {
     if (!seconds) return '0:00';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    
+    const secs = typeof seconds === 'string' ? parseInt(seconds) : seconds;
+    if (isNaN(secs)) return '0:00';
+    
+    const mins = Math.floor(secs / 60);
+    const remainingSecs = Math.floor(secs % 60);
+    return `${mins}:${remainingSecs.toString().padStart(2, '0')}`;
   }
-
-
 
   // Manejo de errores de imágenes
   noImg = new Set<number>();
@@ -544,7 +716,7 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Dentro de la clase PlaylistComponent
+  // Reproducir playlist
   playPlaylist(playlist: {
     songs: Array<{ song: any }>;
   }, ev?: Event) {
@@ -560,22 +732,18 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
   }
 
   playSong(songDto: any, ev?: Event) {
-  if (ev) ev.stopPropagation();
+    if (ev) ev.stopPropagation();
 
-  // armamos la cola con TODAS las canciones visibles de esa playlist
-  const current = this.selectedPlaylist?.() ?? null; // si usás signals
-  const list = current?.songs ?? [];
+    // armamos la cola con TODAS las canciones visibles de esa playlist
+    const current = this.selectedPlaylist?.() ?? null;
+    const list = current?.songs ?? [];
 
-  const queue: Track[] = list
-    .map((ps: any) => ps?.song)
-    .filter(Boolean)
-    .map(dtoToTrack);
+    const queue: Track[] = list
+      .map((ps: any) => ps?.song)
+      .filter(Boolean)
+      .map(dtoToTrack);
 
-  const currentTrack = dtoToTrack(songDto);
-  this.player.playNow(currentTrack, queue);
-}
-
-
-
-
+    const currentTrack = dtoToTrack(songDto);
+    this.player.playNow(currentTrack, queue);
+  }
 }
