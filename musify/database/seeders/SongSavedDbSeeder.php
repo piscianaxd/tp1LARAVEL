@@ -114,13 +114,14 @@ class SongSavedDbSeeder extends Seeder
                 'art'    => 'kendrick_damn.jpg',
                 'tracks' => ['DNA.','HUMBLE.','ELEMENT.','LOVE.','LOYALTY.'],
             ],
-            // 13) Taylor Swift — 1989 (Pop)
+            // 13) Taylor Swift — 1989 (Pop) - ✅ USAR .m4a
             [
                 'artist' => 'Taylor Swift',
                 'album'  => '1989',
                 'genre'  => 'Pop',
                 'art'    => 'taylor-swift_1989.jpg',
                 'tracks' => ['Blank Space','Style','Out of the Woods','Shake It Off','Wildest Dreams'],
+                'extension' => '.m4a' // ✅ NUEVO: Especificar extensión
             ],
             // 14) Billie Eilish — WHEN WE ALL FALL ASLEEP, WHERE DO WE GO? (Pop)
             [
@@ -183,8 +184,11 @@ class SongSavedDbSeeder extends Seeder
         $rows = [];
         foreach ($albums as $a) {
             foreach ($a['tracks'] as $title) {
+                // ✅ DETERMINAR EXTENSIÓN: Taylor Swift usa .m4a, otros .mp3
+                $extension = isset($a['extension']) ? $a['extension'] : '.mp3';
+                
                 $rows[] = [
-                    'url_song'       => $AUDIO_BASE . $this->slug($a['artist']) . '/' . $this->slug($a['album']) . '/' . $this->slug($title) . '.mp3',
+                    'url_song'       => $AUDIO_BASE . $this->slug($a['artist']) . '/' . $this->slug($a['album']) . '/' . $this->slug($title) . $extension,
                     'name_song'      => $title,
                     'genre_song'     => $a['genre'],
                     'artist_song'    => $a['artist'],
@@ -216,9 +220,25 @@ class SongSavedDbSeeder extends Seeder
 
     private function slug(string $s): string
     {
-        $s = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $s);
-        $s = preg_replace('/[^A-Za-z0-9]+/', '-', $s);
-        $s = trim($s ?? '', '-');
+        // Primero reemplazar caracteres acentuados manualmente
+        $replacements = [
+            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
+            'ñ' => 'n', 'ç' => 'c',
+            'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U',
+            'Ñ' => 'N', 'Ç' => 'C',
+            'ü' => 'u', 'Ü' => 'U',
+            '’' => '', "'" => '', '"' => '', '?' => '', '!' => '', 
+            '.' => '', ',' => '', ':' => '', ';' => ''
+        ];
+        
+        $s = strtr($s, $replacements);
+        
+        // Ahora limpiar caracteres especiales y convertir a slug
+        $s = preg_replace('/[^a-zA-Z0-9\s]/', '', $s);
+        $s = preg_replace('/\s+/', '-', $s);
+        $s = preg_replace('/-+/', '-', $s);
+        $s = trim($s, '-');
+        
         return strtolower($s);
     }
 }

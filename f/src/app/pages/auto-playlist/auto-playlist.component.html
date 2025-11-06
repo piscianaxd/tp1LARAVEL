@@ -190,55 +190,130 @@
   </div>
 </section>
 
-<!-- Vista detallada de playlist (superpuesta) -->
+<!-- Vista detallada de playlist automática -->
 <section class="playlist-detail-section" *ngIf="showPlaylistDetail() && selectedPlaylist()">
-  <div class="playlist-tracks-container">
-    <div class="tracks-header">
-      <span class="track-number">#</span>
-      <span class="track-title-header">Título</span>
-      <span class="track-album">Álbum</span>
-      <span class="track-duration">Duración</span>
+  
+  <!-- Header de playlist detallada -->
+  <div class="playlist-detail-header">
+    <button class="back-btn" (click)="closePlaylist()" title="Volver a playlists">
+      <i class="bi bi-arrow-left"></i>
+    </button>
+    
+    <div class="playlist-header-content">
+      <div class="playlist-cover-large">
+        <ng-container *ngIf="getCoverImage(selectedPlaylist()!); else fallbackLarge">
+          <img
+            [src]="(getCoverImage(selectedPlaylist()!) | mediaUrl) + bust(selectedPlaylist()!.songs[0]?.id || 0)"
+            [alt]="selectedPlaylist()!.name"
+            class="cover-img-large"
+            loading="lazy"
+            (error)="selectedPlaylist()!.songs[0] && onImgError($event, selectedPlaylist()!.songs[0])"
+          />
+        </ng-container>
+        <ng-template #fallbackLarge>
+          <div class="cover-fallback-large">
+            <i class="bi bi-collection-play"></i>
+          </div>
+        </ng-template>
+      </div>
+      
+      <div class="playlist-header-info">
+        <h1 class="playlist-detail-title">{{ selectedPlaylist()!.name }}</h1>
+        <p class="playlist-detail-meta">
+          {{ getSongCount(selectedPlaylist()!) }} • 
+          Playlist automática • 
+          Generada por IA
+        </p>
+        
+        <div class="playlist-header-actions">
+          <button class="play-all-btn" (click)="playPlaylist(selectedPlaylist()!, $event)">
+            <i class="bi bi-play-fill"></i> Reproducir
+          </button>
+          <button class="save-playlist-btn" 
+                  (click)="saveAutoPlaylist(selectedPlaylist()!)"
+                  [disabled]="isPlaylistSaved(selectedPlaylist()!) || savingPlaylist()"
+                  [title]="isPlaylistSaved(selectedPlaylist()!) ? 'Ya guardada' : 'Guardar esta playlist'">
+            <i class="bi" 
+               [class.bi-check-lg]="isPlaylistSaved(selectedPlaylist()!)"
+               [class.bi-plus-lg]="!isPlaylistSaved(selectedPlaylist()!)"
+               [class.loading]="savingPlaylist()"></i>
+            {{ isPlaylistSaved(selectedPlaylist()!) ? 'Guardada' : 'Guardar' }}
+          </button>
+        </div>
+      </div>
     </div>
+  </div>
 
+  <!-- Lista de canciones -->
+  <div class="playlist-tracks-container" *ngIf="selectedPlaylist()!.songs && selectedPlaylist()!.songs.length > 0">
+    <div class="tracks-header">
+      <div class="track-number">#</div>
+      <div class="track-title">Título</div>
+      <div class="track-album">Álbum</div>
+      <div class="track-duration">
+        <i class="bi bi-clock"></i>
+      </div>
+    </div>
+    
     <div class="tracks-list">
-      <!-- Mostrar TODAS las canciones directamente -->
-      <div class="track-item" 
-           *ngFor="let song of selectedPlaylist()!.songs; let i = index"
+      <div *ngFor="let song of selectedPlaylist()!.songs; let i = index" 
+           class="track-item"
            (click)="playSong(song, $event)">
+        
         <div class="track-number">
           <span class="track-index">{{ i + 1 }}</span>
-          <button class="track-play-btn" (click)="playSong(song, $event)">
+          <button class="track-play-btn">
             <i class="bi bi-play-fill"></i>
           </button>
         </div>
         
         <div class="track-info">
           <div class="track-cover-small">
-            <img
-              [src]="(song.art_work_song | mediaUrl) + bust(song.id)"
-              [alt]="song.name_song"
-              class="cover-img-small"
-              (error)="onImgError($event, song)"
-            />
-            <div class="cover-fallback-small" *ngIf="noImg.has(song.id)">
-              <i class="bi bi-music-note-beamed"></i>
-            </div>
+            <ng-container *ngIf="!noImg.has(song.id); else iconFallbackSmall">
+              <img
+                [src]="(song.art_work_song | mediaUrl) + bust(song.id)"
+                [alt]="song.name_song"
+                class="cover-img-small"
+                loading="lazy"
+                (error)="onImgError($event, song)"
+              />
+            </ng-container>
+            <ng-template #iconFallbackSmall>
+              <div class="cover-fallback-small">
+                <i class="bi bi-music-note-beamed"></i>
+              </div>
+            </ng-template>
           </div>
           
           <div class="track-details">
-            <span class="track-name">{{ song.name_song }}</span>
-            <span class="track-artist">{{ song.artist_song }}</span>
+            <div class="track-name">{{ song.name_song }}</div>
+            <div class="track-artist">{{ song.artist_song }}</div>
           </div>
         </div>
         
-        <div class="track-album">
-          {{ song.album_song }}
-        </div>
-        
-        <div class="track-duration">
-          {{ formatDuration(180) }}
-        </div>
+        <div class="track-album">{{ song.album_song || 'Sin álbum' }}</div>
+        <div class="track-duration">{{ formatDuration(song.duration) }}</div>
       </div>
     </div>
+
+    <!-- Indicador de más canciones (si hay muchas) -->
+    <div *ngIf="selectedPlaylist()!.songs.length > 8" class="more-tracks-indicator">
+      <div class="more-tracks-content">
+        <i class="bi bi-chevron-down"></i>
+        <span class="more-tracks-text">Más canciones</span>
+        <i class="bi bi-chevron-down"></i>
+      </div>
+      <div class="scroll-hint">Desplázate para ver más</div>
+    </div>
   </div>
+
+  <!-- Empty State para vista detallada -->
+  <div *ngIf="selectedPlaylist()!.songs && selectedPlaylist()!.songs.length === 0" class="empty-tracks text-center py-5">
+    <div class="cover-fallback-large mx-auto mb-4" style="width: 120px; height: 120px;">
+      <i class="bi bi-collection-play"></i>
+    </div>
+    <h4 class="playlist-title mb-2">Playlist vacía</h4>
+    <p class="playlist-meta mb-4">Esta playlist automática no tiene canciones disponibles.</p>
+  </div>
+
 </section>
