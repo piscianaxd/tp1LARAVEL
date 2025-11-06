@@ -323,7 +323,10 @@ export class PlayerService {
       'jazz': 'blues',
       'classical': 'blues',
       'reggae': 'tropical',
-      'metal': 'rock'
+      'metal': 'rock',
+      'latin': 'tropical',      
+      'alternative': 'rock',    
+      'indie': 'pop'           
     };
     
     const lowerGenre = genre.toLowerCase().trim();
