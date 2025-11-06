@@ -148,7 +148,7 @@
             <button class="play-all-btn" (click)="playPlaylist(selectedPlaylist()!, $event)">
               <i class="bi bi-play-fill"></i> Reproducir
             </button>
-            <button class="save-playlist-btn" [disabled]="true">
+            <button class="save-playlist-btn" (click)="openEditPlaylistModal(selectedPlaylist()!, $event)">
               <i class="bi bi-pencil"></i> Editar
             </button>
           </div>
@@ -239,7 +239,6 @@
   (close)="closeContextMenu()">
 </app-track-context-menu>
 
-<!-- NUEVO: Modal para mover a otra playlist -->
 <!-- NUEVO: Modal para mover a otra playlist -->
 <div class="modal-overlay" *ngIf="showMoveToPlaylistModal()" (click)="closeMoveToPlaylistModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">

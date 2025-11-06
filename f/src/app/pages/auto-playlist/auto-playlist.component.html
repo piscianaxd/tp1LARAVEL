@@ -226,7 +226,7 @@
         </p>
         
         <div class="playlist-header-actions">
-          <button class="play-all-btn" (click)="playPlaylist(selectedPlaylist()!, $event)">
+          <button class="play-all-btn" (click)="playPlaylist(selectedPlaylist())">
             <i class="bi bi-play-fill"></i> Reproducir
           </button>
           <button class="save-playlist-btn" 
@@ -315,5 +315,7 @@
     <h4 class="playlist-title mb-2">Playlist vacía</h4>
     <p class="playlist-meta mb-4">Esta playlist automática no tiene canciones disponibles.</p>
   </div>
+
+  
 
 </section>

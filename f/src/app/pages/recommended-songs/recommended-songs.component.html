@@ -1,75 +1,99 @@
 <div class="recommendations-container">
-    <h2 class="section-title">Recomendaciones para ti</h2>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h3 fw-bold mb-0">Recomendaciones para ti</h2>
 
-    <!-- Loading -->
-    <div *ngIf="loading()" class="loading">
-        <p>🎵 Analizando tus gustos musicales...</p>
+    <!-- 🔹 Flechas de navegación -->
+    <div class="d-flex gap-2 align-items-center">
+      <button
+        class="nav-arrow nav-arrow-left"
+        (click)="scrollLeft()"
+        [disabled]="!canScrollLeft()"
+        title="Anterior"
+      >
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <button
+        class="nav-arrow nav-arrow-right"
+        (click)="scrollRight()"
+        [disabled]="!canScrollRight()"
+        title="Siguiente"
+      >
+        <i class="bi bi-chevron-right"></i>
+      </button>
     </div>
+  </div>
 
-    <!-- Error -->
-    <div *ngIf="error() && !loading()" class="error">
-        <p>❌ {{ error() }}</p>
+  <!-- Loading -->
+  <div *ngIf="loading()" class="loading">
+    <p>🎵 Analizando tus gustos musicales...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error() && !loading()" class="error">
+    <p>❌ {{ error() }}</p>
+  </div>
+
+  <!-- Usuario sin historial -->
+  <div
+    *ngIf="!loading() && !error() && recommendations().length === 0"
+    class="no-history"
+  >
+    <div class="no-history-content">
+      <div class="music-icon">🎵</div>
+      <h3>Aún no has escuchado música</h3>
+      <p>
+        Comienza a escuchar música para que te pueda recomendar canciones basadas en tus gustos.
+      </p>
+      <button class="explore-btn" routerLink="/explore">Explorar Música</button>
     </div>
+  </div>
 
-    <!-- Usuario sin historial -->
-    <div *ngIf="!loading() && !error() && recommendations().length === 0" class="no-history">
-        <div class="no-history-content">
-            <div class="music-icon">🎵</div>
-            <h3>Aún no has escuchado música</h3>
-            <p>Comienza a escuchar música para que te pueda recomendar canciones basadas en tus gustos.</p>
-            <button class="explore-btn" routerLink="/explore">
-                Explorar Música
-            </button>
+  <!-- Recomendaciones -->
+  <div
+    *ngIf="!loading() && !error() && recommendations().length > 0"
+    class="recommendations-section"
+  >
+    <p class="recommendations-subtitle">Basado en tu historial de escucha</p>
+
+    <div class="recommendations-carousel">
+      <div class="circular-recommendations" #scrollContainer (scroll)="onScroll()">
+        <div
+          *ngFor="let song of recommendations()"
+          class="song-circle"
+          (click)="selectSong(song)"
+          [class.selected]="isSelected(song)"
+          [title]="song.title + ' - ' + song.artist"
+        >
+          <!-- Contenedor de imagen -->
+          <div class="image-container">
+            <ng-container *ngIf="!failedImages.has(song.cover); else iconFallback">
+              <img
+                [src]="song.cover | mediaUrl"
+                [alt]="'Portada de ' + song.title"
+                width="224"
+                height="224"
+                decoding="async"
+                class="circle-image"
+                (error)="handleImageError($event, song)"
+                loading="lazy"
+              />
+            </ng-container>
+
+            <ng-template #iconFallback>
+              <div class="image-fallback">
+                <i class="bi bi-music-note-beamed"></i>
+              </div>
+            </ng-template>
+          </div>
+
+          <!-- Texto -->
+          <div class="song-text">
+            <strong class="song-title">{{ song.title }}</strong>
+            <span class="song-artist">{{ song.artist }}</span>
+            <small class="song-genre">{{ song.genre }}</small>
+          </div>
         </div>
+      </div>
     </div>
-
-    <!-- Recomendaciones con layout horizontal y flechas -->
-    <div *ngIf="!loading() && !error() && recommendations().length > 0" class="recommendations-section">
-        <p class="recommendations-subtitle">Basado en tu historial de escucha</p>
-
-        <!-- Contenedor con flechas de navegación -->
-        <div class="recommendations-carousel">
-            <button class="nav-arrow nav-arrow-left" (click)="scrollLeft()" [disabled]="!canScrollLeft()">
-                <i class="bi bi-chevron-left"></i>
-            </button>
-
-            <div class="circular-recommendations" #scrollContainer (scroll)="onScroll()">
-                <div *ngFor="let song of recommendations()" class="song-circle" (click)="selectSong(song)"
-                    [class.selected]="isSelected(song)" [title]="song.title + ' - ' + song.artist">
-
-                <!-- Contenedor de imagen con fallback -->
-                <div class="image-container">
-                    <ng-container *ngIf="!failedImages.has(song.cover); else iconFallback">
-                        <img 
-                            [src]="song.cover | mediaUrl" 
-                            [alt]="'Portada de ' + song.title" 
-                            width="224" height="224"
-                            decoding="async"
-                            class="circle-image"
-                            (error)="handleImageError($event, song)"
-                            loading="lazy">
-                            
-                    </ng-container>
-                    
-                    <ng-template #iconFallback>
-                        <div class="image-fallback">
-                            <i class="bi bi-music-note-beamed"></i>
-                        </div>
-                    </ng-template>
-                </div>
-
-                    <!-- TEXTO SIEMPRE VISIBLE -->
-                    <div class="song-text">
-                        <strong class="song-title">{{ song.title }}</strong>
-                        <span class="song-artist">{{ song.artist }}</span>
-                        <small class="song-genre">{{ song.genre }}</small>
-                    </div>
-                </div>
-            </div>
-
-            <button class="nav-arrow nav-arrow-right" (click)="scrollRight()" [disabled]="!canScrollRight()">
-                <i class="bi bi-chevron-right"></i>
-            </button>
-        </div>
-    </div>
+  </div>
 </div>

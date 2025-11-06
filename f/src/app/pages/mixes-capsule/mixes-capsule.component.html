@@ -1,7 +1,5 @@
 <section class="random-section">
-    <div>
-      <h2 class="h3 fw-bold mb-3">Canciones Recomendadas Por Genero</h2>
-    </div>
+
   <!-- Filtros -->
   <div class="d-flex flex-wrap gap-2 mb-4">
     <button
@@ -11,13 +9,6 @@
       [class.pill-active]="f === activeFilter()"
       (click)="selectFilter(f)">
       {{ f }}
-    </button>
-  </div>
-
-  <div class="d-flex justify-content-between align-items-center mb-4">
-
-    <button class="btn btn-sm btn-outline-light" (click)="playAll()">
-      <i class="bi bi-play-fill me-1"></i> Reproducir todo
     </button>
   </div>
 
@@ -90,10 +81,3 @@
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Sin resultados -->
-    <div *ngIf="!loading() && songs().length === 0 && !error()" class="alert alert-info mt-3">
-      No hay canciones disponibles para el género seleccionado.
-    </div>
-</section>

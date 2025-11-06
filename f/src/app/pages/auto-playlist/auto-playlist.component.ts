@@ -7,6 +7,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { PlaylistService } from '../../services/playlist.service';
 import { PlaylistEventService } from '../../services/playlist-event.service';
 import { AddToPlaylistService } from '../../services/add-to-playlist.service';
+import { PlayerService } from '../../services/player.service';
+import { songToTrack } from '../../helpers/adapters';
+import { Track } from '../../models/track/track.model';
+import { dtoToTrack } from '../../helpers/adapters';
+
 
 interface AutoPlaylist {
   id?: number;
@@ -42,6 +47,8 @@ export class AutoPlaylistsComponent implements OnInit {
   savingPlaylist = signal(false);
   savedPlaylists = signal<Set<string>>(new Set());
 
+
+
   // ✅ Señal computada para páginas máximas
   popularPlaylistMaxPages = computed(() => {
     const playlist = this.popularPlaylist();
@@ -62,6 +69,7 @@ export class AutoPlaylistsComponent implements OnInit {
   private playlistService = inject(PlaylistService);
   private playlistEventService = inject(PlaylistEventService);
   private addToPlaylistService = inject(AddToPlaylistService);
+  private player: PlayerService = inject(PlayerService);
 
   @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
 
@@ -73,6 +81,11 @@ export class AutoPlaylistsComponent implements OnInit {
     this.generateAutoPlaylists();
     this.loadPopularPlaylist();
   }
+
+  // 1) Type guard para detectar la forma anidada
+isNested(pl: any): pl is { songs: { song: Song }[] } {
+  return !!pl && Array.isArray(pl.songs) && pl.songs.length > 0 && 'song' in pl.songs[0];
+}
 
   // ✅ NUEVO: Método para guardar playlist automática
   saveAutoPlaylist(playlist: AutoPlaylist): void {
@@ -170,11 +183,6 @@ export class AutoPlaylistsComponent implements OnInit {
   // ✅ NUEVO: Reproducir canción desde vista detallada
   playSongFromDetail(song: Song, event?: Event): void {
     this.playSong(song, event || new Event('click'));
-  }
-
-  // ✅ NUEVO: Reproducir playlist desde vista detallada
-  playPlaylistFromDetail(playlist: AutoPlaylist, event?: Event): void {
-    this.playPlaylist(playlist, event);
   }
 
   // ✅ NUEVO: Cerrar vista detallada
@@ -376,15 +384,7 @@ export class AutoPlaylistsComponent implements OnInit {
     }
   }
 
-  playPopularPlaylist(event?: Event) {
-    if (event) {
-      event.stopPropagation();
-    }
-    const popular = this.popularPlaylist();
-    if (popular?.songs && popular.songs.length > 0) {
-      console.log('Reproducir Mix Popular:', popular.songs);
-    }
-  }
+
 
   getPopularSongCount(): string {
     const popular = this.popularPlaylist();
@@ -393,10 +393,7 @@ export class AutoPlaylistsComponent implements OnInit {
     return count === 1 ? '1 canción' : `${count} canciones`;
   }
 
-  playSong(song: Song, event: Event) {
-    event.stopPropagation();
-    console.log('Reproducir canción:', song);
-  }
+
 
   noImg = new Set<number>();
   
@@ -543,12 +540,7 @@ export class AutoPlaylistsComponent implements OnInit {
     this.selectedPlaylist.set(null);
   }
 
-  playPlaylist(playlist: AutoPlaylist, event?: Event) {
-    if (event) {
-      event.stopPropagation();
-    }
-    console.log('Reproducir playlist:', playlist.name, playlist.songs);
-  }
+
 
   private updateMaxPages() {
     const totalPlaylists = this.playlists().length;
@@ -582,4 +574,66 @@ export class AutoPlaylistsComponent implements OnInit {
   canGoPrev(): boolean {
     return this.playlistPage() > 0;
   }
+
+  playSong(songDto: any, ev?: Event) {
+  if (ev) ev.stopPropagation();
+
+  // armamos la cola con TODAS las canciones visibles de esa playlist
+  const current = this.selectedPlaylist?.() ?? null; // si usás signals
+  const list = current?.songs ?? [];
+
+  const queue: Track[] = list
+    .map((ps: any) => ps?.song)
+    .filter(Boolean)
+    .map(dtoToTrack);
+
+  const currentTrack = dtoToTrack(songDto);
+  this.player.playNow(currentTrack, queue);
+}
+
+getPopularTitle(): string {
+  const p = this.popularPlaylist();
+  // Soporta distintas formas de nombre según de dónde venga el dato
+  return (p as any)?.name_playlist ?? (p as any)?.name ?? 'Mix Popular';
+}
+
+getPopularIsPublic(): boolean | null {
+  const p = this.popularPlaylist();
+  if (!p) return null;
+  // Soporta distintos flags
+  return (p as any)?.is_public ?? (p as any)?.public ?? null;
+}
+
+getPopularCreatedAt(): string | Date | null {
+  const p = this.popularPlaylist();
+  return (p as any)?.created_at ?? null;
+}
+
+// Acepta plano, anidado, null o undefined
+playPlaylist(
+  pl: AutoPlaylist | { songs: { song: Song }[] } | null | undefined,
+  event?: Event
+): void {
+  event?.stopPropagation?.();
+  if (!pl || !pl.songs || pl.songs.length === 0) return;
+
+  // Normalizar a Song[]
+  const flatSongs: Song[] = this.isNested(pl)
+    ? pl.songs.map(x => x.song)
+    : (pl.songs as Song[]);
+
+  if (!flatSongs.length) return;
+
+  // Adaptar a Track[] y reproducir
+  const queue: Track[] = flatSongs.map(songToTrack);
+  this.player.playNow(queue[0], queue);
+}
+
+playPopularPlaylist(event?: Event): void {
+  event?.stopPropagation?.();
+  const popular = this.popularPlaylist();
+  if (!popular || !popular.songs || popular.songs.length === 0) return;
+  this.playPlaylist(popular, event);
+}
+
 }
