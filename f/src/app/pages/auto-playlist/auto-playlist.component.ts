@@ -7,9 +7,6 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { PlaylistService } from '../../services/playlist.service';
 import { PlaylistEventService } from '../../services/playlist-event.service';
 import { AddToPlaylistService } from '../../services/add-to-playlist.service';
-import { Track } from '../../models/track/track.model';
-import { dtoToTrack } from '../../helpers/adapters';
-import { PlayerService } from '../../services/player.service';
 
 interface AutoPlaylist {
   id?: number;
