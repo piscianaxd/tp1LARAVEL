@@ -10,9 +10,8 @@
 /* ========== CONTENEDOR PRINCIPAL ========== */
 .auto-playlists-section {
   background: var(--bg0);
-  border-radius: 16px;
-  padding: 1rem;
-  min-height: 400px;
+
+
 }
 
 /* ========== LAYOUT Y GRID ========== */
@@ -641,9 +640,7 @@
 /* ========== PLAYSTYLISTS CIRCULARES (RECOMENDACIONES) ========== */
 .recommendations-section {
   background: var(--bg0);
-  border-radius: 16px;
-  padding: 2rem;
-}
+  border-radius: 16px;}
 
 .nav-arrow {
   width: 40px;
