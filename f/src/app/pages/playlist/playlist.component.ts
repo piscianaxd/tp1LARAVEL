@@ -8,6 +8,9 @@ import { PlaylistEventService, SongForPlaylist } from '../../services/playlist-e
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TrackContextComponent } from '../track-context/track-context.component';
+import { PlayerService } from '../../services/player.service';
+import { Track } from '../../models/track/track.model';
+import { dtoToTrack } from '../../helpers/adapters';
 
 interface Playlist {
   id: number;
@@ -29,6 +32,8 @@ interface Playlist {
 export class PlaylistsComponent implements OnInit, OnDestroy {
   @Output() close = new EventEmitter<void>();
 
+
+  
   // Señales de estado
   loading = signal(true);
   error = signal<string | null>(null);
@@ -68,6 +73,9 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
   private playlistService = inject(PlaylistService);
   private playlistEventService = inject(PlaylistEventService);
 
+
+  private player: PlayerService = inject(PlayerService);
+
   ngOnInit(): void {
     this.loadPlaylists();
 
@@ -87,6 +95,7 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     });
   }
 
+
   ngOnDestroy() {
     if (this.playlistEventSubscription) {
       this.playlistEventSubscription.unsubscribe();
@@ -96,7 +105,16 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     }
   }
 
+
+  
   // ========== GESTIÓN DE PLAYLLISTS ==========
+
+  openEditPlaylistModal(playlist: Playlist, event: Event) {
+    event.stopPropagation();
+    // Lógica para abrir el modal de edición de playlist
+  }
+  
+
 
   loadPlaylists() {
     this.loading.set(true);
@@ -515,17 +533,7 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   }
 
-  playPlaylist(playlist: Playlist, event?: Event) {
-    if (event) {
-      event.stopPropagation();
-    }
-    // Implementar lógica de reproducción
-  }
 
-  playSong(song: any, event: Event) {
-    event.stopPropagation();
-    // Implementar lógica de reproducción
-  }
 
   // Manejo de errores de imágenes
   noImg = new Set<number>();
@@ -535,4 +543,39 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
       this.noImg.add(song.id);
     }
   }
+
+  // Dentro de la clase PlaylistComponent
+  playPlaylist(playlist: {
+    songs: Array<{ song: any }>;
+  }, ev?: Event) {
+    if (ev) ev.stopPropagation();
+
+    const queue: Track[] = (playlist.songs ?? [])
+      .map(ps => ps?.song)
+      .filter(Boolean)
+      .map(dtoToTrack);
+
+    if (!queue.length) return;
+    this.player.playNow(queue[0], queue);
+  }
+
+  playSong(songDto: any, ev?: Event) {
+  if (ev) ev.stopPropagation();
+
+  // armamos la cola con TODAS las canciones visibles de esa playlist
+  const current = this.selectedPlaylist?.() ?? null; // si usás signals
+  const list = current?.songs ?? [];
+
+  const queue: Track[] = list
+    .map((ps: any) => ps?.song)
+    .filter(Boolean)
+    .map(dtoToTrack);
+
+  const currentTrack = dtoToTrack(songDto);
+  this.player.playNow(currentTrack, queue);
+}
+
+
+
+
 }

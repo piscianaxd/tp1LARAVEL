@@ -23,6 +23,29 @@ export function isSongDto(x: any): x is SongDto {
     && typeof x.url_song === 'string';
 }
 
+// Ponelo en el mismo archivo, fuera de la clase o como método privado.
+export function dtoToTrack(song: {
+  id: number;
+  name_song: string;
+  artist_song: string;
+  album_song: string;
+  url_song: string;
+  art_work_song: string;
+  genre_song: string;
+}): Track {
+  return {
+    id: song.id,
+    title: song.name_song,
+    artist: song.artist_song,
+    album: song.album_song,
+    url: song.url_song,
+    artwork: song.art_work_song,
+    genre: song.genre_song
+  };
+}
+
+
+
 // (tu adapter existente)
 export function songToTrack(s: SongDto): Track {
   return {
@@ -34,4 +57,6 @@ export function songToTrack(s: SongDto): Track {
     url: s.url_song,
     genre: s.genre_song ?? '',
   };
+
+  
 }
