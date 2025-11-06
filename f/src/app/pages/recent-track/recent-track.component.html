@@ -70,7 +70,7 @@
               <!-- Imagen si no falló -->
               <ng-container *ngIf="!noImg.has(t.id); else iconFallback">
                 <img
-                  [src]="(t.artwork | mediaUrl) + bust(t.id)"
+                  [src]="(t.art_work_songs | mediaUrl) + bust(t.id)"
                   alt="cover"
                   width="56" height="56"
                   class="cover-img"

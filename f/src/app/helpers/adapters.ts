@@ -39,7 +39,7 @@ export function dtoToTrack(song: {
     artist: song.artist_song,
     album: song.album_song,
     url: song.url_song,
-    artwork: song.art_work_song,
+    art_work_songs: song.art_work_song,
     genre: song.genre_song
   };
 }
@@ -53,7 +53,7 @@ export function songToTrack(s: SongDto): Track {
     title: s.name_song,
     artist: s.artist_song,
     album: s.album_song,
-    artwork: s.art_work_song ?? '',
+    art_work_songs: s.art_work_song ?? '',
     url: s.url_song,
     genre: s.genre_song ?? '',
   };
