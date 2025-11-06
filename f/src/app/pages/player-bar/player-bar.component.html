@@ -3,9 +3,9 @@
     <!-- Izquierda: carátula + info -->
     <div class="left d-flex align-items-center gap-3 minw0">
       <div class="cover">
-        <ng-container *ngIf="!useFallback && player.current()?.artwork; else fallback">
+        <ng-container *ngIf="!useFallback && player.current()?.art_work_songs; else fallback">
           <img
-            [src]="player.current()?.artwork | mediaUrl"
+            [src]="player.current()?.art_work_songs | mediaUrl"
             width="224" height="224"
             decoding="async"
             alt="cover"
