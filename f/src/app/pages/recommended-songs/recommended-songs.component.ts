@@ -4,14 +4,17 @@ import { Router } from '@angular/router';
 import { RecommendedSongsService } from '../../services/recommended-songs.service';
 import { AuthService } from '../../services/auth.service';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
+import { TrackContextComponent } from '../track-context/track-context.component';
+import { AddToPlaylistService } from '../../services/add-to-playlist.service';
 import { HttpClient } from '@angular/common/http';
 import { PlayerService } from '../../services/player.service';
 import { Track } from '../../models/track/track.model';
+import { Song } from '../../services/mixes.service';
 
 @Component({
   selector: 'app-recommendations',
   standalone: true,
-  imports: [CommonModule, MediaUrlPipe],
+  imports: [CommonModule, MediaUrlPipe, TrackContextComponent],
   templateUrl: './recommended-songs.component.html',
   styleUrls: ['./recommended-songs.component.css']
 })
@@ -30,8 +33,14 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
   // Control de imágenes fallidas
   failedImages = new Set<string>();
 
+  //señal para el menú contextual
+  showContextMenu = signal(false);
+  contextMenuPosition = signal({ x: 0, y: 0 });
+  selectedTrackForContextMenu = signal<Song | null>(null);
+
   constructor(
     private recommendedSongsService: RecommendedSongsService,
+    private addToPlaylistService: AddToPlaylistService,
     private authService: AuthService,
     private router: Router,
     private http: HttpClient,
@@ -311,4 +320,107 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
     const img = event.target;
     img.style.display = 'none';
   }
+  // Agrega este método en tu clase RecommendationsComponent
+  playSong(song: any, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+
+    // Convertir la canción al formato Track
+    const track: Track = {
+      id: song.id,
+      title: song.title || song.name_song,
+      artist: song.artist || song.artist_song,
+      album: song.album || song.album_song,
+      art_work_songs: song.cover || song.art_work_song,
+      url: song.audioFile || song.url_song,
+      genre: song.genre || song.genre_song
+    };
+
+    // Crear una queue con todas las recomendaciones
+    const queue: Track[] = this.recommendations().map(rec => ({
+      id: rec.id,
+      title: rec.title || rec.name_song,
+      artist: rec.artist || rec.artist_song,
+      album: rec.album || rec.album_song,
+      art_work_songs: rec.cover || rec.art_work_song,
+      url: rec.audioFile || rec.url_song,
+      genre: rec.genre || rec.genre_song
+    }));
+
+    // Reproducir la canción seleccionada con toda la queue
+    this.playerService.playNow(track, queue);
+  }
+    // Métodos para el menú contextual
+    onTrackContextMenu(event: MouseEvent, song: Song) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      this.selectedTrackForContextMenu.set(song);
+      this.contextMenuPosition.set({ x: event.clientX, y: event.clientY });
+      this.showContextMenu.set(true);
+      
+      setTimeout(() => {
+        document.addEventListener('click', this.closeContextMenuOnClickOutside.bind(this));
+        document.addEventListener('contextmenu', this.closeContextMenuOnRightClick.bind(this));
+      });
+    }
+  
+    addToPlaylist(song: Song, event: Event): void {
+      event.stopPropagation(); // Importante para evitar que se propague el click
+  
+      this.addToPlaylistService.openModal({
+        id: song.id,
+          name_song: song.name_song,
+          artist_song: song.artist_song,
+          album_song: song.album_song,
+          art_work_song: song.art_work_song
+        });
+      }
+  
+    private closeContextMenuOnClickOutside(event: MouseEvent) {
+      const contextMenu = document.querySelector('.context-menu');
+      if (contextMenu && !contextMenu.contains(event.target as Node)) {
+        this.closeContextMenu();
+        this.removeEventListeners();
+      }
+    }
+  
+    private closeContextMenuOnRightClick() {
+      this.closeContextMenu();
+      this.removeEventListeners();
+    }
+  
+    private removeEventListeners() {
+      document.removeEventListener('click', this.closeContextMenuOnClickOutside.bind(this));
+      document.removeEventListener('contextmenu', this.closeContextMenuOnRightClick.bind(this));
+    }
+  
+    closeContextMenu() {
+      this.showContextMenu.set(false);
+      this.selectedTrackForContextMenu.set(null);
+      this.removeEventListeners();
+    }
+  
+    onContextMenuPlay() {
+      const song = this.selectedTrackForContextMenu();
+      if (song) {
+        this.playSong(song, new Event('click'));
+      }
+      this.closeContextMenu();
+    }
+  
+    onContextMenuAddToPlaylist() {
+      const song = this.selectedTrackForContextMenu();
+      if (song) {
+        this.addToPlaylistService.openModal({
+          id: song.id,
+          name_song: song.name_song,
+          artist_song: song.artist_song,
+          album_song: song.album_song,
+          art_work_song: song.art_work_song,
+        });
+      }
+      this.closeContextMenu();
+    }
 }
