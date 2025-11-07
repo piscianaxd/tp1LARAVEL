@@ -6,11 +6,14 @@ import { HistoryService, HistoryTrack } from '../../services/history.service';
 import { Track } from '../../models/track/track.model';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { PlayerService } from '../../services/player.service';
+import { TrackContextComponent } from '../track-context/track-context.component';
+import { AddToPlaylistService } from '../../services/add-to-playlist.service';
+import { Song } from '../../services/mixes.service';
 
 @Component({
   selector: 'app-recent-tracks',
   standalone: true,
-  imports: [CommonModule, RouterModule, MediaUrlPipe],
+  imports: [CommonModule, RouterModule, MediaUrlPipe, TrackContextComponent],
   templateUrl: './recent-track.component.html',
   styleUrls: ['./recent-track.component.css']
 })
@@ -48,9 +51,15 @@ export class RecentTracksComponent implements OnInit {
   // control de imagen fallida por id
   noImg = new Set<number>();
 
+  //señal para el menú contextual
+  showContextMenu = signal(false);
+  contextMenuPosition = signal({ x: 0, y: 0 });
+  selectedTrackForContextMenu = signal<HistoryTrack | null>(null);
+
   constructor(
     private history: HistoryService,
-    private player: PlayerService
+    private player: PlayerService,
+    private addToPlaylistService: AddToPlaylistService
   ) {}
 
   ngOnInit(): void {
@@ -121,4 +130,77 @@ export class RecentTracksComponent implements OnInit {
     if (diff < 86400) return `${Math.floor(diff/3600)} h`;
     return `${Math.floor(diff/86400)} d`;
   }
+
+  // Métodos para el menú contextual
+  onTrackContextMenu(event: MouseEvent, track: HistoryTrack) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    this.selectedTrackForContextMenu.set(track);
+    this.contextMenuPosition.set({ x: event.clientX, y: event.clientY });
+    this.showContextMenu.set(true);
+    
+    setTimeout(() => {
+      document.addEventListener('click', this.closeContextMenuOnClickOutside.bind(this));
+      document.addEventListener('contextmenu', this.closeContextMenuOnRightClick.bind(this));
+    });
+  }
+
+  addToPlaylist(song: Song, event: Event): void {
+    event.stopPropagation(); // Importante para evitar que se propague el click
+
+    this.addToPlaylistService.openModal({
+      id: song.id,
+        name_song: song.name_song,
+        artist_song: song.artist_song,
+        album_song: song.album_song,
+        art_work_song: song.art_work_song
+      });
+    }
+
+  private closeContextMenuOnClickOutside(event: MouseEvent) {
+    const contextMenu = document.querySelector('.context-menu');
+    if (contextMenu && !contextMenu.contains(event.target as Node)) {
+      this.closeContextMenu();
+      this.removeEventListeners();
+    }
+  }
+
+  private closeContextMenuOnRightClick() {
+    this.closeContextMenu();
+    this.removeEventListeners();
+  }
+
+  private removeEventListeners() {
+    document.removeEventListener('click', this.closeContextMenuOnClickOutside.bind(this));
+    document.removeEventListener('contextmenu', this.closeContextMenuOnRightClick.bind(this));
+  }
+
+  closeContextMenu() {
+    this.showContextMenu.set(false);
+    this.selectedTrackForContextMenu.set(null);
+    this.removeEventListeners();
+  }
+
+  onContextMenuPlay() {
+    if (this.selectedTrackForContextMenu()) {
+      this.play(this.selectedTrackForContextMenu()!);
+    }
+    this.closeContextMenu();
+  }
+
+  onContextMenuAddToPlaylist() {
+    const track = this.selectedTrackForContextMenu();
+    if (track) {
+      this.addToPlaylistService.openModal({
+        id: track.id,
+        name_song: track.title,
+        artist_song: track.artist,
+        album_song: track.album,
+        art_work_song: track.art_work_songs
+      });
+    }
+    this.closeContextMenu();
+  }
 }
+
