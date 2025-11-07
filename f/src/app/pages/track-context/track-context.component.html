@@ -6,12 +6,18 @@
     <i class="bi bi-play-fill"></i>
     <span>Reproducir</span>
   </div>
-  <div class="context-menu-item" (click)="onDeleteClick($event)">
+  <div *ngIf="menuType === 'playlist'" class="context-menu-item" (click)="onDeleteClick($event)">
     <i class="bi bi-trash"></i>
     <span>Eliminar</span>
   </div>
-  <div class="context-menu-item" (click)="onMoveClick($event)">
+
+  <div *ngIf="menuType === 'playlist'" class="context-menu-item" (click)="onMoveClick($event)">
     <i class="bi bi-folder-plus"></i>
     <span>Mover a playlist</span>
   </div>
+  <div *ngIf="menuType === 'recent'" class="context-menu-item" (click)="onAddToPlaylistClick($event)">
+    <i class="bi bi-plus-circle"></i>
+    <span>Agregar a playlist</span>
+  </div>
+
 </div>

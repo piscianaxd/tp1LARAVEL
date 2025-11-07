@@ -7,6 +7,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { PlaylistService } from '../../services/playlist.service';
 import { PlaylistEventService } from '../../services/playlist-event.service';
 import { AddToPlaylistService } from '../../services/add-to-playlist.service';
+import { TrackContextComponent } from '../track-context/track-context.component';
 import { PlayerService } from '../../services/player.service';
 import { songToTrack } from '../../helpers/adapters';
 import { Track } from '../../models/track/track.model';
@@ -27,7 +28,7 @@ interface AutoPlaylist {
 @Component({
   selector: 'app-auto-playlists',
   standalone: true,
-  imports: [CommonModule, MediaUrlPipe],
+  imports: [CommonModule, MediaUrlPipe, TrackContextComponent],
   templateUrl: './auto-playlist.component.html',
   styleUrls: ['./auto-playlist.component.css']
 })
@@ -46,6 +47,10 @@ export class AutoPlaylistsComponent implements OnInit {
   // ✅ Señales para guardar playlists automáticas
   savingPlaylist = signal(false);
   savedPlaylists = signal<Set<string>>(new Set());
+  
+  showContextMenu = signal(false);
+  contextMenuPosition = signal({ x: 0, y: 0 });
+  selectedTrackForContextMenu = signal<Song | null>(null);
 
 
 
@@ -608,6 +613,81 @@ getPopularCreatedAt(): string | Date | null {
   const p = this.popularPlaylist();
   return (p as any)?.created_at ?? null;
 }
+
+
+  // Métodos para el menú contextual
+  onTrackContextMenu(event: MouseEvent, song: Song) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    this.selectedTrackForContextMenu.set(song);
+    this.contextMenuPosition.set({ x: event.clientX, y: event.clientY });
+    this.showContextMenu.set(true);
+    
+    setTimeout(() => {
+      document.addEventListener('click', this.closeContextMenuOnClickOutside.bind(this));
+      document.addEventListener('contextmenu', this.closeContextMenuOnRightClick.bind(this));
+    });
+  }
+
+  addToPlaylist(song: Song, event: Event): void {
+    event.stopPropagation(); // Importante para evitar que se propague el click
+
+    this.addToPlaylistService.openModal({
+      id: song.id,
+        name_song: song.name_song,
+        artist_song: song.artist_song,
+        album_song: song.album_song,
+        art_work_song: song.art_work_song
+      });
+    }
+
+  private closeContextMenuOnClickOutside(event: MouseEvent) {
+    const contextMenu = document.querySelector('.context-menu');
+    if (contextMenu && !contextMenu.contains(event.target as Node)) {
+      this.closeContextMenu();
+      this.removeEventListeners();
+    }
+  }
+
+  private closeContextMenuOnRightClick() {
+    this.closeContextMenu();
+    this.removeEventListeners();
+  }
+
+  private removeEventListeners() {
+    document.removeEventListener('click', this.closeContextMenuOnClickOutside.bind(this));
+    document.removeEventListener('contextmenu', this.closeContextMenuOnRightClick.bind(this));
+  }
+
+  closeContextMenu() {
+    this.showContextMenu.set(false);
+    this.selectedTrackForContextMenu.set(null);
+    this.removeEventListeners();
+  }
+
+  onContextMenuPlay() {
+    const song = this.selectedTrackForContextMenu();
+    if (song) {
+      this.playSong(song, new Event('click'));
+    }
+    this.closeContextMenu();
+  }
+
+  onContextMenuAddToPlaylist() {
+    const song = this.selectedTrackForContextMenu();
+    if (song) {
+      this.addToPlaylistService.openModal({
+        id: song.id,
+        name_song: song.name_song,
+        artist_song: song.artist_song,
+        album_song: song.album_song,
+        art_work_song: song.art_work_song,
+        duration: song.duration
+      });
+    }
+    this.closeContextMenu();
+  }
 
 // Acepta plano, anidado, null o undefined
 playPlaylist(

@@ -63,7 +63,9 @@
         <ul class="list-group list-group-flush">
           <li class="list-group-item bg-transparent px-0" *ngFor="let song of col">
             <div class="d-flex align-items-center gap-3 popular-item"
-                (click)="playSong(song, $event)" role="button">
+                (click)="playSong(song, $event)" 
+                (contextmenu)="onTrackContextMenu($event, song)"
+                role="button">
 
               <!-- Cover con overlay -->
               <div class="cover-wrap">
@@ -221,8 +223,7 @@
         <h1 class="playlist-detail-title">{{ selectedPlaylist()!.name }}</h1>
         <p class="playlist-detail-meta">
           {{ getSongCount(selectedPlaylist()!) }} • 
-          Playlist automática • 
-          Generada por IA
+          Playlist automática
         </p>
         
         <div class="playlist-header-actions">
@@ -258,6 +259,7 @@
     <div class="tracks-list">
       <div *ngFor="let song of selectedPlaylist()!.songs; let i = index" 
            class="track-item"
+           (contextmenu)="onTrackContextMenu($event, song)"
            (click)="playSong(song, $event)">
         
         <div class="track-number">
@@ -315,7 +317,14 @@
     <h4 class="playlist-title mb-2">Playlist vacía</h4>
     <p class="playlist-meta mb-4">Esta playlist automática no tiene canciones disponibles.</p>
   </div>
-
-  
-
 </section>
+    
+<app-track-context-menu
+  [isVisible]="showContextMenu()"
+  [position]="contextMenuPosition()"
+  [track]="selectedTrackForContextMenu()"
+  [menuType]="'recent'"
+  (play)="onContextMenuPlay()"
+  (addToPlaylist)="onContextMenuAddToPlaylist()"
+  (close)="closeContextMenu()">
+</app-track-context-menu>

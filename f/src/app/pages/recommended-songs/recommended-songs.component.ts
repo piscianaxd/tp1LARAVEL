@@ -273,7 +273,7 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
       title: song.title,
       artist: song.artist,
       album: song.album,
-      artwork: song.cover,
+      art_work_songs: song.cover,
       url: song.audioFile,
       genre: song.genre
     };

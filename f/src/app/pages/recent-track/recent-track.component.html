@@ -63,14 +63,16 @@
         <li class="list-group-item bg-transparent px-0" *ngFor="let t of col">
           <!-- Toda la cápsula ahora reproduce -->
           <div class="d-flex align-items-center gap-3 recent-item"
-               (click)="play(t)" role="button">
+               (click)="play(t)" 
+               role="button"
+               (contextmenu)="onTrackContextMenu($event, t)">
 
             <!-- Cover con overlay SOLO Play -->
             <div class="cover-wrap">
               <!-- Imagen si no falló -->
               <ng-container *ngIf="!noImg.has(t.id); else iconFallback">
                 <img
-                  [src]="(t.artwork | mediaUrl) + bust(t.id)"
+                  [src]="(t.art_work_songs | mediaUrl) + bust(t.id)"
                   alt="cover"
                   width="56" height="56"
                   class="cover-img"
@@ -119,3 +121,13 @@
     </div>
   </div>
 </section>
+
+<app-track-context-menu
+  [isVisible]="showContextMenu()"
+  [position]="contextMenuPosition()"
+  [track]="selectedTrackForContextMenu()"
+  [menuType]="'recent'"
+  (play)="onContextMenuPlay()"
+  (addToPlaylist)="onContextMenuAddToPlaylist()"
+  (close)="closeContextMenu()">
+</app-track-context-menu>

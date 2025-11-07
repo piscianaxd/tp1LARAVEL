@@ -31,7 +31,7 @@ class SongSavedDbSeeder extends Seeder
                 'artist' => '2Pac',
                 'album'  => 'All Eyez on Me',
                 'genre'  => 'Hip-Hop',
-                'art'    => '2pac_all-eyez-on-me.jpg',
+                'art'    => '2pac_all-eyez-on-me.jpg', // ← CORREGIDO
                 'tracks' => ['Ambitionz Az a Ridah','All Eyez on Me','2 of Amerikaz Most Wanted','How Do U Want It','California Love'],
             ],
             // 3) Justin Bieber — Purpose (Pop)
@@ -63,7 +63,7 @@ class SongSavedDbSeeder extends Seeder
                 'artist' => 'mk.gee',
                 'album'  => 'Two Star & The Dream Police',
                 'genre'  => 'Indie',
-                'art'    => 'mkgee_two-star.jpg',
+                'art'    => 'mk-gee_two-star-the-dream-police.jpg', // ← CORREGIDO
                 'tracks' => ['New Low','Candy','Are You Looking Up','How Many Miles','How It All Ends'],
             ],
             // 7) BROCKHAMPTON — SATURATION (Hip-Hop/Alt)
@@ -95,15 +95,16 @@ class SongSavedDbSeeder extends Seeder
                 'artist' => 'The Beatles',
                 'album'  => 'Abbey Road',
                 'genre'  => 'Rock',
-                'art'    => 'beatles_abbey-road.jpg',
+                'art'    => 'the-beatles_abbey-road.jpg', // ← CORREGIDO
                 'tracks' => ['Come Together','Something','Here Comes the Sun','Oh! Darling','I Want You (She’s So Heavy)'],
             ],
             // 11) Queen — A Night at the Opera (Rock)
+            
             [
                 'artist' => 'Queen',
                 'album'  => 'A Night at the Opera',
                 'genre'  => 'Rock',
-                'art'    => 'queen_a-night-at-the-opera.jpg',
+                'art'    => 'queen_a-night-at-the-opera.jpg', // ← CORREGIDO
                 'tracks' => ['Bohemian Rhapsody','You’re My Best Friend','Love of My Life','’39','I’m in Love with My Car'],
             ],
             // 12) Kendrick Lamar — DAMN. (Hip-Hop)
@@ -111,7 +112,7 @@ class SongSavedDbSeeder extends Seeder
                 'artist' => 'Kendrick Lamar',
                 'album'  => 'DAMN.',
                 'genre'  => 'Hip-Hop',
-                'art'    => 'kendrick_damn.jpg',
+                'art'    => 'kendrick-lamar_damn.jpg', // ← CORREGIDO
                 'tracks' => ['DNA.','HUMBLE.','ELEMENT.','LOVE.','LOYALTY.'],
             ],
             // 13) Taylor Swift — 1989 (Pop) - ✅ USAR .m4a
@@ -128,15 +129,16 @@ class SongSavedDbSeeder extends Seeder
                 'artist' => 'Billie Eilish',
                 'album'  => 'WHEN WE ALL FALL ASLEEP, WHERE DO WE GO?',
                 'genre'  => 'Pop',
-                'art'    => 'billie-eilish_wwafawdwg.jpg',
+                'art'    => 'billie-eilish_when-we-all-fall-asleep-where-do-we-go.jpg', // ← CORREGIDO
                 'tracks' => ['bad guy','bury a friend','when the party’s over','you should see me in a crown','wish you were gay'],
             ],
+            
             // 15) Bad Bunny — YHLQMDLG (Latin/Reggaetón)
             [
                 'artist' => 'Bad Bunny',
                 'album'  => 'YHLQMDLG',
                 'genre'  => 'Latin',
-                'art'    => 'bad-bunny_yhlqmdlg.jpg',
+                'art'    => 'bad-bunny_yhlqmdlg.jpg', // ← CORREGIDO
                 'tracks' => ['Si Veo a Tu Mamá','La Difícil','La Santa','Yo Perreo Sola','Safaera'],
             ],
             // 16) Shakira — Fijación Oral, Vol. 1 (Latin/Pop)
@@ -144,7 +146,7 @@ class SongSavedDbSeeder extends Seeder
                 'artist' => 'Shakira',
                 'album'  => 'Fijación Oral, Vol. 1',
                 'genre'  => 'Latin',
-                'art'    => 'shakira_fijacion-oral-vol1.jpg',
+                'art'    => 'shakira_fijaci-on-oral-vol-1.jpg', // ← CORREGIDO
                 'tracks' => ['La Tortura','Día de Enero','No','Obtener un Sí','Las de la Intuición'],
             ],
             // 17) Soda Stereo — Canción Animal (Rock/LatAm)
@@ -152,7 +154,7 @@ class SongSavedDbSeeder extends Seeder
                 'artist' => 'Soda Stereo',
                 'album'  => 'Canción Animal',
                 'genre'  => 'Rock',
-                'art'    => 'soda-stereo_cancion-animal.jpg',
+                'art'    => 'soda-stereo_canci-on-animal.jpg', // ← CORREGIDO
                 'tracks' => ['Canción Animal','De Música Ligera','Un Millón de Años Luz','1990','En el Séptimo Día'],
             ],
             // 18) Gustavo Cerati — Bocanada (Alternative/LatAm)
@@ -160,7 +162,7 @@ class SongSavedDbSeeder extends Seeder
                 'artist' => 'Gustavo Cerati',
                 'album'  => 'Bocanada',
                 'genre'  => 'Alternative',
-                'art'    => 'cerati_bocanada.jpg',
+                'art'    => 'gustavo-cerati_bocanada.jpg', // ← CORREGIDO
                 'tracks' => ['Tabú','Bocanada','Puente','Paseo Inmoral','Raíz'],
             ],
             // 19) Linkin Park — Hybrid Theory (Nu Metal)
@@ -193,7 +195,7 @@ class SongSavedDbSeeder extends Seeder
                     'genre_song'     => $a['genre'],
                     'artist_song'    => $a['artist'],
                     'album_song'     => $a['album'],
-                    'art_work_song'  => $ART_BASE . $this->slug($a['artist']) . '_' . $this->slug($a['album']) . '.jpg',
+                    'art_work_song'  => $ART_BASE . $a['art'], // ← USAR NOMBRE EXACTO DEL ARRAY
                     'created_at'     => now(),
                     'updated_at'     => now(),
                 ];
