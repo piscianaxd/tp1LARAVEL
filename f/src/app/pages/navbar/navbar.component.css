@@ -1,430 +1,406 @@
-/* navbar.component.css - VERSIÓN CON TEMA OSCURO MEJORADO */
+@keyframes fadeInDown {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px)
+    }
 
-/* ========== VARIABLES CONSISTENTES CON AUTO-PLAYLIST ========== */
+    to {
+        opacity: 1;
+        transform: translateY(0)
+    }
+}
+
 :root {
-  --bg0: #0b0f14;
-  --bg1: #0e141b;
-  --border: rgba(255,255,255,.08);
-  --title: #e8eef6;
-  --muted: #aab4be;
-  --brand: #ffffff;
+    --bg0: #0b0f14;
+    --bg1: #0e141b;
+    --border: rgba(255,255,255,.08);
+    --title: #e8eef6;
+    --muted: #aab4be;
+    --brand: #ffffff
 }
 
-/* NAVBAR PRINCIPAL - FIJAR CORRECTAMENTE */
 .navbar {
-  z-index: 9999;
-  position: fixed !important;
-  top: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  height: 56px;
-  background: var(--bg0) !important; /* ✅ Color de fondo consistente */
-  border-bottom: 1px solid var(--border) !important; /* ✅ Borde sutil */
-  backdrop-filter: blur(10px); /* ✅ Efecto de desenfoque */
+    z-index: 9999;
+    position: fixed!important;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 56px;
+    background: var(--bg0)!important;
+    border-bottom: 1px solid var(--border)!important;
+    backdrop-filter: blur(10px)
 }
 
-/* CONTENEDOR PRINCIPAL DEL DASHBOARD - COMPENSAR ALTURA NAVBAR */
+app-dashboard,body {
+    background: var(--bg0)
+}
+
 app-dashboard {
-  display: block;
-  padding-top: 56px;
-  min-height: 100vh;
-  background: var(--bg0); /* ✅ Fondo consistente */
+    display: block;
+    padding-top: 56px;
+    min-height: 100vh
 }
 
-/* Asegurar que el body no tenga márgenes/padding que interfieran */
 body {
-  margin: 0;
-  padding: 0;
-  background: var(--bg0);
+    margin: 0;
+    padding: 0
 }
 
-/* ========== ESTILOS MEJORADOS PARA LA BARRA DE BÚSQUEDA ========== */
 .search-container {
-  position: relative;
-  z-index: 1051;
+    position: relative;
+    z-index: 1051
 }
 
 .navbar-brand {
-  color: var(--title) !important; /* ✅ Color de título consistente */
-  font-size: 1.3rem;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  font-weight: 700;
+    color: var(--title)!important;
+    font-size: 1.3rem;
+    transition: all .3s ease;
+    text-decoration: none;
+    font-weight: 700
 }
 
 .navbar-brand:hover {
-  opacity: 0.8;
-  transform: scale(1.02);
+    opacity: .8;
+    transform: scale(1.02)
 }
 
-/* Grupo de entrada mejorado */
 .input-group {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
-  border-radius: 25px;
-  overflow: hidden;
-  border: 1px solid var(--border); /* ✅ Borde consistente */
-  background: var(--bg1); /* ✅ Fondo del input group */
+    box-shadow: 0 2px 12px rgba(0,0,0,.3);
+    border-radius: 25px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--bg1)
+}
+
+.form-control,.input-group-text {
+    border: 0;
+    background: var(--bg1)!important
 }
 
 .input-group-text {
-  border: none;
-  background: var(--bg1) !important; /* ✅ Fondo consistente */
-  color: var(--muted) !important;
-  backdrop-filter: blur(10px);
+    color: var(--muted)!important;
+    backdrop-filter: blur(10px)
 }
 
 .form-control {
-  border: none;
-  background: var(--bg1) !important; /* ✅ Fondo consistente */
-  padding: 10px 15px;
-  transition: all 0.3s ease;
-  color: var(--title) !important; /* ✅ Texto del título */
+    padding: 10px 15px;
+    transition: all .3s ease;
+    color: var(--title)!important
 }
 
 .form-control::placeholder {
-  color: var(--muted) !important; /* ✅ Placeholder consistente */
-  opacity: 0.8;
+    color: var(--muted)!important;
+    opacity: .8
 }
 
 .form-control:focus {
-  background: var(--bg1) !important;
-  box-shadow: none !important; /* ✅ Elimina el borde verde */
-  outline: none !important;
-  color: var(--title) !important;
-  border-color: var(--border) !important; /* ✅ Mantiene el borde original */
+    background: var(--bg1)!important;
+    box-shadow: none!important;
+    outline: 0!important;
+    color: var(--title)!important;
+    border-color: var(--border)!important
 }
 
 .btn-outline-secondary {
-  border: none;
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: var(--muted) !important;
-  transition: all 0.3s ease;
+    border: 0;
+    background: rgba(255,255,255,.08)!important;
+    color: var(--muted)!important;
+    transition: all .3s ease
+}
+
+.btn-outline-secondary:hover,.user-info {
+    background: rgba(255,255,255,.15)!important
 }
 
 .btn-outline-secondary:hover {
-  background: rgba(255, 255, 255, 0.15) !important;
-  color: var(--title) !important;
-  transform: scale(1.05);
+    color: var(--title)!important;
+    transform: scale(1.05)
 }
 
-/* ========== INFORMACIÓN DE USUARIO MEJORADA ========== */
-/* ========== INFORMACIÓN DE USUARIO MEJORADA ========== */
 .user-info {
-  padding: 6px 16px;
-  border-radius: 25px;
-  background: rgba(255, 255, 255, 0.15) !important; /* ✅ Fondo más claro */
-  border: 1px solid rgba(255, 255, 255, 0.2) !important; /* ✅ Borde más claro */
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
+    padding: 6px 16px;
+    border-radius: 25px;
+    border: 1px solid rgba(255,255,255,.2)!important;
+    backdrop-filter: blur(10px);
+    transition: all .3s ease
 }
 
 .user-info:hover {
-  background: rgba(255, 255, 255, 0.25) !important; /* ✅ Más claro en hover */
-  border-color: rgba(255, 255, 255, 0.3) !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1); /* ✅ Sombra clara */
+    background: rgba(255,255,255,.25)!important;
+    border-color: rgba(255,255,255,.3)!important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255,255,255,.1)
 }
 
 .user-avatar {
-  transition: all 0.3s ease;
-  background: linear-gradient(135deg, #1db954, #1ed760) !important;
-  color: var(--bg0) !important;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(29, 185, 84, 0.3); /* ✅ Sombra para el avatar */
+    transition: all .3s ease;
+    background: linear-gradient(135deg,#1db954,#1ed760)!important;
+    color: var(--bg0)!important;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(29,185,84,.3)
 }
 
 .user-info:hover .user-avatar {
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: 0 4px 12px rgba(29, 185, 84, 0.4); /* ✅ Sombra más intensa en hover */
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 4px 12px rgba(29,185,84,.4)
+}
+
+.user-link,.user-link:hover {
+    text-decoration: none;
+    color: var(--title)!important
 }
 
 .user-link {
-  color: var(--title) !important;
-  text-decoration: none;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* ✅ Sombra de texto para mejor legibilidad */
+    font-weight: 600;
+    transition: all .3s ease;
+    text-shadow: 0 1px 2px rgba(0,0,0,.2)
 }
 
 .user-link:hover {
-  opacity: 0.9;
-  text-decoration: none;
-  color: var(--title) !important;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* ✅ Sombra más intensa en hover */
+    opacity: .9;
+    text-shadow: 0 2px 4px rgba(0,0,0,.3)
 }
 
-/* ========== EFECTOS DE PROFUNDIDAD Y SOMBRAS ========== */
 .navbar {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); /* ✅ Sombra más pronunciada */
+    box-shadow: 0 4px 20px rgba(0,0,0,.3)
 }
 
 .search-container {
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-/* ========== ANIMACIONES MEJORADAS ========== */
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    box-shadow: 0 4px 15px rgba(0,0,0,.2)
 }
 
 .navbar {
-  animation: fadeInDown 0.5s ease;
+    animation: fadeInDown .5s ease
 }
 
-/* ========== RESPONSIVE PARA PANTALLAS GRANDES ========== */
+@media (min-width:1400px) {
+    .navbar {
+        height: 64px;
+        padding: 0 2rem
+    }
 
-/* Pantallas grandes (> 1400px) - Monitores de escritorio */
-@media (min-width: 1400px) {
-  .navbar {
-    height: 64px; /* ✅ Navbar más alta */
-    padding: 0 2rem; /* ✅ Más padding lateral */
-  }
-  
-  app-dashboard {
-    padding-top: 64px; /* ✅ Ajustar compensación */
-  }
-  
-  .navbar-brand {
-    font-size: 1.5rem; /* ✅ Logo más grande */
-    margin-right: 2rem; /* ✅ Más separación del buscador */
-  }
-  
-  .navbar-brand i {
-    font-size: 1.8rem; /* ✅ Icono más grande */
-    margin-right: 12px; /* ✅ Más separación del texto */
-  }
-  
-  /* Buscador más ancho y grande */
-  .search-container {
-    min-width: 600px !important; /* ✅ Buscador más ancho */
-    max-width: 800px !important;
-  }
-  
-  .input-group {
-    border-radius: 30px; /* ✅ Bordes más redondeados */
-  }
-  
-  .form-control {
-    padding: 12px 20px; /* ✅ Input más alto */
-    font-size: 1.1rem; /* ✅ Texto más grande */
-  }
-  
-  .input-group-text {
-    padding: 12px 20px; /* ✅ Icono con más espacio */
-  }
-  
-  .input-group-text i {
-    font-size: 1.2rem; /* ✅ Icono de lupa más grande */
-  }
-  
-  /* Perfil de usuario más destacado */
-  .user-info {
-    padding: 8px 20px; /* ✅ Más espacio interno */
-    border-radius: 30px; /* ✅ Más redondeado */
-    margin-left: 1rem; /* ✅ Separación del borde */
-  }
-  
-  .user-avatar {
-    width: 38px; /* ✅ Avatar más grande */
-    height: 38px;
-    font-size: 1.1rem; /* ✅ Icono más grande */
-  }
-  
-  .user-link {
-    font-size: 1.1rem; /* ✅ Texto más grande */
-    font-weight: 700;
-  }
+    app-dashboard {
+        padding-top: 64px
+    }
+
+    .navbar-brand {
+        font-size: 1.5rem;
+        margin-right: 2rem
+    }
+
+    .navbar-brand i {
+        font-size: 1.8rem;
+        margin-right: 12px
+    }
+
+    .search-container {
+        min-width: 600px!important;
+        max-width: 800px!important
+    }
+
+    .input-group {
+        border-radius: 30px
+    }
+
+    .form-control {
+        font-size: 1.1rem
+    }
+
+    .form-control,.input-group-text {
+        padding: 12px 20px
+    }
+
+    .input-group-text i {
+        font-size: 1.2rem
+    }
+
+    .user-info {
+        padding: 8px 20px;
+        border-radius: 30px;
+        margin-left: 1rem
+    }
+
+    .user-avatar {
+        width: 38px;
+        height: 38px;
+        font-size: 1.1rem
+    }
+
+    .user-link {
+        font-size: 1.1rem;
+        font-weight: 700
+    }
 }
 
-/* Pantallas muy grandes (> 1920px) - Monitores Full HD/2K */
-@media (min-width: 1920px) {
-  .navbar {
-    height: 70px; /* ✅ Navbar aún más alta */
-    padding: 0 3rem; /* ✅ Más margen lateral */
-  }
-  
-  app-dashboard {
-    padding-top: 70px; /* ✅ Ajustar compensación */
-  }
-  
-  .navbar-brand {
-    font-size: 1.7rem; /* ✅ Logo más prominente */
-    margin-right: 3rem;
-  }
-  
-  .navbar-brand i {
-    font-size: 2rem;
-    margin-right: 15px;
-  }
-  
-  /* Buscador muy amplio */
-  .search-container {
-    min-width: 800px !important;
-    max-width: 1000px !important;
-  }
-  
-  .form-control {
-    padding: 14px 24px;
-    font-size: 1.2rem;
-  }
-  
-  .input-group-text {
-    padding: 14px 24px;
-  }
-  
-  .input-group-text i {
-    font-size: 1.3rem;
-  }
-  
-  /* Perfil de usuario muy destacado */
-  .user-info {
-    padding: 10px 24px;
-    border-radius: 35px;
-  }
-  
-  .user-avatar {
-    width: 42px;
-    height: 42px;
-    font-size: 1.2rem;
-  }
-  
-  .user-link {
-    font-size: 1.2rem;
-  }
+@media (min-width:1920px) {
+    .navbar {
+        height: 70px;
+        padding: 0 3rem
+    }
+
+    app-dashboard {
+        padding-top: 70px
+    }
+
+    .navbar-brand {
+        font-size: 1.7rem;
+        margin-right: 3rem
+    }
+
+    .navbar-brand i {
+        font-size: 2rem;
+        margin-right: 15px
+    }
+
+    .search-container {
+        min-width: 800px!important;
+        max-width: 1000px!important
+    }
+
+    .form-control {
+        font-size: 1.2rem
+    }
+
+    .form-control,.input-group-text {
+        padding: 14px 24px
+    }
+
+    .input-group-text i {
+        font-size: 1.3rem
+    }
+
+    .user-info {
+        padding: 10px 24px;
+        border-radius: 35px
+    }
+
+    .user-avatar {
+        width: 42px;
+        height: 42px
+    }
+
+    .user-avatar,.user-link {
+        font-size: 1.2rem
+    }
 }
 
-/* Pantallas ultra wide (> 2560px) - Monitores 2K/4K */
-@media (min-width: 2560px) {
-  .navbar {
-    height: 80px;
-    padding: 0 4rem;
-  }
-  
-  app-dashboard {
-    padding-top: 80px;
-  }
-  
-  .navbar-brand {
-    font-size: 2rem;
-    margin-right: 4rem;
-  }
-  
-  .navbar-brand i {
-    font-size: 2.3rem;
-    margin-right: 20px;
-  }
-  
-  .search-container {
-    min-width: 1000px !important;
-    max-width: 1200px !important;
-  }
-  
-  .form-control {
-    padding: 16px 28px;
-    font-size: 1.3rem;
-  }
-  
-  .input-group-text {
-    padding: 16px 28px;
-  }
-  
-  .user-info {
-    padding: 12px 28px;
-    border-radius: 40px;
-  }
-  
-  .user-avatar {
-    width: 46px;
-    height: 46px;
-    font-size: 1.3rem;
-  }
-  
-  .user-link {
-    font-size: 1.3rem;
-  }
+@media (min-width:2560px) {
+    .navbar {
+        height: 80px;
+        padding: 0 4rem
+    }
+
+    app-dashboard {
+        padding-top: 80px
+    }
+
+    .navbar-brand {
+        font-size: 2rem;
+        margin-right: 4rem
+    }
+
+    .navbar-brand i {
+        font-size: 2.3rem;
+        margin-right: 20px
+    }
+
+    .search-container {
+        min-width: 1000px!important;
+        max-width: 1200px!important
+    }
+
+    .form-control {
+        font-size: 1.3rem
+    }
+
+    .form-control,.input-group-text {
+        padding: 16px 28px
+    }
+
+    .user-info {
+        padding: 12px 28px;
+        border-radius: 40px
+    }
+
+    .user-avatar {
+        width: 46px;
+        height: 46px
+    }
+
+    .user-avatar,.user-link {
+        font-size: 1.3rem
+    }
 }
 
-/* ========== MANTENER ESTILOS EXISTENTES PARA PANTALLAS PEQUEÑAS ========== */
-@media (max-width: 768px) {
-  .navbar {
-    padding: 0 10px;
-    height: 60px;
-  }
-  
-  app-dashboard {
-    padding-top: 60px;
-  }
-  
-  .search-container {
-    min-width: 200px !important;
-    max-width: 400px !important;
-  }
-  
-  .navbar-brand {
-    font-size: 1.1rem;
-  }
+@media (max-width:768px) {
+    .navbar {
+        padding: 0 10px;
+        height: 60px
+    }
+
+    app-dashboard {
+        padding-top: 60px
+    }
+
+    .search-container {
+        min-width: 200px!important;
+        max-width: 400px!important
+    }
+
+    .navbar-brand {
+        font-size: 1.1rem
+    }
 }
 
-@media (max-width: 576px) {
-  .search-container {
-    min-width: 150px !important;
-    max-width: 300px !important;
-  }
-  
-  .user-info .user-link {
-    display: none;
-  }
-  
-  .user-info {
-    padding: 6px 10px;
-  }
+@media (max-width:576px) {
+    .search-container {
+        min-width: 150px!important;
+        max-width: 300px!important
+    }
+
+    .user-info .user-link {
+        display: none
+    }
+
+    .user-info {
+        padding: 6px 10px
+    }
 }
 
-/* ========== ESTADOS DE INTERACCIÓN MEJORADOS ========== */
 .navbar-brand:active {
-  transform: scale(0.98);
+    transform: scale(.98)
 }
 
 .user-info:active {
-  transform: translateY(0);
+    transform: translateY(0)
 }
 
 .btn-outline-secondary:active {
-  transform: scale(0.95);
+    transform: scale(.95)
 }
 
-/* ========== ICONOS MEJORADOS ========== */
-.bi-music-note-beamed,
-.bi-soundwave {
-  color: #1db954 !important; /* ✅ Verde Spotify para el icono */
-  filter: drop-shadow(0 2px 4px rgba(29, 185, 84, 0.3));
+.bi-music-note-beamed,.bi-soundwave {
+    color: #1db954!important;
+    filter: drop-shadow(0 2px 4px rgba(29,185,84,.3))
 }
 
-/* ========== SCROLLBAR PERSONALIZADO ========== */
 .search-container ::-webkit-scrollbar {
-  width: 6px;
+    width: 6px
 }
 
 .search-container ::-webkit-scrollbar-track {
-  background: var(--bg1);
-  border-radius: 3px;
+    background: var(--bg1);
+    border-radius: 3px
 }
 
 .search-container ::-webkit-scrollbar-thumb {
-  background: var(--muted);
-  border-radius: 3px;
-  opacity: 0.5;
+    background: var(--muted);
+    border-radius: 3px;
+    opacity: .5
 }
 
 .search-container ::-webkit-scrollbar-thumb:hover {
-  background: var(--title);
-  opacity: 0.8;
+    background: var(--title);
+    opacity: .8
 }
