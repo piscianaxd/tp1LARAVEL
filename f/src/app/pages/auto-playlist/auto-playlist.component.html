@@ -1,5 +1,6 @@
 <!-- Vista principal de playlists (siempre presente, pero oculta cuando hay detalle) -->
 <section class="auto-playlists-section" [class.d-none]="showPlaylistDetail()">
+  
   <!-- Loader -->
   <div *ngIf="loading()" class="row g-4">
     <div class="col-6 col-md-4 col-lg-3 col-xl-2" *ngFor="let _ of [0,1,2,3,4,5,6,7]">
@@ -20,14 +21,24 @@
     {{ error() }}
   </div>
 
-  <!-- Mix Popular (Persistente con paginación) -->
-  <div *ngIf="!loading() && popularPlaylist()" class="mb-5">
+  <!-- Mix Popular (mismo formato que Recent Track) -->
+  <div *ngIf="!loading() && popularPlaylist() !== undefined" class="mb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div>
         <h3 class="h4 fw-bold mb-0">Mix de Populares</h3>
         <p class="text-muted mb-0">Las canciones más populares</p>
       </div>
       <div class="d-flex gap-2">
+        <!-- Botón para guardar playlist completa -->
+        <button class="round-btn" 
+                (click)="savePopularPlaylist()" 
+                [disabled]="isPopularPlaylistSaved() || savingPopularPlaylist()"
+                [title]="isPopularPlaylistSaved() ? 'Ya guardada' : 'Guardar playlist completa'">
+          <i class="bi" 
+            [class]="getSavePopularButtonIcon()"
+            [class.loading]="savingPopularPlaylist()"></i>
+        </button>
+        
         <button class="round-btn" (click)="playPopularPlaylist()" title="Reproducir todo">
           <i class="bi bi-play-fill"></i>
         </button>
@@ -83,9 +94,15 @@
                 </button>
               </div>
 
-            <ng-template #iconFallback>
-              <div class="cover-fallback-square">
-                <i class="bi bi-music-note-beamed"></i>
+              <!-- Texto - igual que Recent Track -->
+              <div class="flex-grow-1 overflow-hidden minw0">
+                <span class="track-title text-truncate" [title]="song.name_song">
+                  {{ song.name_song }}
+                </span>
+                <div class="track-meta text-truncate" 
+                    [title]="song.artist_song + (song.album_song ? ' • ' + song.album_song : '')">
+                  {{ song.artist_song }}<span *ngIf="song.album_song"> • {{ song.album_song }}</span>
+                </div>
               </div>
 
               <!-- Acciones al extremo derecho - NUEVO: Botón + para agregar a playlist -->
@@ -98,165 +115,216 @@
               </div>
 
             </div>
-          </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Indicador de paginación -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+      
+      <div class="d-flex gap-2 d-md-none">
+        <button class="round-btn" 
+                [disabled]="!canGoPrevPopular()" 
+                (click)="prevPopularPage()" 
+                title="Anterior">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button class="round-btn" 
+                [disabled]="!canGoNextPopular()" 
+                (click)="nextPopularPage()" 
+                title="Siguiente">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Playlists por género (estilo circular tipo recomendaciones) -->
+  <div *ngIf="!loading() && !error() && playlists().length > 0" class="recommendations-section mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h3 class="h4 fw-bold mb-0 text-light">Playlists automáticas por género</h3>
+      </div>
+      <!-- Flechas -->
+      <div class="d-flex gap-2">
+        <button class="nav-arrow" (click)="scrollLeft()" [disabled]="!canScrollLeft()" title="Anterior">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button class="nav-arrow" (click)="scrollRight()" [disabled]="!canScrollRight()" title="Siguiente">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Carrusel circular -->
+    <div class="circular-recommendations" #scrollContainer (scroll)="onScroll()">
+      <div *ngFor="let playlist of getCurrentPlaylists()" class="song-circle" (click)="openPlaylist(playlist)">
+        <div class="image-container">
+          <ng-container *ngIf="getCoverImage(playlist); else fallback">
+            <img
+              [src]="(getCoverImage(playlist) | mediaUrl) + bust(playlist.songs[0]?.id || 0)"
+              [alt]="playlist.name"
+              class="circle-image"
+              loading="lazy"
+              (error)="playlist.songs[0] && onImgError($event, playlist.songs[0])"
+            />
+          </ng-container>
+          <ng-template #fallback>
+            <div class="image-fallback">
+              <i class="bi bi-collection-play"></i>
+            </div>
+          </ng-template>
+        </div>
+
+        <div class="song-text">
+          <strong class="song-title text-truncate">{{ playlist.name }}</strong>
+          <span class="song-artist text-truncate">{{ playlist.description }}</span>
+          <small class="song-genre">{{ getSongCount(playlist) }}</small>
         </div>
       </div>
     </div>
   </div>
 
-<!-- Playlists por género (ESTILO CIRCULAR) -->
-<div *ngIf="!loading() && !error() && playlists().length > 0" class="recommendations-section">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h3 class="h4 fw-bold mb-0 text-light">Descubrí nuevas playlists</h3>
-    </div>
-    <div class="d-flex gap-2">
-      <button class="nav-arrow" (click)="scrollLeft()" [disabled]="!canScrollLeft()" title="Anterior">
-        <i class="bi bi-chevron-left"></i>
-      </button>
-      <button class="nav-arrow" (click)="scrollRight()" [disabled]="!canScrollRight()" title="Siguiente">
-        <i class="bi bi-chevron-right"></i>
-      </button>
-    </div>
-  </div>
-
-  <!-- Carrusel circular -->
-  <div class="circular-recommendations" #scrollContainer (scroll)="onScroll()">
-    <div class="song-circle" *ngFor="let playlist of getCurrentPlaylists()" class="song-circle" (click)="openPlaylist(playlist)">
-  <div class="image-container">
-    <!-- Cinta superior -->
-    <div class="ribbon">{{ playlist.name }}</div>
-
-    <!-- Imagen o fallback -->
-    <ng-container *ngIf="getCoverImage(playlist); else fallback">
-      <img
-        [src]="(getCoverImage(playlist) | mediaUrl) + bust(playlist.songs[0].id || 0)"
-        [alt]="playlist.name"
-        class="circle-image"
-        loading="lazy"
-        (error)="playlist.songs[0] && onImgError($event, playlist.songs[0])"
-      />
-    </ng-container>
-
-    <ng-template #fallback>
-      <div class="image-fallback">
-        <i class="bi bi-collection-play"></i>
-      </div>
-    </ng-template>
-  </div>
-
-  <div class="song-text">
-    <strong class="song-title text-truncate">{{ playlist.name }}</strong>
-    <span class="song-artist text-truncate">{{ playlist.description }}</span>
-    <small class="song-genre">{{ getSongCount(playlist) }}</small>
-  </div>
-</div>
-  </div>
-
-</div>
   <!-- Empty -->
   <div *ngIf="!loading() && !error() && playlists().length === 0" class="alert alert-info mt-3">
     No se pudieron generar playlists automáticas.
   </div>
 </section>
 
-<!-- Vista detallada de playlist (superpuesta) -->
+<!-- Vista detallada de playlist automática -->
 <section class="playlist-detail-section" *ngIf="showPlaylistDetail() && selectedPlaylist()">
- <!-- Playlists por género (estilo circular tipo recomendaciones) -->
-<div *ngIf="!loading() && !error() && playlists().length > 0" class="recommendations-section">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h3 class="h4 fw-bold mb-0 text-light">Playlists automáticas por género</h3>
-    </div>
-    <!-- Flechas -->
-    <div class="d-flex gap-2">
-      <button class="nav-arrow" (click)="scrollLeft()" [disabled]="!canScrollLeft()" title="Anterior">
-        <i class="bi bi-chevron-left"></i>
-      </button>
-      <button class="nav-arrow" (click)="scrollRight()" [disabled]="!canScrollRight()" title="Siguiente">
-        <i class="bi bi-chevron-right"></i>
-      </button>
-    </div>
-  </div>
-
-  <!-- Carrusel circular -->
-  <div class="circular-recommendations" #scrollContainer (scroll)="onScroll()">
-    <div *ngFor="let playlist of getCurrentPlaylists()" class="song-circle" (click)="openPlaylist(playlist)">
-      <div class="image-container">
-        <ng-container *ngIf="getCoverImage(playlist); else fallback">
+  
+  <!-- Header de playlist detallada -->
+  <div class="playlist-detail-header">
+    <button class="back-btn" (click)="closePlaylist()" title="Volver a playlists">
+      <i class="bi bi-arrow-left"></i>
+    </button>
+    
+    <div class="playlist-header-content">
+      <div class="playlist-cover-large">
+        <ng-container *ngIf="getCoverImage(selectedPlaylist()!); else fallbackLarge">
           <img
-            [src]="(getCoverImage(playlist) | mediaUrl) + bust(playlist.songs[0]?.id || 0)"
-            [alt]="playlist.name"
-            class="circle-image"
+            [src]="(getCoverImage(selectedPlaylist()!) | mediaUrl) + bust(selectedPlaylist()!.songs[0]?.id || 0)"
+            [alt]="selectedPlaylist()!.name"
+            class="cover-img-large"
             loading="lazy"
-            (error)="playlist.songs[0] && onImgError($event, playlist.songs[0])"
+            (error)="selectedPlaylist()!.songs[0] && onImgError($event, selectedPlaylist()!.songs[0])"
           />
         </ng-container>
-        <ng-template #fallback>
-          <div class="image-fallback">
+        <ng-template #fallbackLarge>
+          <div class="cover-fallback-large">
             <i class="bi bi-collection-play"></i>
           </div>
         </ng-template>
       </div>
-
-      <div class="song-text">
-        <strong class="song-title text-truncate">{{ playlist.name }}</strong>
-        <span class="song-artist text-truncate">{{ playlist.description }}</span>
-        <small class="song-genre">{{ getSongCount(playlist) }}</small>
+      
+      <div class="playlist-header-info">
+        <h1 class="playlist-detail-title">{{ selectedPlaylist()!.name }}</h1>
+        <p class="playlist-detail-meta">
+          {{ getSongCount(selectedPlaylist()!) }} • 
+          Playlist automática
+        </p>
+        
+        <div class="playlist-header-actions">
+          <button class="play-all-btn" (click)="playPlaylist(selectedPlaylist())">
+            <i class="bi bi-play-fill"></i> Reproducir
+          </button>
+          <button class="save-playlist-btn" 
+                  (click)="saveAutoPlaylist(selectedPlaylist()!)"
+                  [disabled]="isPlaylistSaved(selectedPlaylist()!) || savingPlaylist()"
+                  [title]="isPlaylistSaved(selectedPlaylist()!) ? 'Ya guardada' : 'Guardar esta playlist'">
+            <i class="bi" 
+               [class.bi-check-lg]="isPlaylistSaved(selectedPlaylist()!)"
+               [class.bi-plus-lg]="!isPlaylistSaved(selectedPlaylist()!)"
+               [class.loading]="savingPlaylist()"></i>
+            {{ isPlaylistSaved(selectedPlaylist()!) ? 'Guardada' : 'Guardar' }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-
-
-  <div class="playlist-tracks-container">
+  <!-- Lista de canciones -->
+  <div class="playlist-tracks-container" *ngIf="selectedPlaylist()!.songs && selectedPlaylist()!.songs.length > 0">
     <div class="tracks-header">
-      <span class="track-number">#</span>
-      <span class="track-title-header">Título</span>
-      <span class="track-album">Álbum</span>
-      <span class="track-duration">Duración</span>
+      <div class="track-number">#</div>
+      <div class="track-title">Título</div>
+      <div class="track-album">Álbum</div>
+      <div class="track-duration">
+        <i class="bi bi-clock"></i>
+      </div>
     </div>
-
+    
     <div class="tracks-list">
-      <!-- Mostrar TODAS las canciones directamente -->
-      <div class="track-item" 
-           *ngFor="let song of selectedPlaylist()!.songs; let i = index"
+      <div *ngFor="let song of selectedPlaylist()!.songs; let i = index" 
+           class="track-item"
+           (contextmenu)="onTrackContextMenu($event, song)"
            (click)="playSong(song, $event)">
+        
         <div class="track-number">
           <span class="track-index">{{ i + 1 }}</span>
-          <button class="track-play-btn" (click)="playSong(song, $event)">
+          <button class="track-play-btn">
             <i class="bi bi-play-fill"></i>
           </button>
         </div>
         
         <div class="track-info">
           <div class="track-cover-small">
-            <img
-              [src]="(song.art_work_song | mediaUrl) + bust(song.id)"
-              [alt]="song.name_song"
-              class="cover-img-small"
-              (error)="onImgError($event, song)"
-            />
-            <div class="cover-fallback-small" *ngIf="noImg.has(song.id)">
-              <i class="bi bi-music-note-beamed"></i>
-            </div>
+            <ng-container *ngIf="!noImg.has(song.id); else iconFallbackSmall">
+              <img
+                [src]="(song.art_work_song | mediaUrl) + bust(song.id)"
+                [alt]="song.name_song"
+                class="cover-img-small"
+                loading="lazy"
+                (error)="onImgError($event, song)"
+              />
+            </ng-container>
+            <ng-template #iconFallbackSmall>
+              <div class="cover-fallback-small">
+                <i class="bi bi-music-note-beamed"></i>
+              </div>
+            </ng-template>
           </div>
           
           <div class="track-details">
-            <span class="track-name">{{ song.name_song }}</span>
-            <span class="track-artist">{{ song.artist_song }}</span>
+            <div class="track-name">{{ song.name_song }}</div>
+            <div class="track-artist">{{ song.artist_song }}</div>
           </div>
         </div>
         
-        <div class="track-album">
-          {{ song.album_song }}
-        </div>
-        
-        <div class="track-duration">
-          {{ formatDuration(180) }}
-        </div>
+        <div class="track-album">{{ song.album_song || 'Sin álbum' }}</div>
+        <div class="track-duration">{{ formatDuration(song.duration) }}</div>
       </div>
     </div>
+
+    <!-- Indicador de más canciones (si hay muchas) -->
+    <div *ngIf="selectedPlaylist()!.songs.length > 8" class="more-tracks-indicator">
+      <div class="more-tracks-content">
+        <i class="bi bi-chevron-down"></i>
+        <span class="more-tracks-text">Más canciones</span>
+        <i class="bi bi-chevron-down"></i>
+      </div>
+      <div class="scroll-hint">Desplázate para ver más</div>
+    </div>
+  </div>
+
+  <!-- Empty State para vista detallada -->
+  <div *ngIf="selectedPlaylist()!.songs && selectedPlaylist()!.songs.length === 0" class="empty-tracks text-center py-5">
+    <div class="cover-fallback-large mx-auto mb-4" style="width: 120px; height: 120px;">
+      <i class="bi bi-collection-play"></i>
+    </div>
+    <h4 class="playlist-title mb-2">Playlist vacía</h4>
+    <p class="playlist-meta mb-4">Esta playlist automática no tiene canciones disponibles.</p>
   </div>
 </section>
+    
+<app-track-context-menu
+  [isVisible]="showContextMenu()"
+  [position]="contextMenuPosition()"
+  [track]="selectedTrackForContextMenu()"
+  [menuType]="'recent'"
+  (play)="onContextMenuPlay()"
+  (addToPlaylist)="onContextMenuAddToPlaylist()"
+  (close)="closeContextMenu()">
+</app-track-context-menu>

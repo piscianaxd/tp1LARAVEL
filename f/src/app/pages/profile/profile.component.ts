@@ -16,19 +16,15 @@ export class ProfileModalComponent implements OnInit {
   @Output() close = new EventEmitter<void>();
 
   profileForm: FormGroup;
-  passwordForm: FormGroup;
   deleteForm: FormGroup;
   user: any = null;
   loading = false;
   saving = false;
-  changingPassword = false;
   deleting = false;
   message = '';
   errorMessage = '';
-  passwordMessage = '';
-  passwordError = '';
   deleteError = '';
-  activeTab: 'profile' | 'security' | 'logout' = 'profile';
+  activeTab: 'profile' | 'security' = 'profile';
 
   constructor(
     private fb: FormBuilder,
@@ -39,14 +35,10 @@ export class ProfileModalComponent implements OnInit {
     // Formulario para editar perfil
     this.profileForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
-      email: ['', [Validators.required, Validators.email]]
-    });
-
-    // Formulario para cambiar contraseña
-    this.passwordForm = this.fb.group({
-      current_password: ['', [Validators.required]],
-      password: ['', [Validators.required, Validators.minLength(8)]],
-      password_confirmation: ['', [Validators.required]]
+      email: ['', [Validators.required, Validators.email]],
+      current_password: [''],
+      password: ['', [Validators.minLength(8)]],
+      password_confirmation: ['']
     }, { validators: this.passwordMatchValidator });
 
     // Formulario para eliminar cuenta
@@ -91,7 +83,6 @@ export class ProfileModalComponent implements OnInit {
 
   updateProfile(): void {
     if (this.profileForm.invalid) {
-      this.markFormGroupTouched(this.profileForm);
       this.errorMessage = 'Por favor, corrige los errores en el formulario';
       return;
     }
@@ -99,7 +90,15 @@ export class ProfileModalComponent implements OnInit {
     this.saving = true;
     this.errorMessage = '';
 
-    this.profileService.updateProfile(this.profileForm.value).subscribe({
+    const formData = { ...this.profileForm.value };
+    
+    if (!formData.password) {
+      delete formData.current_password;
+      delete formData.password;
+      delete formData.password_confirmation;
+    }
+
+    this.profileService.updateProfile(formData).subscribe({
       next: (response) => {
         this.user = response.user;
         this.message = 'Perfil actualizado correctamente';
@@ -111,41 +110,14 @@ export class ProfileModalComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error actualizando perfil:', error);
-        this.errorMessage = error.error?.message || 'Error al actualizar el perfil';
+        this.errorMessage = error.message || 'Error al actualizar el perfil';
         this.saving = false;
-      }
-    });
-  }
-
-  changePassword(): void {
-    if (this.passwordForm.invalid) {
-      this.markFormGroupTouched(this.passwordForm);
-      this.passwordError = 'Por favor, completa todos los campos correctamente';
-      return;
-    }
-
-    this.changingPassword = true;
-    this.passwordError = '';
-
-    this.profileService.updateProfile(this.passwordForm.value).subscribe({
-      next: (response) => {
-        this.passwordMessage = 'Contraseña actualizada correctamente';
-        this.changingPassword = false;
-        this.passwordForm.reset();
-        
-        setTimeout(() => this.passwordMessage = '', 3000);
-      },
-      error: (error) => {
-        console.error('Error cambiando contraseña:', error);
-        this.passwordError = error.error?.message || 'Error al cambiar la contraseña';
-        this.changingPassword = false;
       }
     });
   }
 
   deleteAccount(): void {
     if (this.deleteForm.invalid) {
-      this.markFormGroupTouched(this.deleteForm);
       this.deleteError = 'La contraseña es requerida';
       return;
     }
@@ -157,7 +129,7 @@ export class ProfileModalComponent implements OnInit {
     this.deleting = true;
     this.deleteError = '';
 
-    this.profileService.deleteAccount(this.deleteForm.value).subscribe({
+    this.profileService.deleteAccount(this.deleteForm.value.password).subscribe({
       next: (response) => {
         this.deleting = false;
         this.authService.clearSession();
@@ -166,55 +138,21 @@ export class ProfileModalComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error eliminando cuenta:', error);
-        this.deleteError = error.error?.message || 'Error al eliminar la cuenta';
+        this.deleteError = error.message || 'Error al eliminar la cuenta';
         this.deleting = false;
       }
     });
-  }
-
-  logout(): void {
-    if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-      this.authService.logout().subscribe({
-        next: () => {
-          this.authService.clearSession();
-          this.router.navigate(['/login']);
-          this.closeModal();
-        },
-        error: (error) => {
-          console.error('Error haciendo logout:', error);
-          // Forzar logout incluso si hay error
-          this.authService.clearSession();
-          this.router.navigate(['/login']);
-          this.closeModal();
-        }
-      });
-    }
   }
 
   closeModal(): void {
     this.close.emit();
   }
 
-  setActiveTab(tab: 'profile' | 'security' | 'logout'): void {
+  setActiveTab(tab: 'profile' | 'security'): void {
     this.activeTab = tab;
-    // Limpiar mensajes al cambiar de pestaña
-    this.message = '';
-    this.errorMessage = '';
-    this.passwordMessage = '';
-    this.passwordError = '';
-    this.deleteError = '';
   }
 
   // Helper para acceder fácilmente a los controles del formulario
   get pf() { return this.profileForm.controls; }
-  get passf() { return this.passwordForm.controls; }
   get df() { return this.deleteForm.controls; }
-
-  // Utilidad para marcar todos los campos como touched
-  private markFormGroupTouched(formGroup: FormGroup) {
-    Object.keys(formGroup.controls).forEach(key => {
-      const control = formGroup.get(key);
-      control?.markAsTouched();
-    });
-  }
 }

@@ -5,7 +5,6 @@ import { Router, RouterModule } from '@angular/router';
 import { SearchService } from '../../services/search.service';
 import { SearchResultsComponent } from '../search-results/search-results.component';
 import { ProfileModalComponent } from '../profile/profile.component';
-import { SidebarComponent } from '../sidebar/sidebar.component'; // ✅ Nueva importación
 
 @Component({
   selector: 'app-nav-bar',
@@ -15,8 +14,7 @@ import { SidebarComponent } from '../sidebar/sidebar.component'; // ✅ Nueva im
     FormsModule, 
     RouterModule, 
     SearchResultsComponent, 
-    ProfileModalComponent,
-    SidebarComponent // ✅ Nuevo componente
+    ProfileModalComponent
   ],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css']
@@ -30,11 +28,8 @@ export class NavBar implements OnInit {
   usuarioActual: string = 'Usuario';
   isSearchFocused: boolean = false;
   
-  // Para modal de perfil
+  // Solo para modal de perfil
   showProfileModal: boolean = false;
-  
-  // ✅ Nueva propiedad para sidebar
-  showSidebar: boolean = false;
 
   constructor(public searchService: SearchService, public router: Router) {}
 
@@ -132,7 +127,7 @@ export class NavBar implements OnInit {
     this.searchService.clearDashboardSearch();
   }
 
-  // === MODAL DE PERFIL ===
+  // === SOLO PARA MODAL DE PERFIL ===
   openProfileModal(): void {
     this.showProfileModal = true;
   }
@@ -157,8 +152,8 @@ export class NavBar implements OnInit {
   esDashboard(): boolean {
     return this.router.url === '/dashboard' || this.router.url === '/';
   }
-
-  scrollToTop(): void {
+    scrollToTop(): void {
+    // ✅ Scroll suave al inicio de la página
     window.scrollTo({
       top: 0,
       left: 0,
@@ -166,12 +161,4 @@ export class NavBar implements OnInit {
     });
   }
 
-  // ✅ NUEVOS MÉTODOS PARA SIDEBAR
-  openSidebar(): void {
-    this.showSidebar = true;
-  }
-
-  closeSidebar(): void {
-    this.showSidebar = false;
-  }
 }
