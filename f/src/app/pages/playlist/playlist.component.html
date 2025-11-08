@@ -1,9 +1,9 @@
 <!-- Contenido principal de playlists -->
 <div class="auto-playlists-section">
-  
+
   <!-- Vista Principal de Playlists -->
   <div *ngIf="!showPlaylistDetail()">
-    
+
     <!-- Header de la Sección MODIFICADO -->
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div>
@@ -17,16 +17,10 @@
           <i class="bi bi-plus-lg"></i>
         </button>
         <!-- Flechas de paginación -->
-        <button class="round-btn" 
-                (click)="prevPage()" 
-                [disabled]="!canGoPrev()" 
-                title="Página anterior">
+        <button class="round-btn" (click)="prevPage()" [disabled]="!canGoPrev()" title="Página anterior">
           <i class="bi bi-chevron-left"></i>
         </button>
-        <button class="round-btn" 
-                (click)="nextPage()" 
-                [disabled]="!canGoNext()" 
-                title="Página siguiente">
+        <button class="round-btn" (click)="nextPage()" [disabled]="!canGoNext()" title="Página siguiente">
           <i class="bi bi-chevron-right"></i>
         </button>
       </div>
@@ -60,30 +54,24 @@
       <!-- ELIMINADO: Contenedor de paginación que estaba aquí -->
 
       <!-- NUEVO: Cambiar playlists() por getCurrentPlaylists() -->
-      <div *ngFor="let playlist of getCurrentPlaylists()" 
-           class="col-6 col-md-4 col-lg-3 col-xl-2">
-        
+      <div *ngFor="let playlist of getCurrentPlaylists()" class="col-6 col-md-4 col-lg-3 col-xl-2">
+
         <div class="playlist-card" (click)="openPlaylist(playlist)">
-          
+
           <div class="cover-wrap-square">
-            <img *ngIf="getPlaylistCover(playlist)" 
-                 [src]="getPlaylistCover(playlist) | mediaUrl" 
-                 [alt]="playlist.name_playlist"
-                 class="cover-img-square"
-                 (error)="onImgError($event, playlist.songs[0]?.song)">
+            <img *ngIf="getPlaylistCover(playlist)" [src]="getPlaylistCover(playlist) | mediaUrl"
+              [alt]="playlist.name_playlist" class="cover-img-square"
+              (error)="onImgError($event, playlist.songs[0]?.song)">
             <div *ngIf="!getPlaylistCover(playlist)" class="cover-fallback-square">
               <i class="bi bi-music-note-list"></i>
             </div>
-            
+
             <div class="playlist-overlay">
-              <button class="overlay-btn-square play" 
-                      (click)="playPlaylist(playlist, $event)"
-                      title="Reproducir playlist">
+              <button class="overlay-btn-square play" (click)="playPlaylist(playlist, $event)"
+                title="Reproducir playlist">
                 <i class="bi bi-play-fill"></i>
               </button>
-              <button class="overlay-btn-square" 
-                      (click)="deletePlaylist(playlist, $event)"
-                      title="Eliminar playlist">
+              <button class="overlay-btn-square" (click)="deletePlaylist(playlist, $event)" title="Eliminar playlist">
                 <i class="bi bi-trash"></i>
               </button>
             </div>
@@ -118,37 +106,35 @@
 
   <!-- Vista Detallada de Playlist -->
   <div *ngIf="showPlaylistDetail() && selectedPlaylist()" class="playlist-detail-section">
-    
+
     <!-- Header de playlist detallada -->
     <div class="playlist-detail-header">
       <button class="back-btn" (click)="closePlaylist()" title="Volver a playlists">
         <i class="bi bi-arrow-left"></i>
       </button>
-      
+
       <div class="playlist-header-content">
         <div class="playlist-cover-large">
-          <img *ngIf="getPlaylistCover(selectedPlaylist()!)" 
-               [src]="getPlaylistCover(selectedPlaylist()!) | mediaUrl" 
-               [alt]="selectedPlaylist()!.name_playlist"
-               class="cover-img-large">
+          <img *ngIf="getPlaylistCover(selectedPlaylist()!)" [src]="getPlaylistCover(selectedPlaylist()!) | mediaUrl"
+            [alt]="selectedPlaylist()!.name_playlist" class="cover-img-large">
           <div *ngIf="!getPlaylistCover(selectedPlaylist()!)" class="cover-fallback-large">
             <i class="bi bi-music-note-list"></i>
           </div>
         </div>
-        
+
         <div class="playlist-header-info">
           <h1 class="playlist-detail-title">{{ selectedPlaylist()!.name_playlist }}</h1>
           <p class="playlist-detail-meta">
-            {{ getSongCount(selectedPlaylist()!) }} • 
-            {{ selectedPlaylist()!.is_public ? 'Pública' : 'Privada' }} • 
+            {{ getSongCount(selectedPlaylist()!) }} •
+            {{ selectedPlaylist()!.is_public ? 'Pública' : 'Privada' }} •
             Creada el {{ selectedPlaylist()!.created_at | date:'mediumDate' }}
           </p>
-          
+
           <div class="playlist-header-actions">
             <button class="play-all-btn" (click)="playPlaylist(selectedPlaylist()!, $event)">
               <i class="bi bi-play-fill"></i> Reproducir
             </button>
-            <button class="save-playlist-btn" (click)="openEditPlaylistModal(selectedPlaylist()!, $event)">
+            <button class="save-playlist-btn" [disabled]="true">
               <i class="bi bi-pencil"></i> Editar
             </button>
           </div>
@@ -166,27 +152,23 @@
           <i class="bi bi-clock"></i>
         </div>
       </div>
-      
+
       <!-- NUEVO: Agregado contextmenu a cada track -->
-      <div *ngFor="let playlistSong of selectedPlaylist()!.songs; let i = index" 
-           class="track-item"
-           (click)="playSong(playlistSong.song, $event)"
-           (contextmenu)="onTrackContextMenu($event, playlistSong, i)">
-        
+      <div *ngFor="let playlistSong of selectedPlaylist()!.songs; let i = index" class="track-item"
+        (click)="playSong(playlistSong.song, $event)" (contextmenu)="onTrackContextMenu($event, playlistSong, i)">
+
         <div class="track-number">
           <span class="track-index">{{ i + 1 }}</span>
           <button class="track-play-btn">
             <i class="bi bi-play-fill"></i>
           </button>
         </div>
-        
+
         <div class="track-info">
           <div class="track-cover-small">
-            <img *ngIf="playlistSong.song?.art_work_song" 
-                 [src]="playlistSong.song.art_work_song | mediaUrl" 
-                 [alt]="playlistSong.song.name_song"
-                 class="cover-img-small"
-                 (error)="onImgError($event, playlistSong.song)">
+            <img *ngIf="playlistSong.song?.art_work_song" [src]="playlistSong.song.art_work_song | mediaUrl"
+              [alt]="playlistSong.song.name_song" class="cover-img-small"
+              (error)="onImgError($event, playlistSong.song)">
             <div *ngIf="!playlistSong.song?.art_work_song" class="cover-fallback-small">
               <i class="bi bi-music-note-beamed"></i>
             </div>
@@ -196,7 +178,7 @@
             <div class="track-artist">{{ playlistSong.song?.artist_song || 'Artista desconocido' }}</div>
           </div>
         </div>
-        
+
         <div class="track-album">{{ playlistSong.song?.album_song || 'Álbum desconocido' }}</div>
         <div class="track-duration">{{ formatDuration(playlistSong.song?.duration) }}</div>
       </div>
@@ -229,21 +211,16 @@
 </div>
 
 <!-- NUEVO: Menú contextual para tracks -->
-<app-track-context-menu
-  [isVisible]="showContextMenu()"
-  [position]="contextMenuPosition()"
-  [track]="selectedTrackForContextMenu()"
-  [menuType]="'playlist'"
-  (play)="onContextMenuPlay()"
-  (delete)="onContextMenuDelete()"
-  (move)="onContextMenuMove()"
-  (close)="closeContextMenu()">
+<app-track-context-menu [isVisible]="showContextMenu()" [position]="contextMenuPosition()"
+  [track]="selectedTrackForContextMenu()" (play)="onContextMenuPlay()" (delete)="onContextMenuDelete()"
+  (move)="onContextMenuMove()" (close)="closeContextMenu()">
 </app-track-context-menu>
 
 <!-- NUEVO: Modal para mover a otra playlist -->
+<!-- NUEVO: Modal para mover a otra playlist -->
 <div class="modal-overlay" *ngIf="showMoveToPlaylistModal()" (click)="closeMoveToPlaylistModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
-    
+
     <div class="modal-header">
       <h2 class="modal-title">Mover a Otra Playlist</h2>
       <button class="close-btn" (click)="closeMoveToPlaylistModal()" title="Cerrar">
@@ -255,10 +232,9 @@
       <!-- Información de la canción -->
       <div class="song-info" *ngIf="selectedTrackForContextMenu()">
         <div class="song-cover">
-          <img *ngIf="selectedTrackForContextMenu()?.song?.art_work_song" 
-               [src]="selectedTrackForContextMenu()?.song?.art_work_song | mediaUrl" 
-               [alt]="selectedTrackForContextMenu()?.song?.name_song"
-               class="cover-img">
+          <img *ngIf="selectedTrackForContextMenu()?.song?.art_work_song"
+            [src]="selectedTrackForContextMenu()?.song?.art_work_song | mediaUrl"
+            [alt]="selectedTrackForContextMenu()?.song?.name_song" class="cover-img">
           <div *ngIf="!selectedTrackForContextMenu()?.song?.art_work_song" class="cover-fallback">
             <i class="bi bi-music-note-beamed"></i>
           </div>
@@ -272,25 +248,22 @@
       <!-- Lista de playlists disponibles -->
       <div class="playlists-section">
         <h5 class="section-title">Selecciona una playlist destino</h5>
-        
+
         <div *ngIf="loadingMoveModal()" class="loading-playlists">
           <div class="spinner-border spinner-border-sm text-brand me-2"></div>
           <span>Cargando playlists...</span>
         </div>
 
         <div *ngIf="!loadingMoveModal()" class="playlists-list">
-          <div *ngFor="let playlist of availablePlaylistsForMove()" 
-               class="playlist-item"
-               [class.selected]="selectedPlaylistForMove() === playlist.id"
-               (click)="selectPlaylistForMove(playlist.id)">
+          <div *ngFor="let playlist of availablePlaylistsForMove()" class="playlist-item"
+            [class.selected]="selectedPlaylistForMove() === playlist.id" (click)="selectPlaylistForMove(playlist.id)">
             <div class="playlist-info">
-              <i class="bi" 
-                 [class.bi-list-ul]="!selectedPlaylistForMove() || selectedPlaylistForMove() !== playlist.id"
-                 [class.bi-check-circle-fill]="selectedPlaylistForMove() === playlist.id"></i>
+              <i class="bi" [class.bi-list-ul]="!selectedPlaylistForMove() || selectedPlaylistForMove() !== playlist.id"
+                [class.bi-check-circle-fill]="selectedPlaylistForMove() === playlist.id"></i>
               <span class="playlist-name">{{ playlist.name_playlist }}</span>
             </div>
             <span class="playlist-meta">
-              {{ playlist.songs.length || 0 }} canciones • 
+              {{ playlist.songs.length || 0 }} canciones •
               {{ playlist.is_public ? 'Pública' : 'Privada' }}
             </span>
           </div>
@@ -305,16 +278,13 @@
 
       <!-- Botones de acción -->
       <div class="modal-actions">
-        <button class="btn btn-outline-secondary" 
-                (click)="createNewPlaylistForMove()"
-                [disabled]="movingTrack()">
+        <button class="btn btn-outline-secondary" (click)="createNewPlaylistForMove()" [disabled]="movingTrack()">
           <i class="bi bi-plus-circle me-2"></i>
           Crear Nueva Playlist
         </button>
-        
-        <button class="btn btn-primary" 
-                (click)="moveTrackToPlaylist()"
-                [disabled]="!selectedPlaylistForMove() || movingTrack()">
+
+        <button class="btn btn-primary" (click)="moveTrackToPlaylist()"
+          [disabled]="!selectedPlaylistForMove() || movingTrack()">
           <span *ngIf="movingTrack()" class="spinner-border spinner-border-sm me-2"></span>
           <i *ngIf="!movingTrack()" class="bi bi-arrow-right me-2"></i>
           {{ movingTrack() ? 'Moviendo...' : 'Mover a Playlist' }}
@@ -327,13 +297,11 @@
 <!-- Modal para crear nueva playlist - CON EFECTO DE DESENFOQUE -->
 <div class="modal-overlay" *ngIf="showCreatePlaylistModal()" (click)="closeCreatePlaylistModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
-    
+
     <!-- Header del Modal -->
     <div class="modal-header">
       <h2 class="modal-title">Crear Nueva Playlist</h2>
-      <button class="close-btn" (click)="closeCreatePlaylistModal()" 
-              [disabled]="creatingNewPlaylist()"
-              title="Cerrar">
+      <button class="close-btn" (click)="closeCreatePlaylistModal()" [disabled]="creatingNewPlaylist()" title="Cerrar">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -344,14 +312,8 @@
         <!-- Nombre de la playlist -->
         <div class="form-group">
           <label for="playlistName">Nombre de la playlist</label>
-          <input type="text" 
-                 id="playlistName"
-                 class="form-control"
-                 [(ngModel)]="newPlaylistName"
-                 name="playlistName"
-                 placeholder="Mi playlist favorita"
-                 required
-                 [disabled]="creatingNewPlaylist()">
+          <input type="text" id="playlistName" class="form-control" [(ngModel)]="newPlaylistName" name="playlistName"
+            placeholder="Mi playlist favorita" required [disabled]="creatingNewPlaylist()">
           <small>Elige un nombre único para tu playlist</small>
         </div>
 
@@ -360,13 +322,8 @@
           <label>Visibilidad</label>
           <div class="visibility-options">
             <div class="form-check">
-              <input class="form-check-input" 
-                     type="radio" 
-                     id="publicPlaylist"
-                     [(ngModel)]="newPlaylistIsPublic" 
-                     name="playlistVisibility"
-                     [value]="true"
-                     [disabled]="creatingNewPlaylist()">
+              <input class="form-check-input" type="radio" id="publicPlaylist" [(ngModel)]="newPlaylistIsPublic"
+                name="playlistVisibility" [value]="true" [disabled]="creatingNewPlaylist()">
               <label class="form-check-label" for="publicPlaylist">
                 <i class="bi bi-globe me-2"></i>
                 Pública
@@ -374,13 +331,8 @@
               </label>
             </div>
             <div class="form-check mt-2">
-              <input class="form-check-input" 
-                     type="radio" 
-                     id="privatePlaylist"
-                     [(ngModel)]="newPlaylistIsPublic" 
-                     name="playlistVisibility"
-                     [value]="false"
-                     [disabled]="creatingNewPlaylist()">
+              <input class="form-check-input" type="radio" id="privatePlaylist" [(ngModel)]="newPlaylistIsPublic"
+                name="playlistVisibility" [value]="false" [disabled]="creatingNewPlaylist()">
               <label class="form-check-label" for="privatePlaylist">
                 <i class="bi bi-lock me-2"></i>
                 Privada
@@ -392,17 +344,14 @@
 
         <!-- Botones -->
         <div class="form-actions">
-          <button type="button" 
-                  class="btn btn-outline-secondary" 
-                  (click)="closeCreatePlaylistModal()"
-                  [disabled]="creatingNewPlaylist()">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeCreatePlaylistModal()"
+            [disabled]="creatingNewPlaylist()">
             Cancelar
           </button>
-          <button type="submit" 
-                  class="btn btn-primary"
-                  [disabled]="!newPlaylistName.trim() || creatingNewPlaylist()">
+          <button type="submit" class="btn btn-primary" [disabled]="!newPlaylistName.trim() || creatingNewPlaylist()">
             <span *ngIf="creatingNewPlaylist()" class="spinner-border spinner-border-sm me-2"></span>
-            <i class="bi" [class.bi-plus-circle]="!creatingNewPlaylist()" [class.bi-arrow-repeat]="creatingNewPlaylist()"></i>
+            <i class="bi" [class.bi-plus-circle]="!creatingNewPlaylist()"
+              [class.bi-arrow-repeat]="creatingNewPlaylist()"></i>
             {{ creatingNewPlaylist() ? 'Creando...' : 'Crear Playlist' }}
           </button>
         </div>
@@ -410,131 +359,3 @@
     </div>
   </div>
 </div>
-  <!-- Modal para editar playlist CON LISTA DE CANCIONES -->
-<!-- Modal para editar playlist CON NUEVO LAYOUT -->
-<div class="modal-overlay" *ngIf="showEditPlaylistModal()" (click)="closeEditPlaylistModal()">
-  <div class="modal-content large-modal" (click)="$event.stopPropagation()">
-    
-    <!-- Header del Modal -->
-    <div class="modal-header">
-      <h2 class="modal-title">Editar Playlist</h2>
-      <button class="close-btn" (click)="closeEditPlaylistModal()" 
-              [disabled]="editingPlaylist()"
-              title="Cerrar">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
-
-    <!-- Contenido principal CON NUEVO LAYOUT -->
-    <div class="modal-body edit-playlist-modal">
-
-      <!-- FILA 1: Formulario de edición -->
-      <div class="edit-playlist-form">
-        <form (ngSubmit)="updatePlaylist()" class="profile-form">
-          <!-- Nombre de la playlist -->
-          <div class="form-group">
-            <label for="editPlaylistName">Nombre de la playlist</label>
-            <input type="text"
-                  id="editPlaylistName"
-                  class="form-control"
-                  [(ngModel)]="editPlaylistName"
-                  name="editPlaylistName"
-                  placeholder="Nombre de la playlist"
-                  required
-                  [disabled]="editingPlaylist()">
-          </div>
-
-          <!-- Visibilidad -->
-          <div class="form-group">
-            <label class="form-label fw-bold">Visibilidad</label>
-            <div class="visibility-options-simple">
-              <div class="form-check">
-                <input class="form-check-input" type="radio" id="editPublicPlaylist" [(ngModel)]="editPlaylistIsPublic" name="editPlaylistVisibility" [value]="true">
-                <label class="form-check-label" for="editPublicPlaylist">
-                  <div class="label-row"><i class="bi bi-globe"></i><span> Pública</span></div>
-                  <small class="d-block text-muted">Todos pueden ver esta playlist</small>
-                </label>
-              </div>
-              <div class="form-check mt-2">
-                <input class="form-check-input" type="radio" id="editPrivatePlaylist" [(ngModel)]="editPlaylistIsPublic" name="editPlaylistVisibility" [value]="false">
-                <label class="form-check-label" for="editPrivatePlaylist">
-                  <div class="label-row"><i class="bi bi-lock"></i><span> Privada</span></div>
-                  <small class="d-block text-muted">Solo tú puedes ver esta playlist</small>
-                </label>
-              </div>
-            </div>
-          </div>
-        </form>
-      </div>
-
-      <!-- FILA 2: Lista de canciones -->
-      <div class="edit-playlist-songs-list">
-        <div class="songs-list-container">
-          <div *ngFor="let playlistSong of selectedPlaylist()!.songs; let i = index" class="song-item-editable">
-
-            <span class="song-number">{{ i + 1 }}</span>
-
-            <div class="song-cover-small">
-              <img *ngIf="playlistSong.song?.art_work_song && !noImg.has(playlistSong.song.id)"
-                  [src]="playlistSong.song.art_work_song | mediaUrl"
-                  [alt]="playlistSong.song.name_song"
-                  class="cover-img-tiny"
-                  (error)="onImgError($event, playlistSong.song)">
-              <div *ngIf="!playlistSong.song?.art_work_song || noImg.has(playlistSong.song.id)" class="cover-fallback-tiny">
-                <i class="bi bi-music-note-beamed"></i>
-              </div>
-            </div>
-
-            <div class="song-text-block">
-              <div class="song-name" [title]="getSafeSongInfo(playlistSong).name">
-                {{ getSafeSongInfo(playlistSong).name }}
-              </div>
-              <div class="song-artist" [title]="getSafeSongInfo(playlistSong).artist">
-                {{ getSafeSongInfo(playlistSong).artist }}
-              </div>
-              <div class="song-album" [title]="getSafeSongInfo(playlistSong).album">
-                {{ getSafeSongInfo(playlistSong).album }}
-              </div>
-            </div>
-
-            <div class="song-duration">{{ getSafeSongInfo(playlistSong).duration }}</div>
-
-            <div class="song-actions">
-              <button class="btn btn-outline-danger btn-sm"
-                      (click)="removeTrackFromPlaylistModal(playlistSong)"
-                      [disabled]="selectedTrackForDeletion()?.song?.id === playlistSong.song.id"
-                      title="Eliminar de la playlist">
-                <span *ngIf="selectedTrackForDeletion()?.song?.id === playlistSong.song.id" class="spinner-border spinner-border-sm me-1"></span>
-                <i class="bi bi-trash" *ngIf="selectedTrackForDeletion()?.song?.id !== playlistSong.song.id"></i>
-                {{ selectedTrackForDeletion()?.song?.id === playlistSong.song.id ? 'Eliminando...' : 'Eliminar' }}
-              </button>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      <!-- FILA 3: Botones de acción -->
-      <!-- Botones en modal de crear playlist -->
-      <div class="form-actions">
-        <button type="button" 
-                class="btn btn-outline-secondary" 
-                (click)="closeCreatePlaylistModal()"
-                [disabled]="creatingNewPlaylist()">
-          Cancelar
-        </button>
-        <button type="button"
-                class="btn btn-primary"
-                (click)="updatePlaylist()"
-                [disabled]="!editPlaylistName.trim() || editingPlaylist()">
-          <span *ngIf="editingPlaylist()" class="spinner-border spinner-border-sm me-2"></span>
-          <i class="bi"
-            [class.bi-check-circle]="!editingPlaylist()"
-            [class.bi-arrow-repeat]="editingPlaylist()"></i>
-          {{ editingPlaylist() ? 'Guardando...' : 'Guardar Cambios' }}
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-  <!-- END: contenido interno reemplazado del modal edit-playlist -->
