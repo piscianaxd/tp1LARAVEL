@@ -200,34 +200,3 @@
 @media (max-width: 576px){
   .auth-card{ margin: 1rem; padding: 1.5rem; }
 }
-
-/* 🔥 Flash rojo al fallar login */
-.flash-error {
-  animation: flashRed 0.5s ease-in-out;
-}
-
-/* 🔥 Flash rojo visible encima del fondo */
-.auth-wrap::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: transparent;
-  z-index: 1; /* por encima del fondo, pero debajo de la card */
-  pointer-events: none;
-  border-radius: inherit;
-}
-
-.auth-wrap.flash-error::after {
-  animation: flashRedOverlay 0.5s ease-in-out;
-}
-
-@keyframes flashRedOverlay {
-  0%   { background: rgba(255, 0, 0, 0.25); }
-  100% { background: transparent; }
-}
-
-
-@keyframes flashRed {
-  0%   { background-color: rgba(255, 0, 0, 0.25); }
-  100% { background-color: transparent; }
-}
