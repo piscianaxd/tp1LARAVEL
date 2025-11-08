@@ -74,18 +74,19 @@
                     <i class="bi bi-music-note-beamed"></i>
                   </div>
                 </ng-template>
+                </div>
+  
+                <div class="popular-meta">
+                  <div class="popular-title text-truncate">{{ song.name_song }}</div>
+                  <div class="popular-artist text-truncate text-muted">{{ song.artist_song }}</div>
+                </div>
+  
               </div>
-
-            <ng-template #iconFallback>
-              <div class="cover-fallback-square">
-                <i class="bi bi-music-note-beamed"></i>
-              </div>
-            </div>
-          </div>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
-  </div>
 
 <!-- Playlists por género (ESTILO CIRCULAR) -->
 <div *ngIf="!loading() && !error() && playlists().length > 0" class="recommendations-section">
