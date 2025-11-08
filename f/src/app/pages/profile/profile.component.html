@@ -152,7 +152,7 @@
                         </div>
 
                         <div *ngIf="passwordForm.errors?.['passwordMismatch'] && (passf['password'].touched || passf['password_confirmation'].touched)" 
-                             class="error-message">
+                            class="error-message">
                             <i class="bi bi-exclamation-circle"></i>
                             Las contraseñas no coinciden
                         </div>
@@ -213,12 +213,6 @@
                         <i class="bi bi-box-arrow-right"></i>
                         Cerrar Sesión
                     </h3>
-                    
-                    <div class="danger-warning">
-                        <i class="bi bi-info-circle"></i>
-                        <span>Serás redirigido a la página de inicio de sesión</span>
-                    </div>
-
                     <p>¿Estás seguro de que quieres cerrar sesión?</p>
 
                     <div class="form-actions">
