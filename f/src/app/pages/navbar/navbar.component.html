@@ -30,11 +30,6 @@
             (focus)="onSearchFocus()"
             (blur)="onSearchBlur()"
             aria-label="Buscar canciones, playlists y artistas">
-          @if (searchTerm) {
-            <button class="btn btn-outline-secondary" type="button" (click)="clearSearch()">
-              <i class="bi bi-x-lg"></i>
-            </button>
-          }
         </div>
         <app-search-results></app-search-results>
       </div>
