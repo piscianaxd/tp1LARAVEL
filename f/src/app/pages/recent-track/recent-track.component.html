@@ -88,6 +88,12 @@
                 </div>
               </ng-template>
 
+              <!-- overlay: solo Play (no propaga, para que no dispare doble) -->
+              <button class="overlay-btn play"
+                      (click)="$event.stopPropagation(); play(t)"
+                      title="Reproducir">
+                <i class="bi bi-play-fill"></i>
+              </button>
             </div>
 
             <!-- Texto -->
