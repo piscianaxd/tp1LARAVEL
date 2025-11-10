@@ -24,7 +24,7 @@
   background: linear-gradient(180deg, var(--bg0), var(--bg1));
   border-right: 1px solid var(--border);
   z-index: 1000;             /* por debajo de navbar si tu navbar usa >1000 */
-  margin-top: 30px;
+  margin-top: 55px;
 }
 
 .rail-logo{
@@ -89,7 +89,7 @@
   transition: transform .28s ease, opacity .18s ease;
   z-index: 1002; outline: none;
   box-shadow: 0 16px 40px rgba(0,0,0,.55);
-  margin-top: 30px;
+  margin-top: 55px;
 }
 .sidebar-drawer.open{ transform: translateX(0); opacity:1; pointer-events:auto; }
 

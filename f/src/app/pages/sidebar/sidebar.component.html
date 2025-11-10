@@ -1,10 +1,7 @@
 <!-- Rail SIEMPRE visible (versión simple) -->
 <nav class="rail" aria-label="Navegación principal">
   
-  <button class="rail-logo" title="Music">
-    <i class="bi bi-play-circle-fill"></i>
-    <span class="brand">Music</span>
-  </button>
+
 
   <!-- abre el panel expandible -->
   <button class="rail-item ghost" title="Menú" (click)="open()">
@@ -43,15 +40,7 @@
   (click)="$event.stopPropagation()"
   tabindex="-1"
 >
-  <header class="drawer-header">
-    <div class="drawer-brand">
-      <i class="bi bi-music-player"></i>
-      <span>Musify</span>
-    </div>
-    <button class="icon-btn" (click)="close()" aria-label="Cerrar">
-      <i class="bi bi-x-lg"></i>
-    </button>
-  </header>
+
 
   <nav class="drawer-nav">
     <button class="drawer-link" (click)="goTo('playlists')">

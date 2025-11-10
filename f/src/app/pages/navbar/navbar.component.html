@@ -1,7 +1,8 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark"
      [class.with-rail]="esDashboard()">
   <div class="container-fluid d-flex justify-content-between align-items-center">
-
+    <!-- botón hamburguesa + marca -->
+    <div class="d-flex align-items-center">
 
       <a class="navbar-brand fw-bold" routerLink="/dashboard" (click)="scrollToTop()" style="text-decoration:none;">
         <i class="bi bi-soundwave me-2"></i>Musify
@@ -45,6 +46,7 @@
         </button>
       </div>
     </div>
+  </div>
 </nav>
 
 <!-- Modal de perfil -->
