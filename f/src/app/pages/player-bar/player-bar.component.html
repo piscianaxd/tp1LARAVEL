@@ -20,7 +20,7 @@
         </ng-template>
       </div>
       <div class="minw0">
-        <div class="title text-truncate">
+        <div class="title text-truncate" (click)="onTitleClick()" style="cursor: pointer;">
           {{ player.current()?.title || 'Nada en reproducción' }}
         </div>
         <div class="meta text-truncate">

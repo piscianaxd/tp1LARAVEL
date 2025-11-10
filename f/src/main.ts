@@ -3,6 +3,7 @@ import { AppComponent } from './app/pages/app/app.component';
 import { appConfig } from './app/app.config';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
+
 bootstrapApplication(AppComponent, {
   ...appConfig,
   providers: [

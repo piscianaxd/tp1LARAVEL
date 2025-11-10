@@ -1,0 +1,174 @@
+<!-- Vista principal de playlists (siempre presente, pero oculta cuando hay detalle) -->
+<section class="auto-playlists-section" [class.d-none]="showPlaylistDetail()">
+  
+  <!-- Loader -->
+  <div *ngIf="loading()" class="row g-4">
+    <div class="col-6 col-md-4 col-lg-3 col-xl-2" *ngFor="let _ of [0,1,2,3,4,5,6,7]">
+      <div class="playlist-card">
+        <div class="sk-cover-square mb-3"></div>
+        <div class="placeholder-glow mb-2">
+          <span class="placeholder col-10"></span>
+        </div>
+        <div class="placeholder-glow">
+          <span class="placeholder col-7"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="!loading() && error()" class="alert alert-danger mt-3">
+    {{ error() }}
+  </div>
+
+  
+  <!-- Agrega esto TEMPORALMENTE en cover-player.component.html -->
+  <button (click)="openFirstPlaylist()" 
+        style="position: fixed; top: 10px; left: 10px; z-index: 1000; background: green; color: white; padding: 15px; font-size: 16px;">
+  🎵 Abrir Vista Detallada
+  </button>
+      
+
+  
+  <!-- Empty -->
+  <div *ngIf="!loading() && !error() && playlists().length === 0" class="alert alert-info mt-3">
+    No se pudieron generar playlists automáticas.
+  </div>
+</section>
+
+<!-- Vista detallada de playlist automática -->
+<section class="playlist-detail-section" *ngIf="showPlaylistDetail() && selectedPlaylist()">
+  
+  <!-- Header de playlist detallada -->
+  <div class="playlist-detail-header">
+    
+    
+    <div class="playlist-header-content">
+      <div class="playlist-cover-large">
+        <ng-container *ngIf="getCoverImage(selectedPlaylist()!); else fallbackLarge">
+          <img
+            [src]="(getCoverImage(selectedPlaylist()!) | mediaUrl) + bust(selectedPlaylist()!.songs[0]?.id || 0)"
+            [alt]="selectedPlaylist()!.name"
+            class="cover-img-large"
+            loading="lazy"
+            (error)="selectedPlaylist()!.songs[0] && onImgError($event, selectedPlaylist()!.songs[0])"
+          />
+        </ng-container>
+        <ng-template #fallbackLarge>
+          <div class="cover-fallback-large">
+            <i class="bi bi-collection-play"></i>
+          </div>
+        </ng-template>
+      </div>
+      
+      <div class="playlist-header-info">
+        <h1 class="playlist-detail-title">{{ selectedPlaylist()!.name }}</h1>
+        <p class="playlist-detail-meta">
+          {{ getSongCount(selectedPlaylist()!) }} • 
+          Playlist automática
+        </p>
+        
+        <div class="playlist-header-actions">
+          <button class="play-all-btn" (click)="playPlaylist(selectedPlaylist())">
+            <i class="bi bi-play-fill"></i> Reproducir
+          </button>
+          <button class="save-playlist-btn" 
+                  (click)="saveAutoPlaylist(selectedPlaylist()!)"
+                  [disabled]="isPlaylistSaved(selectedPlaylist()!) || savingPlaylist()"
+                  [title]="isPlaylistSaved(selectedPlaylist()!) ? 'Ya guardada' : 'Guardar esta playlist'">
+            <i class="bi" 
+               [class.bi-check-lg]="isPlaylistSaved(selectedPlaylist()!)"
+               [class.bi-plus-lg]="!isPlaylistSaved(selectedPlaylist()!)"
+               [class.loading]="savingPlaylist()"></i>
+            {{ isPlaylistSaved(selectedPlaylist()!) ? 'Guardada' : 'Guardar' }}
+          </button>
+        </div>
+          <!-- Lista de canciones -->
+        <div class="playlist-tracks-container" *ngIf="selectedPlaylist()!.songs && selectedPlaylist()!.songs.length > 0">
+          <div class="tracks-header">
+            <div class="track-number">#</div>
+            <div class="track-title">Título</div>
+            <div class="track-album">Álbum</div>
+            <div class="track-duration">
+              <i class="bi bi-clock"></i>
+            </div>
+          </div>
+          
+          <div class="tracks-list">
+            <div *ngFor="let song of selectedPlaylist()!.songs; let i = index" 
+                class="track-item"
+                (contextmenu)="onTrackContextMenu($event, song)"
+                (click)="playSong(song, $event)">
+              
+              <div class="track-number">
+                <span class="track-index">{{ i + 1 }}</span>
+                <button class="track-play-btn">
+                  <i class="bi bi-play-fill"></i>
+                </button>
+              </div>
+              
+              <div class="track-info">
+                <div class="track-cover-small">
+                  <ng-container *ngIf="!noImg.has(song.id); else iconFallbackSmall">
+                    <img
+                      [src]="(song.art_work_song | mediaUrl) + bust(song.id)"
+                      [alt]="song.name_song"
+                      class="cover-img-small"
+                      loading="lazy"
+                      (error)="onImgError($event, song)"
+                    />
+                  </ng-container>
+                  <ng-template #iconFallbackSmall>
+                    <div class="cover-fallback-small">
+                      <i class="bi bi-music-note-beamed"></i>
+                    </div>
+                  </ng-template>
+                </div>
+                
+                <div class="track-details">
+                  <div class="track-name">{{ song.name_song }}</div>
+                  <div class="track-artist">{{ song.artist_song }}</div>
+                </div>
+              </div>
+              
+              <div class="track-album">{{ song.album_song || 'Sin álbum' }}</div>
+              <div class="track-duration">{{ formatDuration(song.duration) }}</div>
+            </div>
+          </div>
+
+          <!-- Indicador de más canciones (si hay muchas) -->
+          <div *ngIf="selectedPlaylist()!.songs.length > 8" class="more-tracks-indicator">
+            <div class="more-tracks-content">
+              <i class="bi bi-chevron-down"></i>
+              <span class="more-tracks-text">Más canciones</span>
+              <i class="bi bi-chevron-down"></i>
+            </div>
+            <div class="scroll-hint">Desplázate para ver más</div>
+          </div>
+        </div>
+
+        <!-- Empty State para vista detallada -->
+        <div *ngIf="selectedPlaylist()!.songs && selectedPlaylist()!.songs.length === 0" class="empty-tracks text-center py-5">
+          <div class="cover-fallback-large mx-auto mb-4" style="width: 120px; height: 120px;">
+            <i class="bi bi-collection-play"></i>
+          </div>
+          <h4 class="playlist-title mb-2">Playlist vacía</h4>
+          <p class="playlist-meta mb-4">Esta playlist automática no tiene canciones disponibles.</p>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+  
+</section>
+    
+<app-track-context-menu
+  [isVisible]="showContextMenu()"
+  [position]="contextMenuPosition()"
+  [track]="selectedTrackForContextMenu()"
+  [menuType]="'recent'"
+  (play)="onContextMenuPlay()"
+  (addToPlaylist)="onContextMenuAddToPlaylist()"
+  (close)="closeContextMenu()">
+</app-track-context-menu>

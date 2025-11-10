@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';          // 👈 necesario para *ngIf, ngClass, else
 import { PlayerService } from '../../services/player.service';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe'; // 👈 tu pipe standalone
+import { PlayerEventsService } from '../../services/player-events.service';
 
 @Component({
   selector: 'app-player-bar',
@@ -13,7 +14,14 @@ import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe'; // 👈 tu pip
 export class PlayerBarComponent {
   useFallback = false;
 
+   private playerEvents = inject(PlayerEventsService);
+  
   constructor(public player: PlayerService) {}
+
+  onTitleClick() {
+    console.log('🎵 Título clickeado - abriendo cover player');
+    this.playerEvents.openCoverPlayer(); // ← Ahora sí existe
+  }
 
   onCoverError() { this.useFallback = true; }
   onCoverLoad()  { this.useFallback = false; }
@@ -30,4 +38,6 @@ export class PlayerBarComponent {
     const c = this.player.currentTime() || 0;
     return Math.max(0, d - c);
   }
+  
+
 }
