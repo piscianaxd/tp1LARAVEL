@@ -21,15 +21,17 @@
 
 .navbar {
     z-index: 9999;
-    position: fixed!important;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
     width: 100%;
     height: 56px;
-    background: var(--bg0)!important;
-    border-bottom: 1px solid var(--border)!important;
-    backdrop-filter: blur(10px)
+    background: var(--bg0);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0,0,0,.3);
+    animation: fadeInDown .5s ease
 }
 
 app-dashboard,body {
@@ -49,20 +51,47 @@ body {
 
 .search-container {
     position: relative;
-    z-index: 1051
+    z-index: 1051;
+    min-width: 400px;
+    max-width: 600px;
+    box-shadow: 0 4px 15px rgba(0,0,0,.2)
 }
 
 .navbar-brand {
-    color: var(--title)!important;
+    color: var(--title);
     font-size: 1.3rem;
     transition: all .3s ease;
     text-decoration: none;
-    font-weight: 700
+    font-weight: 700;
+    margin-right: 1rem
 }
 
 .navbar-brand:hover {
     opacity: .8;
     transform: scale(1.02)
+}
+
+.navbar-brand:active {
+    transform: scale(.98)
+}
+
+.navbar-brand-icon {
+    margin-right: 0.5rem
+}
+
+.sidebar-toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--title);
+    font-size: 1.2rem;
+    margin-right: 0.75rem;
+    cursor: pointer;
+    transition: all .3s ease
+}
+
+.sidebar-toggle-btn:hover {
+    opacity: .8;
+    transform: scale(1.1)
 }
 
 .input-group {
@@ -75,70 +104,86 @@ body {
 
 .form-control,.input-group-text {
     border: 0;
-    background: var(--bg1)!important
+    background: var(--bg1)
 }
 
 .input-group-text {
-    color: var(--muted)!important;
-    backdrop-filter: blur(10px)
+    color: var(--muted);
+    backdrop-filter: blur(10px);
+    padding: 10px 15px
 }
 
 .form-control {
     padding: 10px 15px;
     transition: all .3s ease;
-    color: var(--title)!important
+    color: var(--title)
 }
 
 .form-control::placeholder {
-    color: var(--muted)!important;
+    color: var(--muted);
     opacity: .8
 }
 
 .form-control:focus {
-    background: var(--bg1)!important;
-    box-shadow: none!important;
-    outline: 0!important;
-    color: var(--title)!important;
-    border-color: var(--border)!important
+    background: var(--bg1);
+    box-shadow: none;
+    outline: 0;
+    color: var(--title);
+    border-color: var(--border)
 }
 
 .btn-outline-secondary {
     border: 0;
-    background: rgba(255,255,255,.08)!important;
-    color: var(--muted)!important;
+    background: rgba(255,255,255,.08);
+    color: var(--muted);
     transition: all .3s ease
 }
 
-.btn-outline-secondary:hover,.user-info {
-    background: rgba(255,255,255,.15)!important
+.btn-outline-secondary:hover {
+    background: rgba(255,255,255,.15);
+    color: var(--title);
+    transform: scale(1.05)
 }
 
-.btn-outline-secondary:hover {
-    color: var(--title)!important;
-    transform: scale(1.05)
+.btn-outline-secondary:active {
+    transform: scale(.95)
 }
 
 .user-info {
     padding: 6px 16px;
     border-radius: 25px;
-    border: 1px solid rgba(255,255,255,.2)!important;
+    border: 1px solid rgba(255,255,255,.2);
     backdrop-filter: blur(10px);
-    transition: all .3s ease
+    transition: all .3s ease;
+    background: rgba(255,255,255,.15);
+    display: flex;
+    align-items: center
 }
 
 .user-info:hover {
-    background: rgba(255,255,255,.25)!important;
-    border-color: rgba(255,255,255,.3)!important;
+    background: rgba(255,255,255,.25);
+    border-color: rgba(255,255,255,.3);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(255,255,255,.1)
 }
 
+.user-info:active {
+    transform: translateY(0)
+}
+
 .user-avatar {
-    transition: all .3s ease;
-    background: linear-gradient(135deg,#1db954,#1ed760)!important;
-    color: var(--bg0)!important;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg,#1db954,#1ed760);
+    color: var(--bg0);
     font-weight: 600;
-    box-shadow: 0 2px 8px rgba(29,185,84,.3)
+    box-shadow: 0 2px 8px rgba(29,185,84,.3);
+    transition: all .3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5rem
 }
 
 .user-info:hover .user-avatar {
@@ -146,15 +191,15 @@ body {
     box-shadow: 0 4px 12px rgba(29,185,84,.4)
 }
 
-.user-link,.user-link:hover {
-    text-decoration: none;
-    color: var(--title)!important
-}
-
 .user-link {
+    background: transparent;
+    border: 0;
+    text-decoration: none;
+    color: var(--title);
     font-weight: 600;
     transition: all .3s ease;
-    text-shadow: 0 1px 2px rgba(0,0,0,.2)
+    text-shadow: 0 1px 2px rgba(0,0,0,.2);
+    cursor: pointer
 }
 
 .user-link:hover {
@@ -162,16 +207,29 @@ body {
     text-shadow: 0 2px 4px rgba(0,0,0,.3)
 }
 
-.navbar {
-    box-shadow: 0 4px 20px rgba(0,0,0,.3)
+.bi-music-note-beamed,.bi-soundwave {
+    color: #1db954;
+    filter: drop-shadow(0 2px 4px rgba(29,185,84,.3))
 }
 
-.search-container {
-    box-shadow: 0 4px 15px rgba(0,0,0,.2)
+.search-container ::-webkit-scrollbar {
+    width: 6px
 }
 
-.navbar {
-    animation: fadeInDown .5s ease
+.search-container ::-webkit-scrollbar-track {
+    background: var(--bg1);
+    border-radius: 3px
+}
+
+.search-container ::-webkit-scrollbar-thumb {
+    background: var(--muted);
+    border-radius: 3px;
+    opacity: .5
+}
+
+.search-container ::-webkit-scrollbar-thumb:hover {
+    background: var(--title);
+    opacity: .8
 }
 
 @media (min-width:1400px) {
@@ -189,14 +247,14 @@ body {
         margin-right: 2rem
     }
 
-    .navbar-brand i {
+    .navbar-brand-icon {
         font-size: 1.8rem;
         margin-right: 12px
     }
 
     .search-container {
-        min-width: 600px!important;
-        max-width: 800px!important
+        min-width: 600px;
+        max-width: 800px
     }
 
     .input-group {
@@ -248,14 +306,14 @@ body {
         margin-right: 3rem
     }
 
-    .navbar-brand i {
+    .navbar-brand-icon {
         font-size: 2rem;
         margin-right: 15px
     }
 
     .search-container {
-        min-width: 800px!important;
-        max-width: 1000px!important
+        min-width: 800px;
+        max-width: 1000px
     }
 
     .form-control {
@@ -280,7 +338,7 @@ body {
         height: 42px
     }
 
-    .user-avatar,.user-link {
+    .user-link {
         font-size: 1.2rem
     }
 }
@@ -300,14 +358,14 @@ body {
         margin-right: 4rem
     }
 
-    .navbar-brand i {
+    .navbar-brand-icon {
         font-size: 2.3rem;
         margin-right: 20px
     }
 
     .search-container {
-        min-width: 1000px!important;
-        max-width: 1200px!important
+        min-width: 1000px;
+        max-width: 1200px
     }
 
     .form-control {
@@ -328,7 +386,7 @@ body {
         height: 46px
     }
 
-    .user-avatar,.user-link {
+    .user-link {
         font-size: 1.3rem
     }
 }
@@ -344,8 +402,8 @@ body {
     }
 
     .search-container {
-        min-width: 200px!important;
-        max-width: 400px!important
+        min-width: 200px;
+        max-width: 400px
     }
 
     .navbar-brand {
@@ -355,8 +413,8 @@ body {
 
 @media (max-width:576px) {
     .search-container {
-        min-width: 150px!important;
-        max-width: 300px!important
+        min-width: 150px;
+        max-width: 300px
     }
 
     .user-info .user-link {
@@ -366,41 +424,4 @@ body {
     .user-info {
         padding: 6px 10px
     }
-}
-
-.navbar-brand:active {
-    transform: scale(.98)
-}
-
-.user-info:active {
-    transform: translateY(0)
-}
-
-.btn-outline-secondary:active {
-    transform: scale(.95)
-}
-
-.bi-music-note-beamed,.bi-soundwave {
-    color: #1db954!important;
-    filter: drop-shadow(0 2px 4px rgba(29,185,84,.3))
-}
-
-.search-container ::-webkit-scrollbar {
-    width: 6px
-}
-
-.search-container ::-webkit-scrollbar-track {
-    background: var(--bg1);
-    border-radius: 3px
-}
-
-.search-container ::-webkit-scrollbar-thumb {
-    background: var(--muted);
-    border-radius: 3px;
-    opacity: .5
-}
-
-.search-container ::-webkit-scrollbar-thumb:hover {
-    background: var(--title);
-    opacity: .8
 }

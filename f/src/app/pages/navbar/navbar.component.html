@@ -4,25 +4,25 @@
     <!-- Logo y Botón Menú a la izquierda -->
     <div class="d-flex align-items-center">
       <!-- Botón del menú hamburguesa -->
-      <button class="sidebar-toggle-btn me-3" (click)="openSidebar()" title="Abrir menú">
+      <button class="sidebar-toggle-btn" (click)="openSidebar()" title="Abrir menú">
         <i class="bi bi-list"></i>
       </button>
       
       <!-- Logo -->
-      <a class="navbar-brand fw-bold" routerLink="/dashboard" (click)="scrollToTop()" style="text-decoration: none;">
-        <i class="bi bi-soundwave me-2"></i>Musify
+      <a class="navbar-brand" routerLink="/dashboard" (click)="scrollToTop()">
+        <i class="bi bi-soundwave navbar-brand-icon"></i>Musify
       </a>
     </div>
     
     <!-- Buscador centrado -->
     <div class="d-flex justify-content-center flex-grow-1 mx-3 position-relative">
-      <div class="search-container" style="min-width: 400px; max-width: 600px;">
+      <div class="search-container">
         <div class="input-group">
-          <span class="input-group-text bg-secondary border-secondary">
-            <i class="bi bi-search text-white"></i>
+          <span class="input-group-text">
+            <i class="bi bi-search"></i>
           </span>
           <input
-            class="form-control border-secondary"
+            class="form-control"
             type="search"
             [(ngModel)]="searchTerm"
             [placeholder]="placeholder"
@@ -39,13 +39,11 @@
     <div class="d-flex align-items-center gap-3">
       
       <!-- Información de usuario - ahora abre modal de perfil -->
-      <div class="user-info d-flex align-items-center">
-        <div class="user-avatar bg-primary rounded-circle d-flex align-items-center justify-content-center me-2"
-            style="width: 32px; height: 32px;">
-          <i class="bi bi-person-fill text-white"></i>
+      <div class="user-info">
+        <div class="user-avatar">
+          <i class="bi bi-person-fill"></i>
         </div>
-        <button class="user-link text-white text-decoration-none border-0 bg-transparent"
-                (click)="openProfileModal()">
+        <button class="user-link" (click)="openProfileModal()">
           {{ usuarioActual }}
         </button>
       </div>
