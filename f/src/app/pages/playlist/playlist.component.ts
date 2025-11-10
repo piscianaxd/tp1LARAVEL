@@ -8,6 +8,7 @@ import { PlaylistEventService, SongForPlaylist } from '../../services/playlist-e
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TrackContextComponent } from '../track-context/track-context.component';
+import { AlertService } from '../../services/alert.service';
 import { PlayerService } from '../../services/player.service';
 import { Track } from '../../models/track/track.model';
 import { dtoToTrack } from '../../helpers/adapters';
@@ -30,6 +31,9 @@ interface Playlist {
   styleUrls: ['./playlist.component.css']
 })
 export class PlaylistsComponent implements OnInit, OnDestroy {
+
+  constructor(private alertService: AlertService) {}
+
   @Output() close = new EventEmitter<void>();
 
   // Señales de estado
@@ -78,6 +82,12 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
   private playlistService = inject(PlaylistService);
   private playlistEventService = inject(PlaylistEventService);
   private player: PlayerService = inject(PlayerService);
+
+  private handleClickOutside = (e: MouseEvent) => this.closeContextMenuOnClickOutside(e);
+  private handleRightClick = () => this.closeContextMenuOnRightClick();
+
+  trackBeingMoved: any = null;
+
 
   ngOnInit(): void {
     this.loadPlaylists();
@@ -217,13 +227,14 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     document.body.classList.remove('modal-active');
   }
 
-  removeTrackFromPlaylistModal(track: any) {
+  async removeTrackFromPlaylistModal(track: any) {
     this.selectedTrackForDeletion.set(track);
     
     const songName = track.song?.name_song || 'esta canción';
     const playlistName = this.selectedPlaylist()?.name_playlist || 'la playlist';
     
-    if (confirm(`¿Eliminar "${songName}" de la playlist "${playlistName}"?`)) {
+    const confirmed = await this.alertService.confirmRemoveSong(songName, playlistName);
+    if (confirmed) {
       const playlist = this.selectedPlaylist();
       if (!playlist) return;
 
@@ -239,10 +250,16 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
           
           this.selectedTrackForDeletion.set(null);
           this.error.set(null);
+          
+          // 🔥 NUEVO: Mostrar confirmación
+          this.alertService.showSuccess(
+            'Canción eliminada',
+            `"${songName}" fue removida de la playlist`
+          );
         },
         error: (err) => {
           console.error('Error al eliminar canción:', err);
-          this.error.set('Error al eliminar la canción de la playlist');
+          this.alertService.showError('Error', 'No se pudo eliminar la canción de la playlist');
           this.selectedTrackForDeletion.set(null);
         }
       });
@@ -296,7 +313,7 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     });
   }
 
-  refreshPlaylists() {
+ refreshPlaylists() {
     this.loading.set(true);
     this.playlistService.getPlaylists().subscribe({
       next: (response: any) => {
@@ -311,6 +328,16 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
         }
 
         this.playlists.set(playlistsData);
+        
+        // Si hay una playlist seleccionada, actualizarla también
+        const currentSelected = this.selectedPlaylist();
+        if (currentSelected) {
+          const updatedSelected = playlistsData.find(p => p.id === currentSelected.id);
+          if (updatedSelected) {
+            this.selectedPlaylist.set(updatedSelected);
+          }
+        }
+        
         this.loading.set(false);
       },
       error: (err: HttpErrorResponse) => {
@@ -319,7 +346,6 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
       }
     });
   }
-
   // ========== PAGINACIÓN ==========
 
   nextPage() {
@@ -460,10 +486,10 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
   }
 
   private removeEventListeners() {
-    document.removeEventListener('click', this.closeContextMenuOnClickOutside.bind(this));
-    document.removeEventListener('contextmenu', this.closeContextMenuOnRightClick.bind(this));
+    document.removeEventListener('click', this.handleClickOutside);
+    document.removeEventListener('contextmenu', this.handleRightClick);
   }
-
+  
   closeContextMenu() {
     this.showContextMenu.set(false);
     this.selectedTrackForContextMenu.set(null);
@@ -486,16 +512,27 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
   }
 
   onContextMenuMove() {
+    const track = this.selectedTrackForContextMenu();
+    if (!track) return;
+
+    this.closeContextMenu();
+
+    this.trackBeingMoved = track;  // Guardamos el track antes de abrir el modal
     this.openMoveToPlaylistModal();
   }
 
-  private removeTrackFromPlaylist() {
+  private async removeTrackFromPlaylist() {
     const track = this.selectedTrackForContextMenu();
     const playlist = this.selectedPlaylist();
     
     if (!track || !playlist) return;
 
-    if (confirm(`¿Eliminar "${track.song.name_song}" de la playlist?`)) {
+    const confirmed = await this.alertService.confirmRemoveSong(
+      track.song.name_song, 
+      playlist.name_playlist
+    );
+    
+    if (confirmed) {
       this.playlistService.removeSongFromPlaylist(playlist.id, track.song.id).subscribe({
         next: () => {
           this.refreshPlaylists();
@@ -504,9 +541,13 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
             updatedPlaylist.songs = updatedPlaylist.songs.filter(s => s.song.id !== track.song.id);
             this.selectedPlaylist.set(updatedPlaylist);
           }
+          this.alertService.showSuccess(
+            'Canción eliminada',
+            `"${track.song.name_song}" fue removida correctamente`
+          );
         },
         error: (err) => {
-          this.error.set('Error al eliminar la canción');
+          this.alertService.showError('Error', 'No se pudo eliminar la canción');
         }
       });
     }
@@ -523,13 +564,9 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
       next: (response: any) => {
         let allPlaylists: any[] = [];
         
-        if (Array.isArray(response)) {
-          allPlaylists = response;
-        } else if (response && Array.isArray(response.data)) {
-          allPlaylists = response.data;
-        } else if (response && Array.isArray(response.playlists)) {
-          allPlaylists = response.playlists;
-        }
+        if (Array.isArray(response)) allPlaylists = response;
+        else if (response?.data) allPlaylists = response.data;
+        else if (response?.playlists) allPlaylists = response.playlists;
 
         const currentPlaylistId = this.selectedPlaylist()?.id;
         const availablePlaylists = allPlaylists.filter(p => p.id !== currentPlaylistId);
@@ -544,12 +581,14 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     });
   }
 
+
   closeMoveToPlaylistModal() {
     this.showMoveToPlaylistModal.set(false);
     this.selectedPlaylistForMove.set(null);
     this.availablePlaylistsForMove.set([]);
     this.loadingMoveModal.set(false);
     this.movingTrack.set(false);
+    this.trackBeingMoved = null; // limpia la canción
     document.body.classList.remove('modal-active');
   }
 
@@ -574,59 +613,54 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     });
   }
 
-  moveTrackToPlaylist() {
-    const targetPlaylistId = this.selectedPlaylistForMove();
-    
-    if (!targetPlaylistId) {
-      this.error.set('Selecciona una playlist destino');
-      return;
-    }
-    
-    const track = this.selectedTrackForContextMenu();
-    if (!track) {
-      this.error.set('Error: No se encontró la canción seleccionada');
-      return;
-    }
-
-    this.movingTrack.set(true);
-
-    this.playlistService.addSongToPlaylist(targetPlaylistId, track.song.id).subscribe({
-      next: () => {
-        const currentPlaylistId = this.selectedPlaylist()?.id;
-        if (currentPlaylistId) {
-          this.playlistService.removeSongFromPlaylist(currentPlaylistId, track.song.id).subscribe({
-            next: () => {
-              this.movingTrack.set(false);
-              this.closeMoveToPlaylistModal();
-              this.refreshPlaylists();
-              
-              if (this.selectedPlaylist()) {
-                const updatedPlaylist = { ...this.selectedPlaylist()! };
-                updatedPlaylist.songs = updatedPlaylist.songs.filter(s => s.song.id !== track.song.id);
-                this.selectedPlaylist.set(updatedPlaylist);
-              }
-              
-              this.error.set(null);
-            },
-            error: () => {
-              this.movingTrack.set(false);
-              this.error.set('Canción movida pero no se pudo eliminar de la playlist original');
-              this.closeMoveToPlaylistModal();
-              this.refreshPlaylists();
-            }
-          });
-        } else {
-          this.movingTrack.set(false);
-          this.closeMoveToPlaylistModal();
-          this.refreshPlaylists();
-        }
-      },
-      error: (addErr) => {
-        this.movingTrack.set(false);
-        this.error.set('Error al mover la canción: ' + (addErr.error?.message || 'Error desconocido'));
-      }
-    });
+moveTrackToPlaylist() {
+  const targetPlaylistId = this.selectedPlaylistForMove();
+  const track = this.trackBeingMoved; // <-- usar trackBeingMoved en vez de selectedTrackForContextMenu()
+  
+  if (!track) {
+    this.error.set('Error: No se encontró la canción seleccionada');
+    return;
   }
+
+  if (!targetPlaylistId) {
+    this.error.set('Selecciona una playlist destino');
+    return;
+  }
+
+  this.movingTrack.set(true);
+
+  // Agregar a nueva playlist
+  this.playlistService.addSongToPlaylist(targetPlaylistId, track.song.id).subscribe({
+    next: () => {
+      // Eliminar de la playlist actual
+      const currentPlaylistId = this.selectedPlaylist()?.id;
+      if (currentPlaylistId) {
+        this.playlistService.removeSongFromPlaylist(currentPlaylistId, track.song.id).subscribe({
+          next: () => {
+            this.movingTrack.set(false);
+            this.closeMoveToPlaylistModal();
+            this.refreshPlaylists();
+            this.error.set(null);
+            this.alertService.showSuccess('Canción movida', 'La canción se movió correctamente a la nueva playlist');
+          },
+          error: () => {
+            this.movingTrack.set(false);
+            this.error.set('Error al eliminar la canción de la playlist original');
+          }
+        });
+      } else {
+        this.movingTrack.set(false);
+        this.closeMoveToPlaylistModal();
+        this.refreshPlaylists();
+      }
+    },
+    error: (err) => {
+      this.movingTrack.set(false);
+      this.error.set('Error al agregar la canción a la nueva playlist');
+    }
+  });
+}
+
 
   // ========== MÉTODOS AUXILIARES ==========
 
@@ -665,23 +699,29 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     this.selectedPlaylist.set(null);
   }
 
-  deletePlaylist(playlist: Playlist, event: Event) {
+  async deletePlaylist(playlist: Playlist, event: Event) {
     event.stopPropagation();
     
-    if (confirm(`¿Estás seguro de que quieres eliminar "${playlist.name_playlist}"?`)) {
+    const confirmed = await this.alertService.confirmDeletePlaylist(playlist.name_playlist);
+    if (confirmed) {
+      this.alertService.showLoading('Eliminando playlist...');
+      
       this.playlistService.deletePlaylist(playlist.id).subscribe({
         next: () => {
+          this.alertService.closeLoading();        
+          this.alertService.showSuccess(
+            'Playlist eliminada',
+            `"${playlist.name_playlist}" fue eliminada correctamente`
+          );
           this.loadPlaylists();
-          if (this.selectedPlaylist()?.id === playlist.id) {
-            this.closePlaylist();
-          }
         },
         error: (err) => {
-          this.error.set('Error al eliminar la playlist');
+          this.alertService.closeLoading();
+          this.alertService.showPlaylistError('No se pudo eliminar la playlist');
         }
       });
     }
-  }
+  } 
 
   getPlaylistCover(playlist: Playlist): string {
     if (playlist.songs && playlist.songs.length > 0 && playlist.songs[0].song?.art_work_song) {

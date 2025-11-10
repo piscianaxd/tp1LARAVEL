@@ -253,21 +253,23 @@
 
     <div class="modal-body">
       <!-- Información de la canción -->
-      <div class="song-info" *ngIf="selectedTrackForContextMenu()">
+      <div class="song-info" *ngIf="trackBeingMoved">
         <div class="song-cover">
-          <img *ngIf="selectedTrackForContextMenu()?.song?.art_work_song" 
-               [src]="selectedTrackForContextMenu()?.song?.art_work_song | mediaUrl" 
-               [alt]="selectedTrackForContextMenu()?.song?.name_song"
-               class="cover-img">
-          <div *ngIf="!selectedTrackForContextMenu()?.song?.art_work_song" class="cover-fallback">
+          <img *ngIf="trackBeingMoved.song?.art_work_song" 
+              [src]="trackBeingMoved.song.art_work_song | mediaUrl" 
+              [alt]="trackBeingMoved.song?.name_song"
+              class="cover-img">
+          <div *ngIf="!trackBeingMoved.song?.art_work_song" class="cover-fallback">
             <i class="bi bi-music-note-beamed"></i>
           </div>
         </div>
         <div class="song-details">
-          <h4 class="song-name">{{ selectedTrackForContextMenu()?.song?.name_song }}</h4>
-          <p class="song-artist">{{ selectedTrackForContextMenu()?.song?.artist_song }}</p>
+          <h4 class="song-name">{{ trackBeingMoved.song?.name_song }}</h4>
+          <p class="song-artist">{{ trackBeingMoved.song?.artist_song }}</p>
         </div>
       </div>
+
+
 
       <!-- Lista de playlists disponibles -->
       <div class="playlists-section">
@@ -278,7 +280,8 @@
           <span>Cargando playlists...</span>
         </div>
 
-        <div *ngIf="!loadingMoveModal()" class="playlists-list">
+        <!-- Si hay playlists disponibles -->
+        <div *ngIf="!loadingMoveModal() && availablePlaylistsForMove().length > 0" class="playlists-list">
           <div *ngFor="let playlist of availablePlaylistsForMove()" 
                class="playlist-item"
                [class.selected]="selectedPlaylistForMove() === playlist.id"
@@ -294,24 +297,23 @@
               {{ playlist.is_public ? 'Pública' : 'Privada' }}
             </span>
           </div>
+        </div>
 
-          <div *ngIf="availablePlaylistsForMove().length === 0" class="no-playlists">
-            <i class="bi bi-music-note-list"></i>
-            <p>No tienes otras playlists disponibles</p>
-            <small>Crea una nueva playlist para mover esta canción</small>
+        <!-- Si NO hay playlists -->
+        <div *ngIf="!loadingMoveModal() && availablePlaylistsForMove().length === 0" class="no-playlists text-center py-4">
+          <i class="bi bi-music-note-list fs-1 mb-2"></i>
+          <p>No tienes playlists creadas</p>
+          <small>Crea tu primera playlist para poder mover canciones</small>
+          <div class="mt-3">
+            <button class="btn btn-primary" (click)="openCreatePlaylistModal(); closeMoveToPlaylistModal()">
+              Crear Playlist
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Botones de acción -->
-      <div class="modal-actions">
-        <button class="btn btn-outline-secondary" 
-                (click)="createNewPlaylistForMove()"
-                [disabled]="movingTrack()">
-          <i class="bi bi-plus-circle me-2"></i>
-          Crear Nueva Playlist
-        </button>
-        
+      <!-- Botón mover (solo si hay playlists) -->
+      <div class="mt-3" *ngIf="availablePlaylistsForMove().length > 0">
         <button class="btn btn-primary" 
                 (click)="moveTrackToPlaylist()"
                 [disabled]="!selectedPlaylistForMove() || movingTrack()">
@@ -320,6 +322,7 @@
           {{ movingTrack() ? 'Moviendo...' : 'Mover a Playlist' }}
         </button>
       </div>
+
     </div>
   </div>
 </div>

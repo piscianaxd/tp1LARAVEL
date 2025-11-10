@@ -47,8 +47,8 @@ export class TrackContextComponent {
     // Scroll en elementos internos con debounce
     private scrollTimeout: any;
     @HostListener('scroll', ['$event.target'])
-    onElementScroll(target: HTMLElement) {
-      if (this.isVisible) {
+    onElementScroll(target: EventTarget | null) {
+      if (this.isVisible && target instanceof HTMLElement) {
         // Debounce muy corto para respuesta casi inmediata
         clearTimeout(this.scrollTimeout);
         this.scrollTimeout = setTimeout(() => {

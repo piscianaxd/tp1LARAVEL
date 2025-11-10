@@ -61,6 +61,7 @@
           *ngFor="let song of recommendations()"
           class="song-circle"
           (click)="selectSong(song)"
+          (contextmenu)="onTrackContextMenu($event, song)"
           [class.selected]="isSelected(song)"
           [title]="song.title + ' - ' + song.artist"
         >
@@ -96,4 +97,16 @@
       </div>
     </div>
   </div>
+
+  <!-- Context Menu -->
+  <app-track-context-menu
+    [isVisible]="contextMenuVisible()"
+    [position]="contextMenuPosition()"
+    [track]="contextMenuTrack()"
+    [menuType]="'recent'"
+    (play)="onContextMenuPlay()"
+    (addToPlaylist)="onContextMenuAddToPlaylist()"
+    (close)="onContextMenuClose()"
+  ></app-track-context-menu>
+  
 </div>

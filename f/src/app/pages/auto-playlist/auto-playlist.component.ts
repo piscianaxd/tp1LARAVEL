@@ -11,6 +11,7 @@ import { TrackContextComponent } from '../track-context/track-context.component'
 import { PlayerService } from '../../services/player.service';
 import { songToTrack } from '../../helpers/adapters';
 import { Track } from '../../models/track/track.model';
+import { AlertService } from '../../services/alert.service';
 import { dtoToTrack } from '../../helpers/adapters';
 
 
@@ -79,7 +80,8 @@ export class AutoPlaylistsComponent implements OnInit {
   @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
 
   constructor(
-    private randomTrackService: RandomTrackService
+    private randomTrackService: RandomTrackService,
+    private alertService: AlertService
   ) {}
 
   ngOnInit(): void {
@@ -98,6 +100,21 @@ isNested(pl: any): pl is { songs: { song: Song }[] } {
       return;
     }
 
+    // 🔥 NUEVO: Confirmación antes de guardar
+    this.alertService.showConfirm({
+      swal: {
+        title: 'Guardar Playlist',
+        text: `¿Guardar "${playlist.name}" en tus playlists?`,
+        icon: 'question'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.executeSavePlaylist(playlist);
+      }
+    });
+  }
+
+  private executeSavePlaylist(playlist: AutoPlaylist): void {
     this.savingPlaylist.set(true);
     console.log('💾 Guardando playlist automática:', playlist.name);
 
@@ -115,12 +132,6 @@ isNested(pl: any): pl is { songs: { song: Song }[] } {
       }))
     };
 
-    // Simulación de guardado instantáneo
-    setTimeout(() => {
-      console.log('✅ Playlist guardada instantáneamente:', playlist.name);
-    }, 0);
-
-    // Llamada real al servidor
     this.playlistService.createPlaylist(playlistData).subscribe({
       next: (response: any) => {
         console.log('✅ Playlist confirmada en servidor:', response);
@@ -135,12 +146,17 @@ isNested(pl: any): pl is { songs: { song: Song }[] } {
         
         // Emitir evento después de guardar exitosamente
         this.playlistEventService.notifyPlaylistSaved();
-        console.log('🔄 Evento de playlist guardada emitido');
+        
+        // 🔥 NUEVO: Mostrar confirmación
+        this.alertService.showSuccess(
+          'Playlist guardada',
+          `"${playlist.name}" se agregó a tus playlists`
+        );
       },
       error: (err: HttpErrorResponse) => {
         console.error('❌ Error guardando playlist:', err);
         this.savingPlaylist.set(false);
-        this.error.set(`Error al guardar la playlist ${playlist.name}`);
+        this.alertService.showError('Error', `No se pudo guardar la playlist ${playlist.name}`);
       }
     });
   }
