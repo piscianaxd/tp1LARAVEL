@@ -1,6 +1,5 @@
 // app.routes.ts
 import { Routes } from '@angular/router';
-import { PlaylistsComponent } from './pages/playlist/playlist.component';
 import { LoginComponent } from './pages/login/login.component';
 import { RegisterComponent } from './pages/register/register.component';
 import { authGuard, authMatchGuard } from './services/auth-guard.service';

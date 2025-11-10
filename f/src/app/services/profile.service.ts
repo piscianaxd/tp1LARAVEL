@@ -10,10 +10,12 @@ export class ProfileService {
 
   constructor(private http: HttpClient) {}
 
-  private getHeaders() {
-    const token = localStorage.getItem('token');
+  private getHeaders(): { headers: HttpHeaders } {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    
     let headers = new HttpHeaders({
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
     });
 
     if (token) {
@@ -23,7 +25,6 @@ export class ProfileService {
     return { headers };
   }
 
-  // Obtener perfil del usuario actual
   getProfile(): Observable<any> {
     return this.http.get(this.apiUrl, this.getHeaders())
       .pipe(
@@ -31,7 +32,6 @@ export class ProfileService {
       );
   }
 
-  // Actualizar perfil del usuario
   updateProfile(profileData: any): Observable<any> {
     return this.http.put(this.apiUrl, profileData, this.getHeaders())
       .pipe(
@@ -39,14 +39,17 @@ export class ProfileService {
       );
   }
 
-  // Eliminar cuenta del usuario
+  // ✅ VERSIÓN CORREGIDA - Opción 3 (Recomendada)
   deleteAccount(password: string): Observable<any> {
-    return this.http.delete(this.apiUrl, {
-      ...this.getHeaders(),
-      body: { password } // Laravel espera { password } en el body
-    }).pipe(
-      catchError(this.handleError)
-    );
+    const options = {
+      headers: this.getHeaders().headers,
+      body: { password }
+    };
+
+    return this.http.delete(this.apiUrl, options)
+      .pipe(
+        catchError(this.handleError)
+      );
   }
 
   private handleError(error: any) {
