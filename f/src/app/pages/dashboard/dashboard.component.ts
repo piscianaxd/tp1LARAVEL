@@ -1,7 +1,7 @@
 // src/app/components/dashboard/dashboard.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { SearchService, DashboardComponent as DashboardComponentInterface } from '../../services/search.service';
@@ -15,6 +15,7 @@ import { NavBar } from "../navbar/navbar.component";
 import { RecommendationsComponent } from '../recommended-songs/recommended-songs.component';
 import { PlaylistsComponent } from '../playlist/playlist.component';
 import { AddToPlaylistComponent } from '../add-to-playlist/add-to-playlist.component';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -32,11 +33,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // ... tus cards existentes ...
   ];
 
-  constructor(private searchService: SearchService) {
+  constructor(private searchService: SearchService, private authService: AuthService, private router: Router) {
     this.filteredCards = this.cards;
   }
 
   ngOnInit() {
+      if (!this.authService.isLoggedIn()) {
+        this.router.navigate(['/login']);
+        return;
+      }
     // 🔥 MODIFICADO: Solo escuchar búsqueda del dashboard, NO global
     this.searchSubscription = this.searchService.dashboardSearchTerm$.subscribe(term => {
       if (term !== this.searchTerm) {
