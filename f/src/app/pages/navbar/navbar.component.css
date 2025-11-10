@@ -404,3 +404,31 @@ body {
     background: var(--title);
     opacity: .8
 }
+
+.navbar {
+  position: fixed !important;
+  top: 0; left: 0; right: 0;
+  height: var(--nav-h);
+  z-index: 1100; /* por encima del sidebar */
+}
+
+
+
+/* La navbar ya está fixed con z-index alto en tu CSS */
+.navbar.with-rail .container-fluid{
+  padding-left: var(--rail-w); /* corre logo y buscador para no chocar con el rail */
+}
+
+/* Botón hamburguesa un poco más grande/visible */
+.sidebar-toggle-btn{
+  width: 38px; height: 38px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: 10px;
+  background: transparent; color: var(--title);
+  transition: .2s;
+}
+.sidebar-toggle-btn:hover{ background: var(--bg1); transform: translateY(-1px); }
+
+/* Opcional: agrandar la marca un toque */
+.navbar-brand{ font-size: 1.35rem; }
+.navbar-brand i{ font-size: 1.4rem; }

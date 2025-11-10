@@ -1,49 +1,67 @@
-<!-- Overlay del sidebar (solo activa el fondo cuando está completamente abierto) -->
-<div class="sidebar-overlay" [class.active]="isOpen" (click)="close()">
+<!-- Rail SIEMPRE visible (versión simple) -->
+<nav class="rail" aria-label="Navegación principal">
   
-  <!-- Contenedor principal del sidebar -->
-  <div class="sidebar-content" (click)="$event.stopPropagation()" [class.collapsed]="!isOpen">
+  <button class="rail-logo" title="Music">
+    <i class="bi bi-play-circle-fill"></i>
+    <span class="brand">Music</span>
+  </button>
 
-    <!-- Header (solo visible cuando está expandido) -->
-    <div class="sidebar-header" *ngIf="isOpen">
-      <button class="sidebar-close-btn" (click)="close()" title="Cerrar menú">
-        <i class="bi bi-x-lg"></i>
-      </button>
+  <!-- abre el panel expandible -->
+  <button class="rail-item ghost" title="Menú" (click)="open()">
+    <i class="bi bi-list"></i>
+    <span>Menú</span>
+  </button>
+
+  <button class="rail-item" title="Inicio" (click)="goTo('top')">
+    <i class="bi bi-house-door-fill"></i>
+    <span>Inicio</span>
+  </button>
+
+  <button class="rail-item" title="Explorar" (click)="goTo('recommended')">
+    <i class="bi bi-at"></i>
+    <span>Explorar</span>
+  </button>
+
+  <button class="rail-item" title="Mi biblioteca" (click)="goTo('playlists')">
+    <i class="bi bi-bookmark"></i>
+    <span>Mi biblioteca</span>
+  </button>
+
+  <div class="rail-sep"></div>
+
+
+</nav>
+
+<!-- Overlay + Drawer (opcional, solo cuando abrís el menú) -->
+<div class="sidebar-overlay" [class.active]="isOpen" (click)="close()"></div>
+
+<aside
+  class="sidebar-drawer"
+  [class.open]="isOpen"
+  role="dialog"
+  aria-modal="true"
+  (click)="$event.stopPropagation()"
+  tabindex="-1"
+>
+  <header class="drawer-header">
+    <div class="drawer-brand">
+      <i class="bi bi-music-player"></i>
+      <span>Musify</span>
     </div>
+    <button class="icon-btn" (click)="close()" aria-label="Cerrar">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </header>
 
-    <!-- Navegación -->
-    <nav class="sidebar-nav">
-      <ul class="nav-menu">
-
-        <li class="nav-item" title="Tus Playlists">
-          <button class="nav-link" (click)="scrollToPlaylists()">
-            <i class="bi bi-collection-play nav-icon"></i>
-            <span class="nav-text" *ngIf="isOpen">Tus Playlists</span>
-          </button>
-        </li>
-
-        <li class="nav-item" title="Recomendaciones">
-          <button class="nav-link" (click)="goToRecommended()">
-            <i class="bi bi-music-note-beamed nav-icon"></i>
-            <span class="nav-text" *ngIf="isOpen">Recomendaciones</span>
-          </button>
-        </li>
-
-        <li class="nav-item" title="Mix Populares">
-          <button class="nav-link" (click)="goToMixes()">
-            <i class="bi bi-fire nav-icon"></i>
-            <span class="nav-text" *ngIf="isOpen">Mix Populares</span>
-          </button>
-        </li>
-
-      </ul>
-    </nav>
-
-    <!-- Footer -->
-    <div class="sidebar-footer" *ngIf="isOpen">
-      <div class="app-info">
-        <small class="text-muted">Musify App</small>
-      </div>
-    </div>
-  </div>
-</div>
+  <nav class="drawer-nav">
+    <button class="drawer-link" (click)="goTo('playlists')">
+      <i class="bi bi-collection-play"></i><span>Tus Playlists</span>
+    </button>
+    <button class="drawer-link" (click)="goTo('recommended')">
+      <i class="bi bi-music-note-beamed"></i><span>Recomendaciones</span>
+    </button>
+    <button class="drawer-link" (click)="goTo('mixes')">
+      <i class="bi bi-fire"></i><span>Mix Populares</span>
+    </button>
+  </nav>
+</aside>

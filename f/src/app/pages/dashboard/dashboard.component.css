@@ -1,0 +1,10 @@
+:root { --rail-w: 72px; --navbar-h: 56px; }
+
+/* Reserva el ancho del rail y el alto de la navbar fija */
+.app-shell{
+  padding-left: var(--rail-w);
+  padding-top: var(--navbar-h);
+}
+
+/* Ajuste fino entre secciones */
+.section{ margin-top: 2rem; }

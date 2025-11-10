@@ -15,11 +15,11 @@ import { NavBar } from "../navbar/navbar.component";
 import { RecommendationsComponent } from '../recommended-songs/recommended-songs.component';
 import { PlaylistsComponent } from '../playlist/playlist.component';
 import { AddToPlaylistComponent } from '../add-to-playlist/add-to-playlist.component';
-
+import { SidebarComponent } from '../sidebar/sidebar.component';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule,AddToPlaylistComponent, PlaylistsComponent, RecentTracksComponent, RandomTracksComponent, MixesCapsuleComponent, AutoPlaylistsComponent, NavBar, PlayerBarComponent, RecommendationsComponent],
+  imports: [CommonModule, RouterModule, FormsModule,AddToPlaylistComponent,  SidebarComponent, PlaylistsComponent, RecentTracksComponent, RandomTracksComponent, MixesCapsuleComponent, AutoPlaylistsComponent, NavBar, PlayerBarComponent, RecommendationsComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
 })
