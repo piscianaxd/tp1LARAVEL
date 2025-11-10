@@ -1,4 +1,5 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import Swal from 'sweetalert2';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,7 +7,6 @@ import { lastValueFrom } from 'rxjs';
 import { ProfileService } from '../../services/profile.service';
 import { AuthService } from '../../services/auth.service';
 import { AlertService } from '../../services/alert.service';
-import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-profile-modal',
@@ -147,20 +147,20 @@ export class ProfileModalComponent implements OnInit {
     });
   }
 
-  async deleteAccount(): Promise<void> {
-    // 1. Validación inicial
-    if (this.deleteForm.invalid) {
-      this.markFormGroupTouched(this.deleteForm);
-      this.alertService.showError('Contraseña requerida', 'Ingresa tu contraseña para confirmar la eliminación');
-      return;
-    }
+// En profile.component.ts - CORREGIR el método deleteAccount
+async deleteAccount(): Promise<void> {
+  // 1. Validación inicial
+  if (this.deleteForm.invalid) {
+    this.markFormGroupTouched(this.deleteForm);
+    this.alertService.showError('Contraseña requerida', 'Ingresa tu contraseña para confirmar la eliminación');
+    return;
+  }
 
-    try {
-      // 2. Confirmación destructiva con SweetAlert
-      const confirmed = await this.alertService.showConfirm({
-        swal: {
+  try {
+    // 2. Confirmación destructiva con SweetAlert - ESTRUCTURA CORRECTA
+    const confirmed = await this.alertService.showConfirm({
+      swal: { // ✅ AGREGAR 'swal:' aquí
         title: '⚠️ Eliminar Cuenta Permanentemente',
-        text: '¿Estás ABSOLUTAMENTE seguro? Esta acción:',
         html: `
           <div class="text-start">
             <ul>
@@ -173,32 +173,38 @@ export class ProfileModalComponent implements OnInit {
             <input type="password" id="password-confirm" class="form-control" placeholder="Tu contraseña actual">
           </div>
         `,
-        icon: 'warning' as const,
+        icon: 'warning',
         confirmButtonText: 'Sí, eliminar mi cuenta',
         cancelButtonText: 'Cancelar',
         showCancelButton: true,
         preConfirm: () => {
-          const passwordInput = document.getElementById('password-confirm') as HTMLInputElement;
-          if (!passwordInput.value) {
-            this.alertService.showError('Contraseña requerida', 'Debes ingresar tu contraseña');
-            return false;
-          }
-          if (passwordInput.value !== this.deleteForm.get('password')?.value) {
-            this.alertService.showError('Contraseña incorrecta', 'La contraseña no coincide');
-            return false;
-          }
-          return true;
+          return new Promise((resolve) => {
+            const passwordInput = document.getElementById('password-confirm') as HTMLInputElement;
+            if (!passwordInput.value) {
+              Swal.showValidationMessage('Debes ingresar tu contraseña');
+              resolve(false);
+              return;
+            }
+            if (passwordInput.value !== this.deleteForm.get('password')?.value) {
+              Swal.showValidationMessage('La contraseña no coincide');
+              resolve(false);
+              return;
+            }
+            resolve(true);
+          });
         }
-      }, });
+      }
+    });
 
-      if (!confirmed.isConfirmed) return;
+    if (!confirmed.isConfirmed) return;
 
       // 3. Procesar eliminación
       this.alertService.showLoading('Eliminando tu cuenta y todos los datos...');
       this.deleting = true;
 
-      // 4. Ejecutar eliminación
-      await lastValueFrom(this.profileService.deleteAccount(this.deleteForm.value));
+      // 4. Ejecutar eliminación - CORREGIDO
+      const password = this.deleteForm.get('password')?.value;
+      await lastValueFrom(this.profileService.deleteAccount(password));
 
       // 5. Éxito
       this.alertService.showSuccess(
@@ -226,24 +232,19 @@ export class ProfileModalComponent implements OnInit {
     }
   }
 
-private getFriendlyErrorMessage(error: any): string {
-  if (error.status === 401) return 'Contraseña incorrecta. Verifica tus credenciales.';
-  if (error.status === 403) return 'No tienes permisos para realizar esta acción.';
-  if (error.status === 500) return 'Error del servidor. Intenta nuevamente más tarde.';
-  if (error.error?.message) return error.error.message;
-  
-  return 'Error inesperado. Por favor, contacta al soporte.';
-}
+  private getFriendlyErrorMessage(error: any): string {
+    if (error.status === 401) return 'Contraseña incorrecta. Verifica tus credenciales.';
+    if (error.status === 403) return 'No tienes permisos para realizar esta acción.';
+    if (error.status === 500) return 'Error del servidor. Intenta nuevamente más tarde.';
+    if (error.error?.message) return error.error.message;
+    
+    return 'Error inesperado. Por favor, contacta al soporte.';
+  }
 
   async logout() {
-    const overlay = document.querySelector('.modal-overlay') as HTMLElement | null;
-
-    // Ocultar el modal temporalmente
-    if (overlay) overlay.style.display = 'none';
-
     try {
       const result = await this.alertService.showConfirm({
-        swal: {
+        swal: { // ✅ AGREGAR 'swal:' aquí también
           title: '¿Cerrar sesión?',
           text: '¿Estás seguro de que quieres salir?',
           icon: 'question',
@@ -257,22 +258,28 @@ private getFriendlyErrorMessage(error: any): string {
 
       if (result.isConfirmed) {
         // 🔥 EJECUTAR EL LOGOUT REAL
-        this.authService.logout();
-        
-        // Cerrar el modal de perfil
-        this.closeModal();
-        
-        // Redirigir al login
-        this.router.navigate(['/login']);
-        
-        // Mostrar confirmación
-        this.alertService.showSuccess('Sesión cerrada', 'Has cerrado sesión correctamente');
+        this.authService.logout().subscribe({
+          next: () => {
+            // Cerrar el modal de perfil
+            this.closeModal();
+            
+            // Redirigir al login
+            this.router.navigate(['/login']);
+            
+            // Mostrar confirmación
+            this.alertService.showSuccess('Sesión cerrada', 'Has cerrado sesión correctamente');
+          },
+          error: (error) => {
+            console.error('Error en logout:', error);
+            // Forzar logout incluso si hay error
+            this.authService.clearSession();
+            this.closeModal();
+            this.router.navigate(['/login']);
+          }
+        });
       }
-    } finally {
-      // Restaurar el modal solo si el usuario canceló
-      if (overlay && !this.authService.isLoggedIn()) {
-        overlay.style.display = 'flex'; // o el valor original que uses
-      }
+    } catch (error) {
+      console.error('Error en logout:', error);
     }
   }
 
@@ -280,7 +287,7 @@ private getFriendlyErrorMessage(error: any): string {
     this.close.emit();
   }
 
-  asetActiveTab(tab: 'profile' | 'security' | 'logout'): void {
+  setActiveTab(tab: 'profile' | 'security' | 'logout'): void { // ✅ CORREGIDO: setActiveTab
     this.activeTab = tab;
     // Limpiar mensajes al cambiar de pestaña
     this.message = '';

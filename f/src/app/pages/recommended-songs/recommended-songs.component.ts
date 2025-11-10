@@ -63,7 +63,7 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
   }
 
   loadCurrentUser(): void {
-    const userData = localStorage.getItem('user');
+    const userData = localStorage.getItem('auth_user');
     if (userData) {
       const user = JSON.parse(userData);
       this.currentUser.set(user);
