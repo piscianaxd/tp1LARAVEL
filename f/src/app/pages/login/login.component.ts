@@ -45,8 +45,7 @@ export class LoginComponent {
     this.authService.login(payload).subscribe({
       next: (userData) => {
         // Primero navegar al dashboard
-        this.router.navigate(['/']).then(() => {
-          // 🔥 MOSTRAR BIENVENIDA DESPUÉS de la navegación
+        this.router.navigate(['/dashboard']).then(() => {
           const userName = userData?.user?.name || 'Usuario';
           this.alertService.showSuccess(
             `¡Bienvenido ${userName}!`,
