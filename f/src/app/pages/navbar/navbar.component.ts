@@ -169,7 +169,12 @@ export class NavBar implements OnInit {
 
   // ✅ NUEVOS MÉTODOS PARA SIDEBAR
   openSidebar(): void {
-    this.showSidebar = true;
+    if (!this.showSidebar) {
+      this.showSidebar = true;
+    }
+    else {
+      this.showSidebar = false;
+    }
   }
 
   closeSidebar(): void {

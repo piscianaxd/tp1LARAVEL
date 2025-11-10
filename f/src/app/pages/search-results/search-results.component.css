@@ -249,3 +249,98 @@
   background: transparent !important;
   backdrop-filter: none !important;
 }
+
+/* Contenedor y card (quedan igual que tenías, con sutiles ajustes) */
+.search-results-card{
+  background: rgba(20, 22, 26, 0.78);
+  border-radius: 10px;                  /* un poco menos redondeado */
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 10px 32px rgba(0,0,0,.35);
+  backdrop-filter: blur(10px);
+}
+
+/* Botón fantasma (texto + icono, sin borde y sin fondo) */
+.ghost-action{
+  appearance: none;
+  background: none;
+  border: 0;
+  color: var(--txt);
+  font-weight: 600;
+  font-size: .85rem;
+  padding: 4px 6px;
+  border-radius: 6px;
+  opacity: .85;
+  transition: opacity .15s ease, transform .15s ease, text-decoration-color .15s ease;
+}
+.ghost-action:hover{
+  opacity: 1;
+  text-decoration: underline;
+}
+.ghost-action:active{ transform: translateY(1px); }
+.ghost-action:focus-visible{
+  outline: 2px solid rgba(255,255,255,.25);
+  outline-offset: 2px;
+}
+
+/* Íconos fantasmas a la derecha de cada item */
+.icon-ghost{
+  appearance: none;
+  background: none;
+  border: 0;
+  color: rgba(255,255,255,.85);
+  padding: 4px;
+  line-height: 1;
+  border-radius: 6px;
+  transition: color .15s ease, transform .15s ease, background-color .15s ease;
+}
+.icon-ghost:hover{
+  color: #fff;
+  background-color: rgba(255,255,255,.08);
+}
+.icon-ghost:active{ transform: translateY(1px); }
+.icon-ghost:focus-visible{
+  outline: 2px solid rgba(255,255,255,.25);
+  outline-offset: 2px;
+}
+
+/* Items */
+.result-item{
+  border-radius: 8px;
+}
+.result-item:hover{
+  background-color: rgba(255,255,255,.10) !important;
+}
+
+/* Títulos y detalles */
+.section-title{
+  color: rgba(255,255,255,.92) !important;
+  letter-spacing: .4px;
+}
+.item-name{ color: rgba(255,255,255,.95) !important; }
+.item-details{ color: rgba(255,255,255,.7) !important; }
+.item-icon{ color: rgba(255,255,255,.7) !important; }
+
+/* “Ver todos” como tarjeta especial, pero sin borde grueso */
+.view-all{
+  background-color: rgba(255,255,255,.06) !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+}
+.view-all:hover{
+  background-color: rgba(255,255,255,.12) !important;
+  border-color: rgba(255,255,255,.18) !important;
+}
+.view-all .item-icon,
+.view-all .item-name{
+  color: rgba(180,210,255,.95) !important;
+}
+
+/* Accesibilidad */
+.result-item:focus{
+  outline: 2px solid rgba(255,255,255,.25);
+  outline-offset: 2px;
+}
+
+/* Mobile tweaks */
+@media (max-width: 768px){
+  .search-results-card{ max-height: 60vh; }
+}
