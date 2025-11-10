@@ -1,0 +1,61 @@
+<section class="random-section">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h3 fw-bold mb-0">Playlists de la comunidad</h2>
+  </div>
+
+  <!-- Loader -->
+  <div *ngIf="loading()" class="row g-4">
+    <div class="col-6 col-md-4 col-lg-2" *ngFor="let _ of [0,1,2,3,4,5]">
+      <div class="random-card">
+        <div class="sk-cover-square mb-2"></div>
+        <div class="placeholder-glow mb-1">
+          <span class="placeholder col-8"></span>
+        </div>
+        <div class="placeholder-glow">
+          <span class="placeholder col-5"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="!loading() && error()" class="alert alert-danger mt-3">
+    {{ error() }}
+  </div>
+
+  <!-- Vacío -->
+  <div *ngIf="!loading() && !error() && playlists().length === 0" class="alert alert-info mt-3">
+    Sé el primero en mostrar tu playlist a la comunidad 🎵
+  </div>
+
+  <!-- Grid de playlists -->
+  <div *ngIf="!loading() && !error() && playlists().length > 0" class="row g-4">
+    <div class="col-6 col-md-4 col-lg-2" *ngFor="let pl of playlists()">
+      <div class="random-card">
+        <div class="cover-wrap-square">
+          <img
+            [src]="pl.cover ?? 'assets/img/default-playlist.jpg'"
+            [alt]="pl.name_playlist"
+            class="cover-img-square"
+            loading="lazy"
+          />
+
+          <div class="playlist-overlay">
+            <button class="overlay-btn-square play" (click)="openPlaylist(pl)" title="Ver playlist">
+              <i class="bi bi-music-note-list"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="random-card-info">
+          <h3 class="song-title text-truncate" [title]="pl.name_playlist">
+            {{ pl.name_playlist }}
+          </h3>
+          <p class="song-artist text-truncate" [title]="pl.user_name">
+            por {{ pl.user_name }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

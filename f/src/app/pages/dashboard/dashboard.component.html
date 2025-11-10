@@ -99,6 +99,21 @@
   }
 </section>
 
+<!-- PLAYLISTS PÚBLICAS -->
+<section class="section container-xxl px-3 px-md-4">
+
+  @defer (on viewport; prefetch on idle) {
+    <app-public-playlist />
+  } @placeholder {
+    <div class="text-muted small">Buscando playlists de la comunidad…</div>
+  } @loading {
+    <div class="text-muted small">Cargando playlists públicas…</div>
+  }
+</section>
+
+
+
+
 <!-- PLAYLISTS MANUALES (si es diferente de auto-playlists) -->
 <section class="section container-xxl px-3 px-md-4">
   <h2 class="h4 fw-bold mb-3">Tus playlists creadas</h2>

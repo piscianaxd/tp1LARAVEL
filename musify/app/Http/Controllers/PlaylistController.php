@@ -101,6 +101,19 @@ class PlaylistController extends Controller
         }
     }
 
+
+    public function getPublicPlaylist(Request $request)
+{
+    $userId = $request->query('exclude_user_id');
+
+    $playlists = Playlist::where('is_public', true)
+        ->where('user_id', '!=', $userId)
+        ->with('songs') // si querés incluir canciones
+        ->get();
+
+    return response()->json($playlists);
+}
+
     /**
      * @OA\Post(
      *     path="/api/playlists",
