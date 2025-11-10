@@ -21,21 +21,21 @@
                 <button 
                     class="tab-btn" 
                     [class.active]="activeTab === 'profile'"
-                    (click)="setActiveTab('profile')">
+                    (click)="asetActiveTab('profile')">
                     <i class="bi bi-person"></i>
                     Perfil
                 </button>
                 <button 
                     class="tab-btn" 
                     [class.active]="activeTab === 'security'"
-                    (click)="setActiveTab('security')">
+                    (click)="asetActiveTab('security')">
                     <i class="bi bi-shield-lock"></i>
                     Seguridad
                 </button>
                 <button 
                     class="tab-btn" 
                     [class.active]="activeTab === 'logout'"
-                    (click)="setActiveTab('logout')">
+                    (click)="asetActiveTab('logout')">
                     <i class="bi bi-box-arrow-right"></i>
                     Cerrar Sesión
                 </button>
@@ -220,7 +220,7 @@
                             <i class="bi bi-box-arrow-right"></i>
                             Sí, Cerrar Sesión
                         </button>
-                        <button type="button" class="btn btn-outline-secondary" (click)="setActiveTab('profile')">
+                        <button type="button" class="btn btn-outline-secondary" (click)="asetActiveTab('profile')">
                             <i class="bi bi-x"></i>
                             Cancelar
                         </button>

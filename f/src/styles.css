@@ -158,3 +158,45 @@ button:hover{ background: #2a2a2a; }
 }
 
 .main-shell{ padding-bottom: 96px; } /* altura de la barra aprox. */
+
+/* Fondo del popup */
+.swal2-popup {
+  background: #111 !important; /* negro suave */
+  color: #fff !important;      /* texto blanco */
+  border-radius: 10px;
+}
+
+.swal2-container.swal2-top-end {
+  top: 55px !important;
+}
+.swal-zindex {
+  z-index: 8000 !important;
+}
+.swal2-backdrop-show {
+  z-index: 7999 !important;
+}
+
+
+/* Texto del título */
+.swal2-title {
+  color: #fff !important;
+}
+
+/* Texto del contenido */
+.swal2-html-container, .swal2-content {
+  color: #ddd !important;
+}
+
+/* Texto del input */
+.swal2-input {
+  background: #222 !important;
+  color: #fff !important;
+  border: 1px solid #444 !important;
+}
+
+/* Botón cancelar */
+.swal2-cancel {
+  background: #333 !important;
+  color: white !important;
+}
+

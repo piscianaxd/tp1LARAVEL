@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { SearchService } from '../../services/search.service';
+import { AlertService } from '../../services/alert.service';
 import { SearchResultsComponent } from '../search-results/search-results.component';
 import { ProfileModalComponent } from '../profile/profile.component';
 import { SidebarComponent } from '../sidebar/sidebar.component'; // ✅ Nueva importación
@@ -36,7 +37,7 @@ export class NavBar implements OnInit {
   // ✅ Nueva propiedad para sidebar
   showSidebar: boolean = false;
 
-  constructor(public searchService: SearchService, public router: Router) {}
+  constructor(public searchService: SearchService, public router: Router,private alertService: AlertService) {}
 
   ngOnInit() {
     this.setPlaceholderByRoute();
