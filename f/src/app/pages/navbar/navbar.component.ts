@@ -42,7 +42,7 @@ export class NavBar implements OnInit {
   ngOnInit() {
     this.setPlaceholderByRoute();
 
-    const usuarioGuardado = localStorage.getItem('user');
+    const usuarioGuardado = localStorage.getItem('auth_user');
     if (usuarioGuardado) {
       try {
         const usuario = JSON.parse(usuarioGuardado);
