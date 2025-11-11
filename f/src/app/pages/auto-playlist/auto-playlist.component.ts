@@ -13,7 +13,7 @@ import { songToTrack } from '../../helpers/adapters';
 import { Track } from '../../models/track/track.model';
 import { AlertService } from '../../services/alert.service';
 import { dtoToTrack } from '../../helpers/adapters';
-
+import { PlayerEventsService } from '../../services/player-events.service';
 
 interface AutoPlaylist {
   id?: number;
@@ -76,6 +76,7 @@ export class AutoPlaylistsComponent implements OnInit {
   private playlistEventService = inject(PlaylistEventService);
   private addToPlaylistService = inject(AddToPlaylistService);
   private player: PlayerService = inject(PlayerService);
+  private playerEvents = inject(PlayerEventsService);
 
   @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
 
@@ -552,9 +553,32 @@ isNested(pl: any): pl is { songs: { song: Song }[] } {
   }
 
   openPlaylist(playlist: AutoPlaylist) {
-    this.selectedPlaylist.set(playlist);
-    this.showPlaylistDetail.set(true);
-  }
+    console.log('🎵 Abriendo playlist automática en cover player:', playlist.name);
+    
+    // Convertir la playlist automática al formato del cover player
+    const coverPlayerPlaylist = {
+        id: playlist.id || Date.now(), // ID temporal si no tiene
+        name_playlist: playlist.name,
+        songs: playlist.songs.map(song => ({
+            song: {
+                id: song.id,
+                name_song: song.name_song,
+                artist_song: song.artist_song,
+                album_song: song.album_song || '',
+                art_work_song: song.art_work_song || '',
+                duration: song.duration || 0,
+                genre_song: song.genre_song || 'unknown',
+                url_song: song.url_song || ''
+            }
+        }))
+    };
+
+    // ✅ USAR EL SERVICIO PARA ENVIAR LA PLAYLIST AL COVER PLAYER
+    this.playerEvents.openCoverPlayerWithPlaylist(coverPlayerPlaylist);
+    
+    // Cerrar la vista de detalle actual
+    this.closePlaylist();
+}
 
   closePlaylist() {
     this.showPlaylistDetail.set(false);
