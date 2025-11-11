@@ -46,8 +46,46 @@ this.http.get<any[]>(`http://localhost:8000/api/song/get-playlist`, {
     });
   }
 
-  openPlaylist(pl: any): void {
-    // Podés abrir un modal o navegar a la ruta /playlist/:id
-    console.log('Abrir playlist', pl);
+  selectedPlaylist = signal<any | null>(null);
+
+openPlaylist(pl: any): void {
+  this.selectedPlaylist.set(pl);
+}
+
+togglePlay(event: Event) {
+  const button = event.currentTarget as HTMLButtonElement;
+  const audio = button.previousElementSibling as HTMLAudioElement;
+  const icon = button.querySelector('i') as HTMLElement;
+
+  // Pausar otros audios activos
+  document.querySelectorAll('audio').forEach(a => {
+    if (a !== audio) {
+      a.pause();
+      const btn = a.nextElementSibling as HTMLButtonElement;
+      if (btn) btn.querySelector('i')!.className = 'bi bi-play-fill';
+    }
+  });
+
+  // Alternar reproducción
+  if (audio.paused) {
+    audio.play();
+    icon.className = 'bi bi-pause-fill';
+  } else {
+    audio.pause();
+    icon.className = 'bi bi-play-fill';
   }
+
+  // Actualizar progreso
+  const progress = button.nextElementSibling?.querySelector('.player-progress') as HTMLElement;
+  if (audio) {
+    audio.addEventListener('timeupdate', () => {
+      const percent = (audio.currentTime / audio.duration) * 100;
+      progress.style.width = percent + '%';
+    });
+  }
+}
+
+
+
+
 }

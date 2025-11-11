@@ -196,3 +196,216 @@
     width: 16.66666667%;
   }
 }
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: var(--bg1);
+  padding: 1.5rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--txt);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: 1rem;
+}
+
+.modal-title {
+  font-weight: 700;
+  margin: 0;
+}
+
+.modal-subtitle {
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+.song-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.song-list li {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.song-thumb {
+  width: 50px;
+  height: 50px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.song-info h4 {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.song-info p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+/* 🎧 Audio player moderno y minimalista */
+audio {
+  width: 180px;
+  height: 32px;
+  border-radius: 8px;
+  background: #000;
+  accent-color: #fff;
+  outline: none;
+  box-shadow: 0 0 4px rgba(255,255,255,0.1);
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+audio:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 8px rgba(255,255,255,0.2);
+}
+
+/* Quita el estilo nativo en algunos navegadores */
+audio::-webkit-media-controls-panel {
+  background: #000;
+  color: #fff;
+  border-radius: 8px;
+}
+
+audio::-webkit-media-controls-play-button,
+audio::-webkit-media-controls-pause-button {
+  background: transparent;
+  color: #fff;
+  filter: invert(1);
+}
+
+audio::-webkit-media-controls-timeline {
+  background: rgba(255, 255, 255, 0.1);
+  height: 3px;
+  border-radius: 3px;
+}
+
+audio::-webkit-media-controls-current-time-display,
+audio::-webkit-media-controls-time-remaining-display {
+  color: #fff;
+  font-size: 0.75rem;
+}
+
+audio::-webkit-media-controls-volume-slider {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+audio::-webkit-media-controls-mute-button,
+audio::-webkit-media-controls-volume-slider-container {
+  filter: invert(1);
+}
+
+audio::-webkit-media-controls-enclosure {
+  border-radius: 8px;
+}
+
+/* 🔘 Ajuste responsivo */
+@media (max-width: 768px) {
+  audio {
+    width: 140px;
+  }
+}
+
+/* 🎧 Custom Dark Minimal Player */
+.song-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.player {
+  display: flex;
+  align-items: center;
+  background: #000;
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+  height: 38px;
+  min-width: 180px;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.08);
+  position: relative;
+}
+
+.player-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.player-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
+
+.player-bar {
+  flex-grow: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-left: 0.7rem;
+}
+
+.player-progress {
+  width: 0%;
+  height: 100%;
+  background: #fff;
+  transition: width 0.15s linear;
+}
+
+/* Ocultar el audio nativo */
+.player audio {
+  display: none;
+}
+
+/* Mobile-friendly */
+@media (max-width: 768px) {
+  .player {
+    min-width: 150px;
+    height: 34px;
+    padding: 0.3rem 0.6rem;
+  }
+  .player-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+  }
+}
+
+

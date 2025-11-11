@@ -14,7 +14,15 @@ class Playlist extends Model
     // Relación con las canciones guardadas
     public function songs()
     {
-        return $this->hasMany(SavedSong::class, 'playlist_id');
+        return $this->belongsToMany(SongSavedDb::class, 'saved_songs', 'playlist_id', 'songs_saved_db_id');
     }
+
+    public function user()
+{
+    return $this->belongsTo(User::class, 'user_id');
+}
+
+
+
 }
     

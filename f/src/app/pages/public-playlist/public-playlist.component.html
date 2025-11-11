@@ -34,7 +34,7 @@
       <div class="random-card">
         <div class="cover-wrap-square">
           <img
-            [src]="pl.cover ?? 'assets/img/default-playlist.jpg'"
+            [src]="pl.cover ?? './null.png'"
             [alt]="pl.name_playlist"
             class="cover-img-square"
             loading="lazy"
@@ -59,3 +59,39 @@
     </div>
   </div>
 </section>
+
+<!-- Modal de canciones -->
+<div *ngIf="selectedPlaylist()" class="modal-overlay">
+  <div class="modal-content">
+    <button class="close-btn" (click)="selectedPlaylist.set(null)">
+      <i class="bi bi-arrow-left"></i> Volver
+    </button>
+
+    <h3 class="modal-title">{{ selectedPlaylist().name_playlist }}</h3>
+    <p class="modal-subtitle">por {{ selectedPlaylist().user?.name }}</p>
+
+    <ul class="song-list">
+      <li *ngFor="let s of selectedPlaylist().songs" class="song-item">
+  <img [src]="s.art_work_song ?? 'null.jpg'" class="song-thumb" />
+  
+  <div class="song-info">
+    <h4>{{ s.name_song }}</h4>
+    <p>{{ s.artist_song }} – {{ s.album_song }}</p>
+  </div>
+
+  <!-- Player moderno -->
+  <div class="player">
+    <audio [src]="s.url_song" preload="none"></audio>
+    <button class="player-btn" (click)="togglePlay($event)">
+      <i class="bi bi-play-fill"></i>
+    </button>
+    <div class="player-bar">
+      <div class="player-progress"></div>
+    </div>
+  </div>
+</li>
+
+    </ul>
+  </div>
+</div>
+

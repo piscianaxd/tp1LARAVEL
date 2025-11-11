@@ -122,19 +122,7 @@
   }
 </section>
 
-<app-add-to-playlist></app-add-to-playlist>
-<app-cover-player></app-cover-player>
-<!-- Barra de reproducción fija siempre montada -->
-<app-player-bar />
-  <!-- PLAYLISTS MANUALES -->
-  <section class="section container-xxl px-3 px-md-4">
-    <h2 class="h4 fw-bold mb-3">Tus playlists creadas</h2>
-    @defer (on immediate) {
-      <app-playlists />
-    } @placeholder {
-      <div class="text-muted small">Cargando playlists…</div>
-    }
-  </section>
+
 
 <app-add-to-playlist></app-add-to-playlist>
 <app-cover-player></app-cover-player>
