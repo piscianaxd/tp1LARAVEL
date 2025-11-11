@@ -1,3 +1,6 @@
+
+<div class="sidebar-rail">
+  <div class="sidebar-content" [class.collapsed]="!isOpen" (click)="$event.stopPropagation()">
 <!-- Rail SIEMPRE visible (versión simple) -->
 <nav class="rail" aria-label="Navegación principal">
   
@@ -54,3 +57,5 @@
     </button>
   </nav>
 </aside>
+  </div>
+</div>
