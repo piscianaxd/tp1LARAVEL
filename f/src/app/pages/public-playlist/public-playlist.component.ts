@@ -25,7 +25,7 @@ export class PublicPlaylistComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    const userRaw = localStorage.getItem('user');
+    const userRaw = localStorage.getItem('auth_user');
     const userId = userRaw ? JSON.parse(userRaw).id : null;
 
 this.http.get<any[]>(`http://localhost:8000/api/song/get-playlist`, {

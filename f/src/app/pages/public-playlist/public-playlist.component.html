@@ -51,9 +51,10 @@
           <h3 class="song-title text-truncate" [title]="pl.name_playlist">
             {{ pl.name_playlist }}
           </h3>
-          <p class="song-artist text-truncate" [title]="pl.user_name">
-            por {{ pl.user_name }}
+          <p class="song-artist text-truncate" [title]="pl.user?.name">
+            por {{ pl.user?.name || 'Usuario desconocido' }}
           </p>
+
         </div>
       </div>
     </div>

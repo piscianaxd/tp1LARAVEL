@@ -72,35 +72,26 @@ class PlaylistController extends Controller
      * )
      */
     public function index(Request $request)
-    {
-        Log::info('🎵 ========== PLAYLIST INDEX START ==========');
-        Log::info('🎵 User:', ['user' => $request->user()]);
-        Log::info('🎵 User ID:', ['user_id' => $request->user()?->id]);
+{
+    \Log::info('🎵 ========== PLAYLIST INDEX START ==========');
 
-        try {
-            $userId = $request->user()?->id ?? 1;
-            Log::info('🎵 Using user ID:', ['user_id' => $userId]);
+    $user = auth()->user();
+    $userId = $user->id;
 
-            $playlists = Playlist::where('user_id', $userId)
-                ->with(['songs']) // Cargar canciones a través de la relación
-                ->get();
+    $playlists = Playlist::where('user_id', $userId)
+        ->with(['savedSongs.song'])
+        ->get();
 
+    \Log::info('🎵 Playlists retrieved:', [
+        'count' => $playlists->count(),
+        'example' => $playlists->first()
+    ]);
 
-            Log::info('🎵 Playlists retrieved:', ['count' => $playlists->count()]);
-            Log::info('🎵 ========== PLAYLIST INDEX END ==========');
-            
-            return response()->json($playlists);
-            
-        } catch (\Exception $e) {
-            Log::error('🎵 PLAYLIST INDEX ERROR:', [
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return response()->json(['error' => 'Error retrieving playlists'], 500);
-        }
-    }
+    \Log::info('🎵 ========== PLAYLIST INDEX END ==========');
+
+    return response()->json($playlists);
+}
+
 
 
  public function getPublicPlaylist(Request $request)
@@ -110,8 +101,8 @@ class PlaylistController extends Controller
 
         \Log::info('🎧 Iniciando getPublicPlaylist', ['exclude_user_id' => $userId]);
 
-        $playlists = Playlist::where('is_public', true)
-            ->where('user_id', '!=', $userId)
+        // ✅ Query base
+        $query = Playlist::where('is_public', true)
             ->with([
                 'songs' => function ($q) {
                     $q->select(
@@ -125,25 +116,28 @@ class PlaylistController extends Controller
                     );
                 },
                 'user:id,name'
-            ])
-            ->get(['id', 'name_playlist', 'is_public', 'user_id']);
+            ]);
+
+        // ✅ Excluir las playlists del usuario autenticado (si lo hay)
+        if (!empty($userId)) {
+            $query->where('user_id', '!=', $userId);
+        }
+
+        $playlists = $query->get(['id', 'name_playlist', 'is_public', 'user_id']);
 
         // ✅ Completar rutas absolutas de imágenes y audios
         $playlists->each(function ($pl) {
             $pl->cover = null;
 
             foreach ($pl->songs as $song) {
-                // 🎨 Imagen de portada (art_work_song)
                 if ($song->art_work_song && !str_starts_with($song->art_work_song, 'http')) {
                     $song->art_work_song = url($song->art_work_song);
                 }
 
-                // 🎧 Archivo de audio (url_song)
                 if ($song->url_song && !str_starts_with($song->url_song, 'http')) {
                     $song->url_song = url($song->url_song);
                 }
 
-                // Asignar la portada general de la playlist
                 if (!$pl->cover && $song->art_work_song) {
                     $pl->cover = $song->art_work_song;
                 }
@@ -165,6 +159,7 @@ class PlaylistController extends Controller
         ], 500);
     }
 }
+
 
 
 

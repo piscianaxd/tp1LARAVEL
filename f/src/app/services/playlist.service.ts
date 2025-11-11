@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, catchError, throwError, of, tap } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -29,20 +30,30 @@ export class PlaylistService {
     return { headers };
   }
 
-  getPlaylists(): Observable<any> {
-    console.log('🔍 Solicitando playlists del usuario...');
-    return this.http.get(this.apiUrl, this.getHeaders())
-      .pipe(
-        tap((response: any) => {
-          console.log('✅ Playlists recibidas del servidor:', response);
-          // Guardar en cache
-          if (Array.isArray(response)) {
-            this.userPlaylists.set(response);
-          }
-        }),
-        catchError(this.handleError)
-      );
-  }
+ getPlaylists(): Observable<any> {
+  console.log('🔍 Solicitando playlists del usuario...');
+  return this.http.get(this.apiUrl, this.getHeaders()).pipe(
+    tap((response: any) => {
+      console.log('✅ Playlists recibidas del servidor:', response);
+    }),
+    // 🔥 Transformamos el JSON a la estructura que el front espera
+    // Cada playlist tendrá un array `songs` directo
+    // en lugar de `saved_songs` con { song }
+    map((response: any) => {
+      if (Array.isArray(response)) {
+        const playlists = response.map(p => ({
+          ...p,
+          songs: (p.saved_songs || []).map((ss: any) => ({ song: ss.song }))
+        }));
+        this.userPlaylists.set(playlists);
+        return playlists;
+      }
+      return [];
+    }),
+    catchError(this.handleError)
+  );
+}
+
 
   // Obtener playlists desde el cache
   getCachedPlaylists(): any[] {

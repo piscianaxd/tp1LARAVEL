@@ -11,16 +11,21 @@ class Playlist extends Model
 
     protected $fillable = ['name_playlist', 'is_public', 'user_id'];
 
-    // Relación con las canciones guardadas
-    public function songs()
-    {
-        return $this->belongsToMany(SongSavedDb::class, 'saved_songs', 'playlist_id', 'songs_saved_db_id');
-    }
+    public function savedSongs()
+{
+    return $this->hasMany(SavedSong::class, 'playlist_id');
+}
 
-    public function user()
+public function songs()
+{
+    return $this->belongsToMany(SongSavedDb::class, 'saved_songs', 'playlist_id', 'songs_saved_db_id');
+}
+
+public function user()
 {
     return $this->belongsTo(User::class, 'user_id');
 }
+
 
 
 
