@@ -1,7 +1,7 @@
 import { Injectable, signal, effect } from '@angular/core';
 import { Track } from '../models/track/track.model';
 import { HistoryService } from './history.service';
-import { RecommendedSongsService } from './recommended-songs.service'; // ✅ NUEVO IMPORT
+import { RecommendedSongsService } from './recommended-songs.service';
 
 type RepeatMode = 'off' | 'all' | 'one';
 
@@ -19,7 +19,7 @@ interface PersistedState {
 @Injectable({ providedIn: 'root' })
 export class PlayerService {
   private readonly LS_KEY = 'player.state.v1';
-  private readonly BASE = 'http://localhost:8000'; // si usás proxy /media, podés removerlo
+  private readonly BASE = 'http://localhost:8000';
 
   private audio = new Audio();
 
@@ -33,13 +33,13 @@ export class PlayerService {
   private _repeat      = signal<RepeatMode>('off');
 
   private _muted   = signal<boolean>(false);
-  private _volume  = signal<number>(1);     // 0..1
-  private _time    = signal<number>(0);     // seconds
-  private _dur     = signal<number>(0);     // seconds
+  private _volume  = signal<number>(1);
+  private _time    = signal<number>(0);
+  private _dur     = signal<number>(0);
 
   constructor(
     private history: HistoryService,
-    private recommendedSongsService: RecommendedSongsService // ✅ NUEVO
+    private recommendedSongsService: RecommendedSongsService
   ) {
     this.restore();
 
@@ -290,8 +290,6 @@ export class PlayerService {
   private resolve(url: string): string {
     if (!url) return '';
     if (/^https?:\/\//i.test(url)) return url;
-    // si en dev usás proxy, podrías devolver url tal cual:
-    // return url;
     return `${this.BASE}${url.startsWith('/') ? '' : '/'}${url}`;
   }
 
@@ -344,30 +342,91 @@ private incrementGenreForTrack(track: any): void {
     });
 }
 
-  // ✅ NUEVO: Método para formatear géneros
+  // ✅ NUEVO: Método para formatear géneros según tu BD
   private formatGenre(genre: string): string | null {
+    if (!genre) return null;
+    
     const genreMap: { [key: string]: string } = {
+      // Mapeo directo a tus 5 géneros principales
       'rock': 'rock',
       'pop': 'pop', 
       'tropical': 'tropical',
       'blues': 'blues',
       'rap': 'rap',
+      
+      // Sinónimos y variaciones para ROCK
+      'punk': 'rock',
+      'metal': 'rock',
+      'alternative': 'rock',
+      'hard rock': 'rock',
+      'classic rock': 'rock',
+      'grunge': 'rock',
+      'indie rock': 'rock',
+      
+      // Sinónimos y variaciones para POP
+      'electronic': 'pop',
+      'dance': 'pop',
+      'synthpop': 'pop',
+      'electropop': 'pop',
+      'indie': 'pop',
+      'indie pop': 'pop',
+      'britpop': 'pop',
+      
+      // Sinónimos y variaciones para TROPICAL
+      'latin': 'tropical',
+      'reggae': 'tropical',
+      'reggaeton': 'tropical',
+      'salsa': 'tropical',
+      'merengue': 'tropical',
+      'bachata': 'tropical',
+      'cumbia': 'tropical',
+      'samba': 'tropical',
+      'bossanova': 'tropical',
+      'tropical house': 'tropical',
+      'caribbean': 'tropical',
+      
+      // Sinónimos y variaciones para BLUES
+      'r&b': 'blues',
+      'rhythm and blues': 'blues',
+      'soul': 'blues',
+      'jazz': 'blues',
+      'funk': 'blues',
+      'gospel': 'blues',
+      'classical': 'blues',
+      'acoustic': 'blues',
+      'folk': 'blues',
+      'country': 'blues',
+      'bluegrass': 'blues',
+      
+      // Sinónimos y variaciones para RAP
       'hip hop': 'rap',
       'hip-hop': 'rap',
-      'punk': 'rock',
-      'electronic': 'pop',
-      'r&b': 'blues',
-      'jazz': 'blues',
-      'classical': 'blues',
-      'reggae': 'tropical',
-      'metal': 'rock',
-      'latin': 'tropical',      
-      'alternative': 'rock',    
-      'indie': 'pop'           
+      'trap': 'rap',
+      'drill': 'rap',
+      'grime': 'rap',
+      'boom bap': 'rap',
+      'old school rap': 'rap'
     };
+
+    // Normalizar el género de entrada (minúsculas, sin espacios extras)
+    const normalizedGenre = genre.toLowerCase().trim();
     
-    const lowerGenre = genre.toLowerCase().trim();
-    return genreMap[lowerGenre] || null;
+    // Buscar en el mapeo
+    const mappedGenre = genreMap[normalizedGenre];
+    
+    // Si no encuentra mapeo directo, buscar por coincidencia parcial
+    if (!mappedGenre) {
+      for (const [key, value] of Object.entries(genreMap)) {
+        if (normalizedGenre.includes(key) || key.includes(normalizedGenre)) {
+          return value;
+        }
+      }
+      
+      // Si no hay coincidencia, devolver null
+      return null;
+    }
+    
+    return mappedGenre;
   }
 
   private persist() {

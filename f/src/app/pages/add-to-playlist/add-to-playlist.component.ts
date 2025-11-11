@@ -5,6 +5,7 @@ import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { AddToPlaylistService } from '../../services/add-to-playlist.service';
 import { PlaylistService } from '../../services/playlist.service';
 import { PlaylistEventService } from '../../services/playlist-event.service';
+import { AlertService } from '../../services/alert.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -18,6 +19,7 @@ export class AddToPlaylistComponent implements OnInit, OnDestroy {
   private addToPlaylistService = inject(AddToPlaylistService);
   private playlistService = inject(PlaylistService);
   private playlistEventService = inject(PlaylistEventService);
+  private alertService: AlertService = inject(AlertService);
 
   // Acceso a las señales del servicio
   showModal = this.addToPlaylistService.showModal$;
@@ -64,12 +66,8 @@ export class AddToPlaylistComponent implements OnInit, OnDestroy {
     const playlistId = this.selectedPlaylistId();
     const song = this.addToPlaylistService.getCurrentSong();
 
-    console.log('🔧 Datos para agregar:', { playlistId, song });
-
     if (!playlistId || !song) {
-      const errorMsg = 'Selecciona una playlist y una canción';
-      console.error('❌ Error de validación:', errorMsg);
-      this.addToPlaylistService.error.set(errorMsg);
+      this.alertService.showError('Error', 'Selecciona una playlist y una canción');
       return;
     }
 
@@ -77,27 +75,25 @@ export class AddToPlaylistComponent implements OnInit, OnDestroy {
     this.successMessage = '';
     this.addToPlaylistService.error.set(null);
 
-    console.log('📤 Enviando solicitud al servidor...');
-
     this.playlistService.addSongToPlaylist(playlistId, song.id).subscribe({
       next: (response) => {
         console.log('✅ Respuesta del servidor:', response);
         this.addingToPlaylist = false;
-        this.successMessage = `"${song.name_song}" agregada a la playlist exitosamente`;
+        
+        // 🔥 CORREGIDO: Cerrar el modal inmediatamente y luego mostrar el toast
+        this.closeModal();
+        
+        // Mostrar toast de confirmación (se auto-cierra)
+        this.alertService.showSuccess(
+          'Canción agregada',
+          `"${song.name_song}" se agregó a la playlist exitosamente`
+        );
         
         // Notificar que se guardó una playlist
         this.playlistEventService.notifyPlaylistSaved();
-
-        setTimeout(() => {
-          this.closeModal();
-        }, 2000);
       },
       error: (error) => {
         console.error('❌ Error completo:', error);
-        console.error('❌ Status:', error.status);
-        console.error('❌ Error message:', error.message);
-        console.error('❌ Error response:', error.error);
-        
         this.addingToPlaylist = false;
         
         let errorMessage = 'Error al agregar la canción a la playlist';
@@ -114,8 +110,7 @@ export class AddToPlaylistComponent implements OnInit, OnDestroy {
           errorMessage = error.error.message;
         }
         
-        console.error('❌ Mensaje de error final:', errorMessage);
-        this.addToPlaylistService.error.set(errorMessage);
+        this.alertService.showError('Error', errorMessage);
       }
     });
   }

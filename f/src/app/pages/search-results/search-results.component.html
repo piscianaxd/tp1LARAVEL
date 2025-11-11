@@ -14,8 +14,9 @@
           <i class="bi bi-music-note-beamed me-1"></i>
           Canciones ({{ songResults.length }})
         </h6>
-        <button type="button" class="btn btn-sm btn-outline-primary"
-                (click)="playAll()">
+
+        <!-- acción estilo link/ghost -->
+        <button type="button" class="ghost-action" (click)="playAll()">
           <i class="bi bi-play-fill me-1"></i> Reproducir todo
         </button>
       </div>
@@ -39,20 +40,15 @@
             </div>
           </div>
 
-          <!-- Acciones al extremo derecho -->
+          <!-- Acciones minimalistas a la derecha -->
           <div class="ms-auto d-flex align-items-center gap-2">
-            <button type="button" class="btn btn-sm btn-light"
+            <button type="button" class="icon-ghost"
                     title="Reproducir"
                     (click)="play(song); $event.stopPropagation()">
               <i class="bi bi-play-fill"></i>
             </button>
-            <!-- (Opcional) Ver detalles del tema -->
-            <a class="btn btn-sm btn-outline-secondary"
-               [routerLink]="['/songs', song.id]"
-               (click)="$event.stopPropagation()"
-               title="Ver detalles">
-              <i class="bi bi-arrow-right"></i>
-            </a>
+
+
           </div>
         </div>
       </div>
@@ -67,7 +63,8 @@
       <div class="result-item"
            *ngFor="let playlist of playlistResults"
            [routerLink]="['/playlists', playlist.id]"
-           (click)="onResultClick()">
+           (click)="onResultClick()"
+           role="link" tabindex="0">
         <div class="item-icon">
           <i class="bi bi-list-ul"></i>
         </div>
@@ -89,8 +86,7 @@
       </h6>
       <div class="result-item"
            *ngFor="let artist of artistResults"
-           role="button"
-           tabindex="0"
+           role="button" tabindex="0"
            (click)="searchByArtist(artist.name); onResultClick()"
            (keydown.enter)="searchByArtist(artist.name); onResultClick()">
         <div class="item-icon">
@@ -109,22 +105,5 @@
       <p>No se encontraron resultados</p>
       <small>Intenta con otros términos de búsqueda</small>
     </div>
-
-    <!-- Ver todos -->
-    <div class="view-all-section" *ngIf="!isLoading && !hasNoResults && currentSearchTerm">
-      <div class="result-item view-all"
-           [routerLink]="['/search']"
-           [queryParams]="{ q: currentSearchTerm }"
-           (click)="onResultClick()">
-        <div class="item-icon">
-          <i class="bi bi-arrow-right"></i>
-        </div>
-        <div class="item-info">
-          <div class="item-name">Ver todos los resultados</div>
-          <div class="item-details">Buscar "{{ currentSearchTerm }}" en toda la aplicación</div>
-        </div>
-      </div>
-    </div>
-
   </div>
 </div>

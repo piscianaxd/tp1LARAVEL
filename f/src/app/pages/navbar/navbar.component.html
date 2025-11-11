@@ -1,51 +1,50 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark"
+     [class.with-rail]="esDashboard()">
   <div class="container-fluid d-flex justify-content-between align-items-center">
+    <!-- botón hamburguesa + marca -->
+    <div class="d-flex align-items-center">
+      <!-- Logo -->
+      <a class="navbar-brand" routerLink="/dashboard" (click)="scrollToTop()">
+        <i class="bi bi-soundwave navbar-brand-icon"></i>Musify
+      </a>
+    </div>
 
-    <!-- Logo a la izquierda -->
-    <a class="navbar-brand fw-bold me-3" routerLink="/dashboard" (click)="scrollToTop()" style="text-decoration: none;">
-      <i class="bi bi-soundwave me-2"></i>Musify <!-- ✅ Agregado me-2 -->
-    </a>
     
     <!-- Buscador centrado -->
     <div class="d-flex justify-content-center flex-grow-1 mx-3 position-relative">
-      <div class="search-container" style="min-width: 400px; max-width: 600px;">
+      <div class="search-container">
         <div class="input-group">
-          <span class="input-group-text bg-secondary border-secondary">
-            <i class="bi bi-search text-white"></i>
+          <span class="input-group-text">
+            <i class="bi bi-search"></i>
           </span>
           <input
-            class="form-control border-secondary"
+            class="form-control"
             type="search"
             [(ngModel)]="searchTerm"
             [placeholder]="placeholder"
             (input)="onSearch()"
             (focus)="onSearchFocus()"
             (blur)="onSearchBlur()"
+            (click)="showResults()"
             aria-label="Buscar canciones, playlists y artistas">
-          @if (searchTerm) {
-            <button class="btn btn-outline-secondary" type="button" (click)="clearSearch()">
-              <i class="bi bi-x-lg"></i>
-            </button>
-          }
         </div>
-        <app-search-results></app-search-results>
+        
+        <!-- Mostrar resultados solo cuando showSearchResults es true -->
+        @if (showSearchResults) {
+          <app-search-results></app-search-results>
+        }
       </div>
     </div>
 
     <!-- Botones a la derecha -->
     <div class="d-flex align-items-center gap-3">
       
-      <!-- NO agregar botón de crear playlist aquí -->
-      <!-- Tus playlists se crean desde AutoPlaylistsComponent -->
-
       <!-- Información de usuario - ahora abre modal de perfil -->
-      <div class="user-info d-flex align-items-center">
-        <div class="user-avatar bg-primary rounded-circle d-flex align-items-center justify-content-center me-2"
-            style="width: 32px; height: 32px;">
-          <i class="bi bi-person-fill text-white"></i>
+      <div class="user-info">
+        <div class="user-avatar">
+          <i class="bi bi-person-fill"></i>
         </div>
-        <button class="user-link text-white text-decoration-none border-0 bg-transparent"
-                (click)="openProfileModal()">
+        <button class="user-link" (click)="openProfileModal()">
           {{ usuarioActual }}
         </button>
       </div>
@@ -53,7 +52,15 @@
   </div>
 </nav>
 
-<!-- Solo agregar el modal de perfil -->
+<!-- Modal de perfil -->
 @if (showProfileModal) {
   <app-profile-modal (close)="closeProfileModal()"></app-profile-modal>
+}
+
+<!-- ✅ Sidebar Menu CORREGIDO -->
+@if (showSidebar) {
+  <app-sidebar 
+    (closeSidebar)="closeSidebar()" 
+    [isOpen]="showSidebar">
+  </app-sidebar>
 }
