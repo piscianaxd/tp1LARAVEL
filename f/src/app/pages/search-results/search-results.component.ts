@@ -16,7 +16,7 @@ import { SearchableItem } from '../../services/search.service';
   styleUrls: ['./search-results.component.css']
 })
 export class SearchResultsComponent implements OnInit, OnDestroy {
-  songResults: SearchableItem[] = []; // tipado correcto
+  songResults: SearchableItem[] = [];
   playlistResults: any[] = [];
   artistResults: any[] = [];
   showResults = false;
@@ -69,11 +69,10 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
   performSearch(term: string) {
     this.isLoading = true;
     this.showResults = true;
-    
-    // ✅ USAR EL NUEVO MÉTODO DEL SERVICIO
+
     this.searchService.searchInDatabase(term).subscribe({
       next: (response: any) => {
-        // ✅ Asignar datos reales desde los endpoints
+        // Asignar datos reales desde los endpoints
         this.songResults = response.songs || [];
         this.playlistResults = response.playlists || [];
         this.artistResults = response.artists || [];
@@ -89,54 +88,8 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
         this.isLoading = false;
         this.hasNoResults = true;
         
-        // ✅ Fallback a datos mock si todo falla
-        this.useMockDataAsFallback(term);
       }
     });
-  }
-
-  private useMockDataAsFallback(term: string) {
-    const mockSongs = this.getMockSongs();
-    const mockPlaylists = this.getMockPlaylists();
-    
-    const results = this.searchService.searchMusic(mockSongs, mockPlaylists, term);
-    this.songResults = results.songs.slice(0, 5);
-    this.playlistResults = results.playlists.slice(0, 5);
-    this.artistResults = results.artists.slice(0, 5);
-    
-    this.hasNoResults = this.songResults.length === 0 && 
-                       this.playlistResults.length === 0 && 
-                       this.artistResults.length === 0;
-  }
-
-  private getMockSongs() {
-    return [
-      { 
-        id: 1, 
-        name_song: 'Bohemian Rhapsody', 
-        artist_song: 'Queen', 
-        album_song: 'A Night at the Opera', 
-        genre_song: 'Rock'
-      },
-      { 
-        id: 2, 
-        name_song: 'Blinding Lights', 
-        artist_song: 'The Weeknd', 
-        album_song: 'After Hours', 
-        genre_song: 'Pop'
-      }
-    ];
-  }
-
-  private getMockPlaylists() {
-    return [
-      { 
-        id: 1, 
-        name_playlist: 'Rock Clásico', 
-        is_public: true, 
-        song_count: 25
-      }
-    ];
   }
 
   searchByArtist(artistName: string) {

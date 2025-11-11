@@ -37,7 +37,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    // 🔥 MODIFICADO: Solo escuchar búsqueda del dashboard, NO global
     this.searchSubscription = this.searchService.dashboardSearchTerm$.subscribe(term => {
       if (term !== this.searchTerm) {
         this.searchTerm = term;
@@ -45,7 +44,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     });
 
-    // 🔥 NUEVO: Configurar el componente actual para el servicio de búsqueda
     this.searchService.setCurrentComponent('dashboard');
   }
 
@@ -53,19 +51,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.searchSubscription) {
       this.searchSubscription.unsubscribe();
     }
-    // 🔥 NUEVO: Limpiar el componente actual
     this.searchService.setCurrentComponent('');
   }
 
   onSearchChange() {
-    // 🔥 MODIFICADO: Solo usar búsqueda del dashboard
     this.searchService.setDashboardSearchTerm(this.searchTerm);
     this.performSearch();
   }
 
   clearSearch() {
     this.searchTerm = '';
-    // 🔥 MODIFICADO: Solo limpiar búsqueda del dashboard
     this.searchService.clearDashboardSearch();
     this.filteredCards = this.cards;
   }
