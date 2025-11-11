@@ -1,588 +1,185 @@
-// components/auto-playlist/auto-playlist.component.ts
-import { Component, OnInit, signal, computed, inject, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RandomTrackService, Song } from '../../services/random-track.service';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
-import { HttpErrorResponse } from '@angular/common/http';
-import { PlaylistService } from '../../services/playlist.service';
-import { PlaylistEventService } from '../../services/playlist-event.service';
-import { AddToPlaylistService } from '../../services/add-to-playlist.service';
-import { TrackContextComponent } from '../track-context/track-context.component';
 import { PlayerService } from '../../services/player.service';
-import { songToTrack } from '../../helpers/adapters';
-import { Track } from '../../models/track/track.model';
-import { dtoToTrack } from '../../helpers/adapters';
 import { PlayerEventsService } from '../../services/player-events.service';
+import { PlaylistService } from '../../services/playlist.service'; // ← AÑADIR
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { dtoToTrack } from '../../helpers/adapters';
+import { Track } from '../../models/track/track.model';
 
-
-interface AutoPlaylist {
-  id?: number;
-  name: string;
-  description: string;
-  songs: Song[];
-  isGenerated: boolean;
-  genre?: string;
-  isPersistent?: boolean;
-  currentPage?: number;
+interface Song {
+  id: number;
+  name_song: string;
+  artist_song: string;
+  album_song: string;
+  art_work_song: string;
+  duration: number;
 }
 
 @Component({
   selector: 'app-cover-player',
   standalone: true,
-  imports: [CommonModule, MediaUrlPipe, TrackContextComponent],
+  imports: [CommonModule, MediaUrlPipe],
   templateUrl: './cover-player.component.html',
   styleUrls: ['./cover-player.component.css']
 })
-export class coverplayerComponent implements OnInit {
-  loading = signal(true);
-  error = signal<string | null>(null);
-  playlists = signal<AutoPlaylist[]>([]);
-  creatingPlaylist = signal<string | null>(null);
-  
-  selectedPlaylist = signal<AutoPlaylist | null>(null);
+export class CoverplayerComponent implements OnInit, OnDestroy {
+  selectedPlaylist = signal<any>(null);
   showPlaylistDetail = signal(false);
-
-  popularPlaylist = signal<AutoPlaylist | undefined>(undefined);
-  popularPlaylistPage = signal(0);
-  
-  // ✅ Señales para guardar playlists automáticas
-  savingPlaylist = signal(false);
-  savedPlaylists = signal<Set<string>>(new Set());
-  
-  showContextMenu = signal(false);
-  contextMenuPosition = signal({ x: 0, y: 0 });
-  selectedTrackForContextMenu = signal<Song | null>(null);
-
-  testBoton() {
-    console.log('🎯 BOTÓN FUNCIONA!!!');
-  }
-
-  // ✅ AGREGAR openFirstPlaylist AQUÍ (justo después de testBoton)
-  openFirstPlaylist() {
-    console.log('🎯 openFirstPlaylist EJECUTADO');
-    console.log('📀 Playlists disponibles:', this.playlists().length);
-    console.log('📀 Playlists data:', this.playlists());
-    console.log('🔄 Loading state:', this.loading());
-    console.log('❌ Error state:', this.error());
-    
-    if (this.playlists().length > 0) {
-      console.log('✅ Hay playlists - intentando abrir la primera');
-      const primeraPlaylist = this.playlists()[0];
-      console.log('📋 Primera playlist:', primeraPlaylist);
-      
-      this.selectedPlaylist.set(primeraPlaylist);
-      this.showPlaylistDetail.set(true);
-      
-      console.log('🎉 Vista detallada activada');
-      console.log('selectedPlaylist:', this.selectedPlaylist());
-      console.log('showPlaylistDetail:', this.showPlaylistDetail());
-    } else {
-      console.log('❌ No hay playlists disponibles');
-      
-      // Forzar una playlist de prueba
-      console.log('🔄 Creando playlist de prueba...');
-      const playlistTest: AutoPlaylist = {
-        name: 'PLAYLIST DE PRUEBA',
-        description: 'Esto es una prueba',
-        songs: [],
-        isGenerated: true
-      };
-      this.selectedPlaylist.set(playlistTest);
-      this.showPlaylistDetail.set(true);
-      console.log('🎉 Vista de prueba activada');
-    }
-  }
-
-  // ✅ Señal computada para páginas máximas
-  popularPlaylistMaxPages = computed(() => {
-    const playlist = this.popularPlaylist();
-    if (!playlist?.songs) return 1;
-    return Math.ceil(playlist.songs.length / this.POPULAR_PAGE_SIZE);
-  });
-
-  playlistPage = signal(0);
-  playlistMaxPages = signal(0);
-
-  // ✅ CONSTANTE para el tamaño de página
-  readonly POPULAR_PAGE_SIZE = 6;
-
-  // ✅ NUEVAS señales para guardar playlist
-  popularPlaylistSaved = signal(false);
-  savingPopularPlaylist = signal(false);
-
-  private playlistService = inject(PlaylistService);
-  private playlistEventService = inject(PlaylistEventService);
-  private addToPlaylistService = inject(AddToPlaylistService);
-  private playerEvents = inject(PlayerEventsService);
-  private player: PlayerService = inject(PlayerService);
-
-  @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
-
-  constructor(
-    private randomTrackService: RandomTrackService
-  ) {}
-
-  ngOnInit(): void {
-    this.generateAutoPlaylists();
-    this.loadPopularPlaylist();
-
-    this.playerEvents.openCoverPlayer$.subscribe(() => {
-    console.log('📢 Evento recibido - abriendo cover player');
-    this.openFirstPlaylist();
-  });
-  }
-
-  // 1) Type guard para detectar la forma anidada
-isNested(pl: any): pl is { songs: { song: Song }[] } {
-  return !!pl && Array.isArray(pl.songs) && pl.songs.length > 0 && 'song' in pl.songs[0];
-}
-
-  // ✅ NUEVO: Método para guardar playlist automática
-  saveAutoPlaylist(playlist: AutoPlaylist): void {
-    if (this.savingPlaylist() || this.isPlaylistSaved(playlist)) {
-      return;
-    }
-
-    this.savingPlaylist.set(true);
-    console.log('💾 Guardando playlist automática:', playlist.name);
-
-    const playlistData = {
-      name_playlist: playlist.name,
-      is_public: true,
-      songs: playlist.songs.map(song => ({
-        id: song.id,
-        name_song: song.name_song,
-        artist_song: song.artist_song,
-        album_song: song.album_song || '',
-        art_work_song: song.art_work_song || '',
-        genre_song: song.genre_song || '',
-        url_song: song.url_song || ''
-      }))
-    };
-
-    // Simulación de guardado instantáneo
-    setTimeout(() => {
-      console.log('✅ Playlist guardada instantáneamente:', playlist.name);
-    }, 0);
-
-    // Llamada real al servidor
-    this.playlistService.createPlaylist(playlistData).subscribe({
-      next: (response: any) => {
-        console.log('✅ Playlist confirmada en servidor:', response);
-        this.savingPlaylist.set(false);
-        
-        // Marcar como guardada usando el nombre como identificador único
-        const currentSaved = new Set(this.savedPlaylists());
-        currentSaved.add(playlist.name);
-        this.savedPlaylists.set(currentSaved);
-        
-        this.error.set(null);
-        
-        // Emitir evento después de guardar exitosamente
-        this.playlistEventService.notifyPlaylistSaved();
-        console.log('🔄 Evento de playlist guardada emitido');
-      },
-      error: (err: HttpErrorResponse) => {
-        console.error('❌ Error guardando playlist:', err);
-        this.savingPlaylist.set(false);
-        this.error.set(`Error al guardar la playlist ${playlist.name}`);
-      }
-    });
-  }
-
-  // ✅ NUEVO: Verificar si playlist está guardada
-  isPlaylistSaved(playlist: AutoPlaylist): boolean {
-    return this.savedPlaylists().has(playlist.name);
-  }
-
-  // ✅ NUEVO: Obtener ícono para botón de guardar
-  getSaveButtonIcon(playlist: AutoPlaylist): string {
-    if (this.savingPlaylist()) {
-      return 'bi-arrow-repeat loading';
-    }
-    return this.isPlaylistSaved(playlist) ? 'bi-check-lg' : 'bi-plus-lg';
-  }
-
-  // ✅ NUEVO: Obtener texto para botón de guardar
-  getSaveButtonText(playlist: AutoPlaylist): string {
-    if (this.savingPlaylist()) {
-      return 'Guardando...';
-    }
-    return this.isPlaylistSaved(playlist) ? 'Guardada' : 'Guardar';
-  }
-
-  // ✅ NUEVO: Método para formatear duración de canciones
-  formatDuration(seconds: number): string {
-    if (!seconds) return '0:00';
-    
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  }
-
-  // ✅ NUEVO: Obtener imagen de cover para vista detallada
-  getCoverImageForDetail(playlist: AutoPlaylist): string | null {
-    return this.getCoverImage(playlist);
-  }
-
-  // ✅ NUEVO: Obtener conteo de canciones para vista detallada
-  getSongCountForDetail(playlist: AutoPlaylist): string {
-    return this.getSongCount(playlist);
-  }
-
-  // ✅ NUEVO: Reproducir canción desde vista detallada
-  playSongFromDetail(song: Song, event?: Event): void {
-    this.playSong(song, event || new Event('click'));
-  }
-
-  // ✅ NUEVO: Cerrar vista detallada
-  closePlaylistDetail(): void {
-    this.closePlaylist();
-  }
-
-  // ✅ NUEVO: Verificar si hay canciones en playlist seleccionada
-  hasSongsInSelectedPlaylist(): boolean {
-    const playlist = this.selectedPlaylist();
-    return !!(playlist?.songs && playlist.songs.length > 0);
-  }
-
-  // ✅ NUEVO: Obtener canciones de playlist seleccionada
-  getSelectedPlaylistSongs(): Song[] {
-    const playlist = this.selectedPlaylist();
-    return playlist?.songs || [];
-  }
-
-  // ✅ NUEVO: Verificar si hay muchas canciones para mostrar indicador
-  shouldShowMoreTracksIndicator(): boolean {
-    const playlist = this.selectedPlaylist();
-    return !!(playlist?.songs && playlist.songs.length > 8);
-  }
-
-  // ✅ NUEVO: Obtener metadata de playlist seleccionada
-  getSelectedPlaylistMeta(): string {
-    const playlist = this.selectedPlaylist();
-    if (!playlist) return '';
-    
-    const count = this.getSongCount(playlist);
-    return `${count} • Playlist automática • Generada por IA`;
-  }
-
-  // ✅ MÉTODOS EXISTENTES (se mantienen igual)
-  loadPopularPlaylist() {
-    this.randomTrackService.getRandomSongs(18).subscribe({
-      next: (response) => {
-        const popularSongs = response.songs || [];
-        
-        this.popularPlaylist.set({
-          name: 'Mix de Populares',
-          description: 'Las canciones más populares de la plataforma',
-          songs: popularSongs,
-          isGenerated: true,
-          isPersistent: true,
-          currentPage: 0
-        });
-      },
-      error: (err) => {
-        console.error('Error loading popular playlist:', err);
-        this.popularPlaylist.set(undefined);
-      }
-    });
-  }
-
-  openAddToPlaylist(song: Song, event?: Event) {
-    if (event) {
-      event.stopPropagation();
-    }
-    console.log('🎵 Abriendo modal para agregar a playlist:', song.name_song);
-    this.addToPlaylistService.openModal(song);
-  }
-
-  savePopularPlaylist() {
-    const popular = this.popularPlaylist();
-    if (!popular?.songs || popular.songs.length === 0) {
-      console.error('❌ No hay canciones en el Mix Popular para guardar');
-      return;
-    }
-
-    if (this.isPopularPlaylistSaved()) {
-      console.log('ℹ️ La playlist ya está guardada');
-      return;
-    }
-
-    this.savingPopularPlaylist.set(true);
-    console.log('💾 Guardando Mix Popular como playlist...');
-
-    const playlistData = {
-      name_playlist: 'Mix Popular - Favoritas',
-      is_public: true,
-      songs: popular.songs.map(song => ({
-        id: song.id,
-        name_song: song.name_song,
-        artist_song: song.artist_song,
-        album_song: song.album_song || '',
-        art_work_song: song.art_work_song || '',
-        genre_song: song.genre_song || '',
-        url_song: song.url_song || ''
-      }))
-    };
-
-    console.log('📤 Enviando playlist con canciones:', playlistData);
-
-    // Simulación de guardado instantáneo
-    setTimeout(() => {
-      console.log('✅ Playlist guardada instantáneamente: Mix Popular');
-    }, 0);
-
-    // Llamada real al servidor
-    this.playlistService.createPlaylist(playlistData).subscribe({
-      next: (response: any) => {
-        console.log('✅ Mix Popular confirmado en servidor:', response);
-        this.savingPopularPlaylist.set(false);
-        this.popularPlaylistSaved.set(true);
-        this.error.set(null);
-        
-        // Emitir evento después de guardar exitosamente
-        this.playlistEventService.notifyPlaylistSaved();
-        console.log('🔄 Evento de playlist guardada emitido');
-      },
-      error: (err: HttpErrorResponse) => {
-        console.error('❌ Error guardando Mix Popular:', err);
-        this.savingPopularPlaylist.set(false);
-        this.error.set('Error al guardar el Mix Popular');
-      }
-    });
-  }
-
-  isPopularPlaylistSaved(): boolean {
-    return this.popularPlaylistSaved();
-  }
-
-  getSavePopularButtonState(): string {
-    if (this.savingPopularPlaylist()) {
-      return 'saving';
-    }
-    return this.popularPlaylistSaved() ? 'saved' : 'unsaved';
-  }
-
-  getSavePopularButtonIcon(): string {
-    const state = this.getSavePopularButtonState();
-    
-    switch (state) {
-      case 'saving':
-        return 'bi-arrow-repeat loading';
-      case 'saved':
-        return 'bi-check-lg';
-      default:
-        return 'bi-plus-lg';
-    }
-  }
-
-  getPopularColumns(): Song[][] {
-    const list = this.getCurrentPopularSongs();
-    const COLS = 3;
-    const colSize = Math.ceil((list.length || 1) / COLS);
-    return Array.from({ length: COLS }, (_, i) => 
-      list.slice(i * colSize, (i + 1) * colSize)
-    );
-  }
-
-  getPopularCoverImage(): string {
-    const popular = this.popularPlaylist();
-    if (popular?.songs && popular.songs.length > 0 && popular.songs[0]?.art_work_song) {
-      return popular.songs[0].art_work_song;
-    }
-    return '';
-  }
-
-  getCurrentPopularSongs(): Song[] {
-    const playlist = this.popularPlaylist();
-    if (!playlist?.songs || playlist.songs.length === 0) return [];
-    
-    const startIndex = this.popularPlaylistPage() * this.POPULAR_PAGE_SIZE;
-    return playlist.songs.slice(startIndex, startIndex + this.POPULAR_PAGE_SIZE);
-  }
-
-  canGoNextPopular(): boolean {
-    const playlist = this.popularPlaylist();
-    if (!playlist?.songs || playlist.songs.length === 0) return false;
-    return this.popularPlaylistPage() < this.popularPlaylistMaxPages() - 1;
-  }
-
-  canGoPrevPopular(): boolean {
-    return this.popularPlaylistPage() > 0;
-  }
-
-  nextPopularPage() {
-    const nextPage = this.popularPlaylistPage() + 1;
-    if (nextPage < this.popularPlaylistMaxPages()) {
-      this.popularPlaylistPage.set(nextPage);
-    }
-  }
-
-  prevPopularPage() {
-    const prevPage = this.popularPlaylistPage() - 1;
-    if (prevPage >= 0) {
-      this.popularPlaylistPage.set(prevPage);
-    }
-  }
-
-  openPopularPlaylist() {
-    const popular = this.popularPlaylist();
-    if (popular?.songs && popular.songs.length > 0) {
-      this.selectedPlaylist.set(popular);
-      this.showPlaylistDetail.set(true);
-    }
-  }
-
-
-
-  getPopularSongCount(): string {
-    const popular = this.popularPlaylist();
-    if (!popular?.songs || popular.songs.length === 0) return '0 canciones';
-    const count = popular.songs.length;
-    return count === 1 ? '1 canción' : `${count} canciones`;
-  }
-
-
-
   noImg = new Set<number>();
   
-  bust(id: number) {
-    return `?v=${id}`;
+  private destroy$ = new Subject<void>();
+  private playerEvents = inject(PlayerEventsService);
+  private player: PlayerService = inject(PlayerService);
+  private playlistService = inject(PlaylistService); // ← INYECTAR SERVICIO
+
+  ngOnInit(): void {
+    this.playerEvents.openCoverPlayer$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      console.log('📢 Evento recibido - abriendo cover player');
+      this.openWithPlaylist(); // ← Usar el nuevo método
+    });
+
+    this.setupSongChangeListener();
   }
 
-  onImgError(ev: Event, song: Song) {
-    this.noImg.add(song.id);
-    console.warn('IMG ERROR:', song.art_work_song, (ev.target as HTMLImageElement).currentSrc);
-  }
+  // NUEVO MÉTODO: Cargar playlist específica
+    openWithPlaylist() {
+      console.log('🎵 Cargando TODAS las playlists para buscar ID=1...');
+      
+      this.playlistService.getPlaylists().subscribe({
+        next: (response: any) => {
+          console.log('📀 RESPUESTA COMPLETA:', response);
+        
+        // Ver la estructura de la respuesta (igual que en tu playlist component)
+        let playlistsData: any[] = [];
+        
+        if (Array.isArray(response)) {
+          playlistsData = response;
+        } else if (response && Array.isArray(response.data)) {
+          playlistsData = response.data;
+        } else if (response && Array.isArray(response.playlists)) {
+          playlistsData = response.playlists;
+        }
 
-  getCoverImage(playlist: AutoPlaylist): string {
-    if (playlist.songs.length > 0 && playlist.songs[0].art_work_song) {
-      return playlist.songs[0].art_work_song;
-    }
-    return '';
-  }
+        console.log('📀 Playlists encontradas:', playlistsData.length);
+        
+        // Buscar la playlist con ID = 1
+        const playlist1 = playlistsData.find(p => p.id === 1);
+        console.log('🎯 Playlist ID=1:', playlist1);
 
-  getSongCount(playlist: AutoPlaylist): string {
-    const count = playlist.songs.length;
-    return count === 1 ? '1 canción' : `${count} canciones`;
-  }
+        if (playlist1 && playlist1.songs) {
+          console.log('🎵 Canciones de playlist 1:', playlist1.songs);
+          
+          // Transformar las canciones al formato que espera tu template
+          const songsList = playlist1.songs.map((playlistSong: any) => {
+    const song = playlistSong.song || playlistSong;
+    return {
+        id: song.id,
+        name_song: song.name_song || song.title,
+        artist_song: song.artist_song || song.artist,
+        album_song: song.album_song || song.album || '',
+        art_work_song: song.art_work_song || song.art_work_songs || '',
+        duration: song.duration || 0,
+        genre_song: song.genre_song || 'unknown',
+        url_song: song.url_song || song.url || '' // ← ¡ESTO ES LO MÁS IMPORTANTE!
+    };
+});
 
-  scrollLeft() {
-    this.scrollContainer.nativeElement.scrollBy({ left: -300, behavior: 'smooth' });
-  }
+          const currentPlaylist = {
+            id: playlist1.id,
+            name: playlist1.name_playlist || 'Mi Playlist',
+            description: `Playlist personalizada - ${songsList.length} canciones`,
+            songs: songsList,
+            isGenerated: false
+          };
 
-  scrollRight() {
-    this.scrollContainer.nativeElement.scrollBy({ left: 300, behavior: 'smooth' });
-  }
-
-  canScrollLeft() {
-    return this.scrollContainer?.nativeElement.scrollLeft > 0;
-  }
-
-  canScrollRight() {
-    const el = this.scrollContainer?.nativeElement;
-    return el && el.scrollLeft + el.clientWidth < el.scrollWidth;
-  }
-
-  onScroll() {
-    // Actualizar estado de botones si es necesario
-  }
-
-  generateAutoPlaylists() {
-    this.loading.set(true);
-    this.error.set(null);
-
-    this.randomTrackService.getRandomSongs(50).subscribe({
-      next: (response) => {
-        const allSongs = response.songs;
-        const genres = this.extractGenres(allSongs);
-        this.createGenrePlaylists(genres, allSongs);
-        this.loading.set(false);
+          this.selectedPlaylist.set(currentPlaylist);
+          this.showPlaylistDetail.set(true);
+          console.log('🎉 Cover player abierto con playlist:', songsList.length, 'canciones');
+        } else {
+          console.log('❌ No se encontró playlist ID=1 o no tiene canciones');
+          this.openWithCurrentSong(); // Fallback
+        }
       },
-      error: (err: HttpErrorResponse) => {
-        console.error('Error loading songs:', err);
-        this.error.set('No se pudieron cargar las canciones para generar playlists.');
-        this.loading.set(false);
+      error: (err) => {
+        console.error('❌ Error cargando playlists:', err);
+        this.openWithCurrentSong(); // Fallback a canción actual
       }
     });
   }
 
-  private extractGenres(songs: Song[]): string[] {
-    const genres = new Set<string>();
+  // Resto de tus métodos igual...
+  private setupSongChangeListener() {
+    let previousSongId: number | null = null;
     
-    songs.forEach(song => {
-      if (song.genre_song && song.genre_song.trim()) {
-        const genre = song.genre_song.trim();
-        genres.add(genre);
+    setInterval(() => {
+      if (this.showPlaylistDetail()) {
+        const currentSong = this.player.current();
+        
+        if (currentSong && currentSong.id !== previousSongId) {
+          console.log('🔄 Canción cambiada - actualizando cover player');
+          previousSongId = currentSong.id;
+          this.updateCurrentSong(currentSong);
+        }
       }
-    });
+    }, 1000);
+  }
 
-    if (genres.size === 0) {
-      return ['Rock', 'Pop', 'Jazz', 'Electrónica', 'Hip Hop'];
+  private updateCurrentSong(currentSong: any) {
+    const currentPlaylist = this.selectedPlaylist();
+    
+    if (currentPlaylist && currentPlaylist.songs.length > 0) {
+      const updatedSongs = [...currentPlaylist.songs];
+      updatedSongs[0] = {
+        id: currentSong.id,
+        name_song: currentSong.title,
+        artist_song: currentSong.artist,
+        album_song: currentSong.album || '',
+        art_work_song: currentSong.art_work_songs || '',
+        duration: this.player.duration() || 0
+      };
+      
+      this.selectedPlaylist.update(playlist => ({
+        ...playlist,
+        songs: updatedSongs
+      }));
+    }
+  }
+
+  openWithCurrentSong() {
+    const currentSong = this.player.current();
+    console.log('🎵 Canción actual COMPLETA:', currentSong);
+
+    if (!currentSong) {
+      console.log('❌ No hay canción reproduciéndose');
+      return;
     }
 
-    return Array.from(genres).slice(0, 6);
-  }
+    const songDuration = this.player.duration() || 0;
+    const songsList = [{
+      id: currentSong.id,
+      name_song: currentSong.title,
+      artist_song: currentSong.artist,
+      album_song: currentSong.album || '',
+      art_work_song: currentSong.art_work_songs || '',
+      duration: songDuration,
+ // ← AÑADIDO
+    }];
 
-  private createGenrePlaylists(genres: string[], allSongs: Song[]) {
-    const autoPlaylists: AutoPlaylist[] = [];
-
-    // 1. Crear mix por género
-    genres.forEach(genre => {
-      const genreSongs = allSongs.filter(song => 
-        song.genre_song && song.genre_song.toLowerCase().includes(genre.toLowerCase())
-      ).slice(0, 6);
-
-      if (genreSongs.length > 0) {
-        autoPlaylists.push({
-          name: `${genre} Mix`,
-          description: `Lo mejor del género ${genre}`,
-          songs: genreSongs,
-          isGenerated: true,
-          genre: genre
-        });
-      }
-    });
-
-    // 2. Crear dos mix variados con canciones diferentes
-    this.createVariedMixes(allSongs, autoPlaylists);
-
-    this.playlists.set(autoPlaylists);
-    this.updateMaxPages();
-    console.log(`🎵 Se crearon ${autoPlaylists.length} playlists`);
-  }
-
-  private createVariedMixes(allSongs: Song[], autoPlaylists: AutoPlaylist[]) {
-    const shuffledSongs = [...allSongs].sort(() => Math.random() - 0.5);
-    
-    const varietySongs1 = shuffledSongs.slice(0, 6);
-    
-    autoPlaylists.push({
-      name: 'Mix Más Variado',
-      description: 'Una selección diversa de todos los géneros',
-      songs: varietySongs1,
+    const currentPlaylist = {
+      name: 'Reproduciendo ahora',
+      description: `Canción actual`,
+      songs: songsList,
       isGenerated: true
-    });
+    };
 
-    const varietySongs2 = shuffledSongs.slice(6, 12);
-    
-    if (varietySongs2.length < 6) {
-      const needed = 6 - varietySongs2.length;
-      varietySongs2.push(...shuffledSongs.slice(0, needed));
-    }
-
-    autoPlaylists.push({
-      name: 'Mix para Todo Momento', 
-      description: 'La combinación perfecta para cualquier ocasión',
-      songs: varietySongs2,
-      isGenerated: true
-    });
-  }
-
-  openPlaylist(playlist: AutoPlaylist) {
-    this.selectedPlaylist.set(playlist);
+    this.selectedPlaylist.set(currentPlaylist);
     this.showPlaylistDetail.set(true);
+    console.log('🎉 Cover player abierto con canción actual');
   }
 
   closePlaylist() {
@@ -590,175 +187,86 @@ isNested(pl: any): pl is { songs: { song: Song }[] } {
     this.selectedPlaylist.set(null);
   }
 
-
-
-  private updateMaxPages() {
-    const totalPlaylists = this.playlists().length;
-    this.playlistMaxPages.set(Math.ceil(totalPlaylists / 6));
-  }
-
-  nextPage() {
-    const nextPage = this.playlistPage() + 1;
-    if (nextPage < this.playlistMaxPages()) {
-      this.playlistPage.set(nextPage);
-    }
-  }
-
-  prevPage() {
-    const prevPage = this.playlistPage() - 1;
-    if (prevPage >= 0) {
-      this.playlistPage.set(prevPage);
-    }
-  }
-
-  getCurrentPlaylists(): AutoPlaylist[] {
-    const allPlaylists = this.playlists();
-    const startIndex = this.playlistPage() * 6;
-    return allPlaylists.slice(startIndex, startIndex + 6);
-  }
-
-  canGoNext(): boolean {
-    return (this.playlistPage() + 1) * 6 < this.playlists().length;
-  }
-
-  canGoPrev(): boolean {
-    return this.playlistPage() > 0;
-  }
-
-  playSong(songDto: any, ev?: Event) {
-  if (ev) ev.stopPropagation();
-
-  // armamos la cola con TODAS las canciones visibles de esa playlist
-  const current = this.selectedPlaylist?.() ?? null; // si usás signals
-  const list = current?.songs ?? [];
-
-  const queue: Track[] = list
-    .map((ps: any) => ps?.song)
-    .filter(Boolean)
-    .map(dtoToTrack);
-
-  const currentTrack = dtoToTrack(songDto);
-  this.player.playNow(currentTrack, queue);
-}
-
-getPopularTitle(): string {
-  const p = this.popularPlaylist();
-  // Soporta distintas formas de nombre según de dónde venga el dato
-  return (p as any)?.name_playlist ?? (p as any)?.name ?? 'Mix Popular';
-}
-
-getPopularIsPublic(): boolean | null {
-  const p = this.popularPlaylist();
-  if (!p) return null;
-  // Soporta distintos flags
-  return (p as any)?.is_public ?? (p as any)?.public ?? null;
-}
-
-getPopularCreatedAt(): string | Date | null {
-  const p = this.popularPlaylist();
-  return (p as any)?.created_at ?? null;
-}
-
-
-  // Métodos para el menú contextual
-  onTrackContextMenu(event: MouseEvent, song: Song) {
-    event.preventDefault();
-    event.stopPropagation();
+  playSong(song: any, ev?: Event) {
+    if (ev) ev.stopPropagation();
     
-    this.selectedTrackForContextMenu.set(song);
-    this.contextMenuPosition.set({ x: event.clientX, y: event.clientY });
-    this.showContextMenu.set(true);
+    console.log('🔍 CANCIÓN ORIGINAL:', song);
     
-    setTimeout(() => {
-      document.addEventListener('click', this.closeContextMenuOnClickOutside.bind(this));
-      document.addEventListener('contextmenu', this.closeContextMenuOnRightClick.bind(this));
-    });
-  }
-
-  addToPlaylist(song: Song, event: Event): void {
-    event.stopPropagation(); // Importante para evitar que se propague el click
-
-    this.addToPlaylistService.openModal({
-      id: song.id,
-        name_song: song.name_song,
-        artist_song: song.artist_song,
-        album_song: song.album_song,
-        art_work_song: song.art_work_song
-      });
+    // ✅ VERIFICAR SI TENEMOS LA URL
+    if (!song.url_song) {
+        console.warn('⚠️ Canción sin URL, buscando canción completa...');
+        
+        // Buscar la canción completa en la playlist actual
+        const fullSong = this.findCompleteSong(song.id);
+        if (fullSong && fullSong.url_song) {
+            console.log('✅ Canción completa encontrada:', fullSong);
+            song = fullSong;
+        } else {
+            console.error('❌ No se pudo encontrar la URL de la canción');
+            // Mostrar alerta al usuario
+            alert('No se puede reproducir esta canción: URL no disponible');
+            return;
+        }
     }
-
-  private closeContextMenuOnClickOutside(event: MouseEvent) {
-    const contextMenu = document.querySelector('.context-menu');
-    if (contextMenu && !contextMenu.contains(event.target as Node)) {
-      this.closeContextMenu();
-      this.removeEventListeners();
-    }
-  }
-
-  private closeContextMenuOnRightClick() {
-    this.closeContextMenu();
-    this.removeEventListeners();
-  }
-
-  private removeEventListeners() {
-    document.removeEventListener('click', this.closeContextMenuOnClickOutside.bind(this));
-    document.removeEventListener('contextmenu', this.closeContextMenuOnRightClick.bind(this));
-  }
-
-  closeContextMenu() {
-    this.showContextMenu.set(false);
-    this.selectedTrackForContextMenu.set(null);
-    this.removeEventListeners();
-  }
-
-  onContextMenuPlay() {
-    const song = this.selectedTrackForContextMenu();
-    if (song) {
-      this.playSong(song, new Event('click'));
-    }
-    this.closeContextMenu();
-  }
-
-  onContextMenuAddToPlaylist() {
-    const song = this.selectedTrackForContextMenu();
-    if (song) {
-      this.addToPlaylistService.openModal({
-        id: song.id,
-        name_song: song.name_song,
-        artist_song: song.artist_song,
-        album_song: song.album_song,
-        art_work_song: song.art_work_song,
-        duration: song.duration
-      });
-    }
-    this.closeContextMenu();
-  }
-
-// Acepta plano, anidado, null o undefined
-playPlaylist(
-  pl: AutoPlaylist | { songs: { song: Song }[] } | null | undefined,
-  event?: Event
-): void {
-  event?.stopPropagation?.();
-  if (!pl || !pl.songs || pl.songs.length === 0) return;
-
-  // Normalizar a Song[]
-  const flatSongs: Song[] = this.isNested(pl)
-    ? pl.songs.map(x => x.song)
-    : (pl.songs as Song[]);
-
-  if (!flatSongs.length) return;
-
-  // Adaptar a Track[] y reproducir
-  const queue: Track[] = flatSongs.map(songToTrack);
-  this.player.playNow(queue[0], queue);
+    
+    const currentTrack = dtoToTrack(song);
+    console.log('🎵 Track con URL:', currentTrack.url);
+    
+    this.player.playNow(currentTrack);
 }
 
-playPopularPlaylist(event?: Event): void {
-  event?.stopPropagation?.();
-  const popular = this.popularPlaylist();
-  if (!popular || !popular.songs || popular.songs.length === 0) return;
-  this.playPlaylist(popular, event);
+// ✅ MÉTODO CORREGIDO PARA BUSCAR CANCIÓN COMPLETA
+private findCompleteSong(songId: number): any {
+    const currentPlaylist = this.selectedPlaylist();
+    
+    if (!currentPlaylist || !currentPlaylist.songs || !currentPlaylist.songs.length) {
+        console.log('❌ No hay playlist seleccionada o no tiene canciones');
+        return null;
+    }
+    
+    console.log('🔍 Buscando canción ID:', songId, 'en playlist:', currentPlaylist.songs);
+    
+    // Buscar en las canciones actuales de la playlist
+    const completeSong = currentPlaylist.songs.find((s: any) => s.id === songId);
+    if (completeSong && completeSong.url_song) {
+        console.log('✅ Canción encontrada en playlist:', completeSong);
+        return completeSong;
+    }
+    
+    // Si no se encuentra con url_song, buscar en estructura anidada
+    for (let song of currentPlaylist.songs) {
+        if (song.song && song.song.id === songId && song.song.url_song) {
+            console.log('✅ Canción encontrada en estructura anidada:', song.song);
+            return song.song;
+        }
+    }
+    
+    console.log('❌ Canción no encontrada en la playlist');
+    return null;
 }
 
+  formatDuration(seconds: number): string {
+    if (!seconds) return '0:00';
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  }
+
+  bust(id: number) {
+    return `?v=${id}`;
+  }
+
+  onImgError(ev: Event, song: any) {
+    this.noImg.add(song.id);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+  // Agrega este método en tu cover-player.component.ts
+  togglePlayPause() {
+    this.player.togglePlayPause();
+    console.log('⏯️ Play/Pause desde carátula del cover player');
+  }
 }

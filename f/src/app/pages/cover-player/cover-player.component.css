@@ -327,15 +327,15 @@
 
 .playlist-detail-section {
     background: var(--bg0);
-    min-height: 100vh;
-    padding: 1rem;
-    padding-top: 50px;
+    min-height:70vh;
+    padding: 0;
+    padding-top:10px;
     margin-left: 40px;
-
+    z-index:   1;
 }
 
 .playlist-detail-header {
-    margin-bottom: 2rem
+    margin-bottom: 0
 }
 
 .back-btn {
@@ -356,7 +356,8 @@
 .playlist-header-content {
     display: flex;
     gap: 2rem;
-    align-items: center
+    align-items: flex-start;
+    padding-bottom: 200px;
 }
 
 .playlist-cover-large {
@@ -419,7 +420,24 @@
     transition: all .2s ease;
     cursor: pointer
 }
+/*  ----------------------------------------------------------MAIN PLAYER COVER----------------------------------------------------------------------------------------- */
+.playlist-detail-section {
+  position: fixed;
+  top: 60px; /* altura del navbar */
+  right: 0px;
+  padding-left: 30px;
+  width: 100vw;
+  height: calc(100vh - 120px); /* 100vh - navbar - footer */
+  z-index: 1;
+  background: #050505;
+  overflow-y:hidden; /* scroll interno */
+  overscroll-behavior: contain;
+}
 
+/* Bloquear scroll del body cuando el modal está abierto */
+body.modal-open {
+  overflow: hidden;
+}
 .play-all-btn {
     background: #1db954;
     color: #fff;
@@ -454,11 +472,12 @@
     background: var(--bg1);
     border-radius: 12px;
     overflow: hidden;
-    max-height: 70vh;
+    max-height: 50vh;
     overflow-y: auto;
     margin-top: 50px;
     margin-right: 40px;
-    margin-bottom: 1rem
+    padding-bottom: 0;
+    
 }
 
 .playlist-tracks-container::-webkit-scrollbar {
@@ -808,6 +827,18 @@
     border: 1px solid rgba(13,110,253,.3);
     color: #0d6efd
 }
+.hover-caratula{
+    background-color: white;
+}
+.hover-caratula:hover{
+    background-color: #fff;
+    cursor: pointer;
+    opacity: 0.60;
+    transition: 0.3s;
+}
+.hover-caratula:active{
+    opacity: 1;
+}
 
 @media (max-width:768px) {
     .auto-playlists-section {
@@ -872,8 +903,9 @@
 
     .playlist-header-content {
         flex-direction: column;
-        align-items: center;
+        align-items: flex-start;
         text-align: center;
+      
         gap: 1rem
     }
 
@@ -944,8 +976,8 @@
     }
 
     .playlist-cover-large {
-        width: 800px;
-        height: 800px
+        width: 600px;
+        height: 600px
     }
 
     .playlist-detail-title {
