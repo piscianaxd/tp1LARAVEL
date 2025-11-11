@@ -489,106 +489,81 @@ class PlaylistController extends Controller
      * )
      */
     public function addSong(Request $request, $playlistId)
-    {
-        Log::info('🎵 ========== ADD SONG TO PLAYLIST START ==========');
-        Log::info('🎵 Adding song to playlist:', ['playlist_id' => $playlistId]);
-        Log::info('🎵 Request data:', $request->all());
+{
+    Log::info('🎵 ========== ADD SONG TO PLAYLIST START ==========');
+    Log::info('🎵 Adding song to playlist:', ['playlist_id' => $playlistId]);
+    Log::info('🎵 Request data:', $request->all());
 
-        DB::beginTransaction();
+    DB::beginTransaction();
 
-        try {
-            $userId = $request->user()?->id ?? 1;
-            
-            // Validar la solicitud
-            $validator = Validator::make($request->all(), [
-                'song_id' => 'required|integer|exists:songs_saved_db,id'
-            ]);
+    try {
+        $userId = $request->user()?->id ?? 1;
+        Log::info('👤 User ID detectado:', ['user_id' => $userId]);
 
-            if ($validator->fails()) {
-                Log::warning('🎵 Validation failed:', $validator->errors()->toArray());
-                return response()->json($validator->errors(), 422);
-            }
+        $validator = Validator::make($request->all(), [
+            'song_id' => 'required|integer|exists:songs_saved_db,id'
+        ]);
 
-            // Buscar la playlist
-            $playlist = Playlist::where('id', $playlistId)
-                ->where('user_id', $userId)
-                ->first();
-
-            if (!$playlist) {
-                Log::warning('🎵 Playlist not found or not owned by user:', [
-                    'playlist_id' => $playlistId, 
-                    'user_id' => $userId
-                ]);
-                return response()->json([
-                    'message' => 'Playlist no encontrada o no tienes permisos'
-                ], 404);
-            }
-
-            // Buscar la canción
-            $song = SongSavedDb::find($request->song_id);
-            if (!$song) {
-                Log::warning('🎵 Song not found:', ['song_id' => $request->song_id]);
-                return response()->json([
-                    'message' => 'Canción no encontrada'
-                ], 404);
-            }
-
-            // Verificar si la canción ya está en la playlist
-            $existingSong = SavedSong::where('playlist_id', $playlist->id)
-                ->where('songs_saved_db_id', $song->id)
-                ->first();
-
-            if ($existingSong) {
-                Log::warning('🎵 Song already in playlist:', [
-                    'playlist_id' => $playlist->id,
-                    'song_id' => $song->id
-                ]);
-                return response()->json([
-                    'message' => 'La canción ya está en esta playlist'
-                ], 409);
-            }
-
-            // Agregar la canción a la playlist
-            SavedSong::create([
-                'playlist_id' => $playlist->id,
-                'songs_saved_db_id' => $song->id
-            ]);
-
-            DB::commit();
-
-            Log::info('🎵 Song added successfully to playlist:', [
-                'playlist_id' => $playlist->id,
-                'song_id' => $song->id,
-                'song_name' => $song->name_song
-            ]);
-
-            // Cargar la playlist actualizada con sus canciones
-            $playlist->load(['songs.song']);
-
-            Log::info('🎵 ========== ADD SONG TO PLAYLIST END ==========');
-
-            return response()->json([
-                'message' => 'Canción agregada exitosamente a la playlist',
-                'playlist' => $playlist,
-                'added_song' => $song
-            ], 200);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            Log::error('🎵 ADD SONG ERROR:', [
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return response()->json([
-                'message' => 'Error al agregar la canción a la playlist',
-                'error' => config('app.debug') ? $e->getMessage() : 'Contact administrator'
-            ], 500);
+        if ($validator->fails()) {
+            Log::warning('🎵 Validation failed:', $validator->errors()->toArray());
+            return response()->json($validator->errors(), 422);
         }
+
+        $playlist = Playlist::where('id', $playlistId)
+            ->where('user_id', $userId)
+            ->first();
+
+        if (!$playlist) {
+            return response()->json([
+                'message' => 'Playlist no encontrada o no tienes permisos'
+            ], 404);
+        }
+
+        $song = SongSavedDb::find($request->song_id);
+        if (!$song) {
+            return response()->json(['message' => 'Canción no encontrada'], 404);
+        }
+
+        $exists = SavedSong::where('playlist_id', $playlist->id)
+            ->where('songs_saved_db_id', $song->id)
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['message' => 'La canción ya está en esta playlist'], 409);
+        }
+
+        SavedSong::create([
+            'playlist_id' => $playlist->id,
+            'songs_saved_db_id' => $song->id
+        ]);
+
+        DB::commit();
+
+        $playlist->load('songs'); // ✅ corregido
+
+        return response()->json([
+            'message' => 'Canción agregada exitosamente a la playlist',
+            'playlist' => $playlist,
+            'added_song' => $song
+        ], 200);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        Log::error('🎵 ADD SONG ERROR:', [
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return response()->json([
+            'message' => 'Error al agregar la canción a la playlist',
+            'error' => config('app.debug') ? $e->getMessage() : 'Contact administrator'
+        ], 500);
     }
+}
+
 
 
     /**
