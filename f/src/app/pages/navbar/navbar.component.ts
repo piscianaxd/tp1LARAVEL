@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -6,7 +6,7 @@ import { SearchService } from '../../services/search.service';
 import { AlertService } from '../../services/alert.service';
 import { SearchResultsComponent } from '../search-results/search-results.component';
 import { ProfileModalComponent } from '../profile/profile.component';
-import { SidebarComponent } from '../sidebar/sidebar.component'; // ✅ Nueva importación
+import { SidebarComponent } from '../sidebar/sidebar.component';
 
 @Component({
   selector: 'app-nav-bar',
@@ -17,7 +17,7 @@ import { SidebarComponent } from '../sidebar/sidebar.component'; // ✅ Nueva im
     RouterModule, 
     SearchResultsComponent, 
     ProfileModalComponent,
-    SidebarComponent // ✅ Nuevo componente
+    SidebarComponent
   ],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css']
@@ -34,10 +34,13 @@ export class NavBar implements OnInit {
   // Para modal de perfil
   showProfileModal: boolean = false;
   
-  // ✅ Nueva propiedad para sidebar
+  // Para sidebar
   showSidebar: boolean = false;
 
-  constructor(public searchService: SearchService, public router: Router,private alertService: AlertService) {}
+  // Para controlar la visibilidad de los resultados de búsqueda
+  showSearchResults: boolean = false;
+
+  constructor(public searchService: SearchService, public router: Router, private alertService: AlertService) {}
 
   ngOnInit() {
     this.setPlaceholderByRoute();
@@ -63,6 +66,24 @@ export class NavBar implements OnInit {
         this.placeholder = this.getPlaceholder(component);
       });
     });
+  }
+
+  // Listener global para clicks fuera del área de búsqueda
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    const searchContainer = document.querySelector('.search-container');
+    const searchResults = document.querySelector('app-search-results');
+    
+    // Verificar si el click fue fuera del área de búsqueda y resultados
+    if (searchContainer && searchResults) {
+      const clickedInsideSearch = searchContainer.contains(target);
+      const clickedInsideResults = searchResults.contains(target);
+      
+      if (!clickedInsideSearch && !clickedInsideResults) {
+        this.hideSearchResults();
+      }
+    }
   }
 
   private setPlaceholderByRoute() {
@@ -110,24 +131,50 @@ export class NavBar implements OnInit {
     } else {
       this.searchService.setSearchTerm(this.searchTerm);
     }
+
+    // Mostrar resultados si hay término de búsqueda
+    if (this.searchTerm.trim()) {
+      this.showSearchResults = true;
+    } else {
+      this.showSearchResults = false;
+    }
   }
 
   onSearchFocus() {
     this.isSearchFocused = true;
+    // Mostrar resultados cuando se enfoca el input, si hay término de búsqueda
+    if (this.searchTerm.trim()) {
+      this.showSearchResults = true;
+    }
+    
     if (this.searchTerm) {
       this.onSearch();
     }
   }
 
   onSearchBlur() {
+    // Usar timeout para permitir clicks en los resultados
     setTimeout(() => {
       this.isSearchFocused = false;
     }, 200);
   }
 
+  // Método para ocultar resultados
+  hideSearchResults() {
+    this.showSearchResults = false;
+  }
+
+  // Método para mostrar resultados
+  showResults() {
+    if (this.searchTerm.trim()) {
+      this.showSearchResults = true;
+    }
+  }
+
   clearSearch() {
     this.searchTerm = '';
     this.isSearchFocused = false;
+    this.showSearchResults = false;
     this.searchService.clearGlobalSearch();
     this.searchService.clearSearch();
     this.searchService.clearDashboardSearch();
@@ -167,7 +214,7 @@ export class NavBar implements OnInit {
     });
   }
 
-  // ✅ NUEVOS MÉTODOS PARA SIDEBAR
+  // MÉTODOS PARA SIDEBAR
   openSidebar(): void {
     if (!this.showSidebar) {
       this.showSidebar = true;

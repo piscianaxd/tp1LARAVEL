@@ -25,9 +25,14 @@
             (input)="onSearch()"
             (focus)="onSearchFocus()"
             (blur)="onSearchBlur()"
+            (click)="showResults()"
             aria-label="Buscar canciones, playlists y artistas">
         </div>
-        <app-search-results></app-search-results>
+        
+        <!-- Mostrar resultados solo cuando showSearchResults es true -->
+        @if (showSearchResults) {
+          <app-search-results></app-search-results>
+        }
       </div>
     </div>
 
