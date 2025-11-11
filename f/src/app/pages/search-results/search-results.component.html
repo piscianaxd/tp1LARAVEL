@@ -105,22 +105,5 @@
       <p>No se encontraron resultados</p>
       <small>Intenta con otros términos de búsqueda</small>
     </div>
-
-    <!-- Ver todos -->
-    <div class="view-all-section" *ngIf="!isLoading && !hasNoResults && currentSearchTerm">
-      <div class="result-item view-all"
-           [routerLink]="['/search']"
-           [queryParams]="{ q: currentSearchTerm }"
-           (click)="onResultClick()">
-        <div class="item-icon">
-          <i class="bi bi-arrow-right"></i>
-        </div>
-        <div class="item-info">
-          <div class="item-name">Ver todos los resultados</div>
-          <div class="item-details">Buscar "{{ currentSearchTerm }}" en toda la aplicación</div>
-        </div>
-      </div>
-    </div>
-
   </div>
 </div>
