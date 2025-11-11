@@ -18,7 +18,6 @@ import { AddToPlaylistComponent } from '../add-to-playlist/add-to-playlist.compo
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { PublicPlaylistComponent } from '../public-playlist/public-playlist.component';
 import { CoverplayerComponent } from '../cover-player/cover-player.component';
-
 @Component({
   selector: 'app-dashboard',
   standalone: true,

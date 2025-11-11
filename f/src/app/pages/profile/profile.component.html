@@ -157,9 +157,13 @@
                             Las contraseñas no coinciden
                         </div>
 
-                        <button type="submit" class="btn btn-primary change-button" [disabled]="saving">
-                            {{ saving ? "Guardando..." : "Cambiar Contraseña" }}
-                        </button>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" [disabled]="changingPassword || passwordForm.invalid">
+                                <i class="bi bi-key" *ngIf="!changingPassword"></i>
+                                <div class="loading-spinner" *ngIf="changingPassword"></div>
+                                {{ changingPassword ? "Cambiando..." : "Cambiar Contraseña" }}
+                            </button>
+                        </div>
                     </form>
                 </div>
 

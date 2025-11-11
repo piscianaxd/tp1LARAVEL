@@ -335,7 +335,8 @@
 }
 
 .playlist-detail-header {
-    margin-bottom: 0
+    margin-bottom: 0;
+    margin-left: 40px;
 }
 
 .back-btn {
@@ -427,7 +428,7 @@
   top: 60px; /* altura del navbar */
   right: 0px;
   padding-left: 30px;
-  width: 100vw;
+  width: 95vw;
   height: calc(100vh - 120px); /* 100vh - navbar - footer */
   z-index: 1;
   background: #050505;
