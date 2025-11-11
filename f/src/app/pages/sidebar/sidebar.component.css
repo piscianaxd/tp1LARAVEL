@@ -124,3 +124,38 @@
 }
 
 
+:root{
+  --nav-h: 56px;     /* altura navbar */
+  --rail-w: 90px;    /* ancho del rail mini */
+}
+
+@media (min-width: 1400px){
+  :root{ --nav-h: 64px; }
+}
+
+/* El overlay no hace falta para el rail fijo mini */
+.sidebar-overlay{ display: contents; }
+
+/* Contenedor del rail mini SIEMPRE visible */
+.sidebar-rail {
+  position: fixed;
+  top: var(--nav-h);                 /* ⬅ debajo de la navbar */
+  left: 0;
+  width: var(--rail-w);
+  height: calc(100vh - var(--nav-h));
+  z-index: 1040;                     /* debajo de navbar (1050) */
+  pointer-events: auto;
+  background: transparent;
+}
+
+/* tu .sidebar-content ahora puede usar .sidebar-rail */
+.sidebar-content{
+  position: absolute;
+  inset: 0;
+  /* resto de tus estilos… */
+}
+
+/* RAIL SOLO SE MUESTRA EN PANTALLAS GRANDES, ocultar en pantallas medianas o chicas y en moviles */
+@media (max-width: 1400px){
+  .rail { display: none; }
+} 
