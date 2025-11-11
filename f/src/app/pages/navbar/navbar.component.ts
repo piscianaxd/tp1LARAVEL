@@ -6,7 +6,7 @@ import { SearchService } from '../../services/search.service';
 import { AlertService } from '../../services/alert.service';
 import { SearchResultsComponent } from '../search-results/search-results.component';
 import { ProfileModalComponent } from '../profile/profile.component';
-import { SidebarComponent } from '../sidebar/sidebar.component'; // ✅ Nueva importación
+import { SidebarComponent } from '../sidebar/sidebar.component'; 
 
 @Component({
   selector: 'app-nav-bar',
