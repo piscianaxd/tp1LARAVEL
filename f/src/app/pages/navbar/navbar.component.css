@@ -432,3 +432,28 @@ body {
 /* Opcional: agrandar la marca un toque */
 .navbar-brand{ font-size: 1.35rem; }
 .navbar-brand i{ font-size: 1.4rem; }
+
+:root{ --rail-w: 90px; }
+
+.navbar { z-index: 1050; }
+
+/* Cuando estás en dashboard, ya tienes .with-rail en la navbar */
+.navbar.with-rail .container-fluid{
+  padding-left: var(--rail-w);
+}
+
+/* El contenido general también debe correr a la derecha del rail */
+body.dashboard-has-rail .section.container-xxl,
+body.dashboard-has-rail .container-xxl{
+  padding-left: var(--rail-w);
+}
+
+/* A 125% (viewport efectivo más chico) comprimimos buscador y nombre */
+@media (max-width: 1600px){
+  .search-container{ min-width: 320px !important; max-width: 520px !important; }
+  .user-link{ max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+@media (max-width: 1366px){
+  .search-container{ min-width: 280px !important; max-width: 460px !important; }
+  .user-link{ display: none; } /* deja solo el avatar si hace falta */
+}
