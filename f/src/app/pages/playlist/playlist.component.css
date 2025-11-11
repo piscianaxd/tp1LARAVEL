@@ -1903,3 +1903,88 @@ body.modal-active .auto-playlists-section,body.modal-active .playlist-detail-sec
         margin-bottom: .25rem
     }
 }
+
+/* [Todo el CSS existente que ya tienes...] */
+
+/* === NUEVAS REGLAS PARA MODAL MOVER CANCIÓN === */
+
+/* Específico para el modal de mover canción - Imagen más pequeña */
+.modal-content .song-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.modal-content .song-cover {
+  width: 50px; /* Tamaño reducido */
+  height: 50px; /* Tamaño reducido */
+  flex-shrink: 0;
+}
+
+.modal-content .song-cover .cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.modal-content .song-cover .cover-fallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  background: var(--bg1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 1rem; /* Icono más pequeño */
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.modal-content .song-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.modal-content .song-name {
+  color: var(--title);
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modal-content .song-artist {
+  color: var(--muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+  .modal-content .song-cover {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .modal-content .song-cover .cover-fallback {
+    font-size: 0.9rem;
+  }
+  
+  .modal-content .song-name {
+    font-size: 0.9rem;
+  }
+  
+  .modal-content .song-artist {
+    font-size: 0.8rem;
+  }
+}

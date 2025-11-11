@@ -85,13 +85,6 @@
                     <i class="bi bi-music-note-beamed"></i>
                   </div>
                 </ng-template>
-
-                <!-- overlay: solo Play -->
-                <button class="overlay-btn play"
-                        (click)="$event.stopPropagation(); playSong(song, $event)"
-                        title="Reproducir">
-                  <i class="bi bi-play-fill"></i>
-                </button>
               </div>
 
               <!-- Texto - igual que Recent Track -->
@@ -104,16 +97,6 @@
                   {{ song.artist_song }}<span *ngIf="song.album_song"> • {{ song.album_song }}</span>
                 </div>
               </div>
-
-              <!-- Acciones al extremo derecho - NUEVO: Botón + para agregar a playlist -->
-              <div class="end-actions">
-                <button class="icon-btn"
-                        (click)="$event.stopPropagation(); openAddToPlaylist(song)"
-                        title="Agregar a playlist">
-                  <i class="bi bi-plus-lg"></i>
-                </button>
-              </div>
-
             </div>
           </li>
         </ul>

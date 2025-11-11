@@ -25,7 +25,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9000;
+  z-index: 3000;
   padding: 1rem;
   animation: overlayFadeIn 0.3s ease;
 }

@@ -1,9 +1,12 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import Swal from 'sweetalert2';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { lastValueFrom } from 'rxjs';
 import { ProfileService } from '../../services/profile.service';
 import { AuthService } from '../../services/auth.service';
+import { AlertService } from '../../services/alert.service';
 
 @Component({
   selector: 'app-profile-modal',
@@ -34,7 +37,8 @@ export class ProfileModalComponent implements OnInit {
     private fb: FormBuilder,
     private profileService: ProfileService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private alertService: AlertService
   ) {
     // Formulario para editar perfil
     this.profileForm = this.fb.group({
@@ -143,51 +147,139 @@ export class ProfileModalComponent implements OnInit {
     });
   }
 
-  deleteAccount(): void {
-    if (this.deleteForm.invalid) {
-      this.markFormGroupTouched(this.deleteForm);
-      this.deleteError = 'La contraseña es requerida';
-      return;
-    }
-
-    if (!confirm('¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.')) {
-      return;
-    }
-
-    this.deleting = true;
-    this.deleteError = '';
-
-    this.profileService.deleteAccount(this.deleteForm.value).subscribe({
-      next: (response) => {
-        this.deleting = false;
-        this.authService.clearSession();
-        this.router.navigate(['/login']);
-        this.closeModal();
-      },
-      error: (error) => {
-        console.error('Error eliminando cuenta:', error);
-        this.deleteError = error.error?.message || 'Error al eliminar la cuenta';
-        this.deleting = false;
-      }
-    });
+// En profile.component.ts - CORREGIR el método deleteAccount
+async deleteAccount(): Promise<void> {
+  // 1. Validación inicial
+  if (this.deleteForm.invalid) {
+    this.markFormGroupTouched(this.deleteForm);
+    this.alertService.showError('Contraseña requerida', 'Ingresa tu contraseña para confirmar la eliminación');
+    return;
   }
 
-  logout(): void {
-    if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-      this.authService.logout().subscribe({
-        next: () => {
-          this.authService.clearSession();
-          this.router.navigate(['/login']);
-          this.closeModal();
-        },
-        error: (error) => {
-          console.error('Error haciendo logout:', error);
-          // Forzar logout incluso si hay error
-          this.authService.clearSession();
-          this.router.navigate(['/login']);
-          this.closeModal();
+  try {
+    // 2. Confirmación destructiva con SweetAlert - ESTRUCTURA CORRECTA
+    const confirmed = await this.alertService.showConfirm({
+      swal: { // ✅ AGREGAR 'swal:' aquí
+        title: '⚠️ Eliminar Cuenta Permanentemente',
+        html: `
+          <div class="text-start">
+            <ul>
+              <li>❌ Eliminará TODOS tus datos</li>
+              <li>🗑️ Borrará tus playlists y favoritos</li>
+              <li>🚫 No se podrá deshacer</li>
+              <li>🔒 Perderás acceso permanente</li>
+            </ul>
+            <p class="mt-2"><strong>Escribe tu contraseña para confirmar:</strong></p>
+            <input type="password" id="password-confirm" class="form-control" placeholder="Tu contraseña actual">
+          </div>
+        `,
+        icon: 'warning',
+        confirmButtonText: 'Sí, eliminar mi cuenta',
+        cancelButtonText: 'Cancelar',
+        showCancelButton: true,
+        preConfirm: () => {
+          return new Promise((resolve) => {
+            const passwordInput = document.getElementById('password-confirm') as HTMLInputElement;
+            if (!passwordInput.value) {
+              Swal.showValidationMessage('Debes ingresar tu contraseña');
+              resolve(false);
+              return;
+            }
+            if (passwordInput.value !== this.deleteForm.get('password')?.value) {
+              Swal.showValidationMessage('La contraseña no coincide');
+              resolve(false);
+              return;
+            }
+            resolve(true);
+          });
+        }
+      }
+    });
+
+    if (!confirmed.isConfirmed) return;
+
+      // 3. Procesar eliminación
+      this.alertService.showLoading('Eliminando tu cuenta y todos los datos...');
+      this.deleting = true;
+
+      // 4. Ejecutar eliminación - CORREGIDO
+      const password = this.deleteForm.get('password')?.value;
+      await lastValueFrom(this.profileService.deleteAccount(password));
+
+      // 5. Éxito
+      this.alertService.showSuccess(
+        'Cuenta Eliminada', 
+        'Lamentamos verte ir. Todos tus datos han sido eliminados permanentemente.'
+      );
+
+      // 6. Limpiar y redirigir
+      this.authService.clearSession();
+      
+      setTimeout(() => {
+        this.router.navigate(['/login']);
+        this.closeModal();
+      }, 3000);
+
+    } catch (error: any) {
+      // 7. Manejo elegante de errores
+      this.alertService.closeLoading();
+      this.deleting = false;
+
+      const errorMessage = this.getFriendlyErrorMessage(error);
+      this.deleteError = errorMessage;
+      
+      this.alertService.showError('No se pudo eliminar la cuenta', errorMessage);
+    }
+  }
+
+  private getFriendlyErrorMessage(error: any): string {
+    if (error.status === 401) return 'Contraseña incorrecta. Verifica tus credenciales.';
+    if (error.status === 403) return 'No tienes permisos para realizar esta acción.';
+    if (error.status === 500) return 'Error del servidor. Intenta nuevamente más tarde.';
+    if (error.error?.message) return error.error.message;
+    
+    return 'Error inesperado. Por favor, contacta al soporte.';
+  }
+
+  async logout() {
+    try {
+      const result = await this.alertService.showConfirm({
+        swal: { // ✅ AGREGAR 'swal:' aquí también
+          title: '¿Cerrar sesión?',
+          text: '¿Estás seguro de que quieres salir?',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, salir',
+          cancelButtonText: 'Cancelar',
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6'
         }
       });
+
+      if (result.isConfirmed) {
+        // 🔥 EJECUTAR EL LOGOUT REAL
+        this.authService.logout().subscribe({
+          next: () => {
+            // Cerrar el modal de perfil
+            this.closeModal();
+            
+            // Redirigir al login
+            this.router.navigate(['/login']);
+            
+            // Mostrar confirmación
+            this.alertService.showSuccess('Sesión cerrada', 'Has cerrado sesión correctamente');
+          },
+          error: (error) => {
+            console.error('Error en logout:', error);
+            // Forzar logout incluso si hay error
+            this.authService.clearSession();
+            this.closeModal();
+            this.router.navigate(['/login']);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error en logout:', error);
     }
   }
 
@@ -195,7 +287,7 @@ export class ProfileModalComponent implements OnInit {
     this.close.emit();
   }
 
-  setActiveTab(tab: 'profile' | 'security' | 'logout'): void {
+  setActiveTab(tab: 'profile' | 'security' | 'logout'): void { // ✅ CORREGIDO: setActiveTab
     this.activeTab = tab;
     // Limpiar mensajes al cambiar de pestaña
     this.message = '';

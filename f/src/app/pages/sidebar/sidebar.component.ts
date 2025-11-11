@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 
@@ -10,88 +10,59 @@ import { Router, RouterModule } from '@angular/router';
   styleUrls: ['./sidebar.component.css']
 })
 export class SidebarComponent {
-  @Output() closeSidebar = new EventEmitter<void>();
-  @Input() isOpen: boolean = false;
+  @Input() isOpen = false;
+  @Output() opened = new EventEmitter<void>();
+  @Output() closed = new EventEmitter<void>();
 
-  constructor(public router: Router) {}
+  constructor(private router: Router) {}
 
-  close(): void {
-    this.closeSidebar.emit();
-  }
-
-  // 🔹 Función general para hacer scroll
-  private scrollToSection(selectorList: string[]): void {
-    let targetElement: HTMLElement | null = null;
-
-    for (const selector of selectorList) {
-      targetElement = document.querySelector(selector);
-      if (targetElement) break;
-    }
-
-    if (targetElement) {
-      targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      targetElement.classList.add('highlight-section');
-      setTimeout(() => targetElement?.classList.remove('highlight-section'), 2000);
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  open() {
+    if (!this.isOpen) {
+      this.isOpen = true;
+      this.opened.emit();
+      setTimeout(() => {
+        const el = document.querySelector<HTMLElement>('.sidebar-drawer');
+        el?.focus();
+      }, 0);
     }
   }
 
-  // ✅ Ir a Playlists
-  scrollToPlaylists(): void {
+  close() {
+    if (this.isOpen) {
+      this.isOpen = false;
+      this.closed.emit();
+    }
+  }
+
+  @HostListener('document:keydown.escape') esc() { this.close(); }
+
+  /** Navega al dashboard (si hace falta) y hace scroll a la sección */
+  goTo(target: 'top' | 'playlists' | 'recommended' | 'mixes') {
+    const run = () => {
+      let selectors: string[] = [];
+      if (target === 'top') window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      if (target === 'playlists')
+        selectors = ['app-playlists', '.playlists-section', '[data-section="playlists"]'];
+
+      if (target === 'recommended')
+        selectors = ['app-recommendations', '.recommended-section', '[data-section="recommended"]'];
+
+      if (target === 'mixes')
+        selectors = ['app-mixes-capsule', '.mixes-section', '[data-section="mixes"]'];
+
+      if (selectors.length) {
+        let el: HTMLElement | null = null;
+        for (const s of selectors) { el = document.querySelector(s); if (el) break; }
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+
     this.close();
-
-    const selectors = [
-      'app-playlists',
-      '.playlists-section',
-      '.playlists-container',
-      '[data-section="playlists"]'
-    ];
-
     if (this.router.url !== '/dashboard' && this.router.url !== '/') {
-      this.router.navigate(['/dashboard']).then(() => {
-        setTimeout(() => this.scrollToSection(selectors), 300);
-      });
+      this.router.navigate(['/dashboard']).then(() => setTimeout(run, 300));
     } else {
-      setTimeout(() => this.scrollToSection(selectors), 100);
-    }
-  }
-
-  // ✅ Ir a Recomendaciones — corregido selector principal
-  goToRecommended(): void {
-    this.close();
-
-    const selectors = [
-      'app-recommendations', // ✅ este es el correcto según tu HTML
-      '.recommended-section',
-      '[data-section="recommended"]'
-    ];
-
-    if (this.router.url !== '/dashboard' && this.router.url !== '/') {
-      this.router.navigate(['/dashboard']).then(() => {
-        setTimeout(() => this.scrollToSection(selectors), 300);
-      });
-    } else {
-      setTimeout(() => this.scrollToSection(selectors), 100);
-    }
-  }
-
-  // ✅ Ir a Mixes Populares
-  goToMixes(): void {
-    this.close();
-
-    const selectors = [
-      'app-mixes-capsule',
-      '.mixes-section',
-      '[data-section="mixes"]'
-    ];
-
-    if (this.router.url !== '/dashboard' && this.router.url !== '/') {
-      this.router.navigate(['/dashboard']).then(() => {
-        setTimeout(() => this.scrollToSection(selectors), 300);
-      });
-    } else {
-      setTimeout(() => this.scrollToSection(selectors), 100);
+      setTimeout(run, 80);
     }
   }
 }

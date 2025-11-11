@@ -9,6 +9,7 @@ import { PlayerService } from '../../services/player.service';
 import { TrackContextComponent } from '../track-context/track-context.component';
 import { AddToPlaylistService } from '../../services/add-to-playlist.service';
 import { Song } from '../../services/mixes.service';
+import { AlertService } from '../../services/alert.service';
 
 @Component({
   selector: 'app-recent-tracks',
@@ -59,7 +60,8 @@ export class RecentTracksComponent implements OnInit {
   constructor(
     private history: HistoryService,
     private player: PlayerService,
-    private addToPlaylistService: AddToPlaylistService
+    private addToPlaylistService: AddToPlaylistService,
+    private alertService: AlertService
   ) {}
 
   ngOnInit(): void {
@@ -106,16 +108,33 @@ export class RecentTracksComponent implements OnInit {
     this.player.playNow(t, q);
   }
 
-  // 🔁 Importante: borrar del origen "all" y se recalcula la vista deduplicada
-  remove(historyId: number) {
-    this.history.deleteFromHistory(historyId).subscribe({
-      next: () => {
-        const nextAll = this.all().filter(it => it.historyId !== historyId);
-        this.all.set(nextAll);
-        this.clampPage();
-      }
-    });
-  }
+async remove(historyId: number) {
+  const { isConfirmed } = await this.alertService.showDestructiveConfirm({
+    swal: {
+      title: 'Eliminar de Historial',
+      text: '¿Estás seguro de que deseas eliminar esta pista de tu historial?',
+      icon: 'warning',
+      confirmButtonText: 'Sí, eliminar',
+      showCancelButton: true
+    }
+  });
+
+  if (!isConfirmed) return;
+
+  this.history.deleteFromHistory(historyId).subscribe({
+    next: () => {
+      // Recalcular "all" (vista deduplicada)
+      this.all.set(this.all().filter(it => it.historyId !== historyId));
+      this.clampPage();
+      this.alertService.showSuccess?.('Eliminado del historial');
+    },
+    error: (err) => {
+      this.alertService.showError?.('No se pudo eliminar. Intenta de nuevo.');
+      console.error(err);
+    }
+  });
+}
+
 
   bust(id: number) { return `?v=${id}`; }
   onImgError(ev: Event, t: HistoryTrack) {

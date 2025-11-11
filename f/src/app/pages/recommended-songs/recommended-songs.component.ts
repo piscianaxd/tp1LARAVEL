@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, signal, ViewChild, ElementRef, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { RecommendedSongsService } from '../../services/recommended-songs.service';
@@ -7,11 +7,13 @@ import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { HttpClient } from '@angular/common/http';
 import { PlayerService } from '../../services/player.service';
 import { Track } from '../../models/track/track.model';
+import { TrackContextComponent, ContextMenuPosition } from '../track-context/track-context.component';
+import { AddToPlaylistService } from '../../services/add-to-playlist.service';
 
 @Component({
   selector: 'app-recommendations',
   standalone: true,
-  imports: [CommonModule, MediaUrlPipe],
+  imports: [CommonModule, MediaUrlPipe, TrackContextComponent],
   templateUrl: './recommended-songs.component.html',
   styleUrls: ['./recommended-songs.component.css']
 })
@@ -29,6 +31,14 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
 
   // Control de imágenes fallidas
   failedImages = new Set<string>();
+
+  // Variables para el context menu
+  contextMenuVisible = signal(false);
+  contextMenuPosition = signal<ContextMenuPosition>({ x: 0, y: 0 });
+  contextMenuTrack = signal<any>(null);
+
+  // Inyectar el servicio de AddToPlaylist
+  private addToPlaylistService = inject(AddToPlaylistService);
 
   constructor(
     private recommendedSongsService: RecommendedSongsService,
@@ -53,7 +63,7 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
   }
 
   loadCurrentUser(): void {
-    const userData = localStorage.getItem('user');
+    const userData = localStorage.getItem('auth_user');
     if (userData) {
       const user = JSON.parse(userData);
       this.currentUser.set(user);
@@ -266,6 +276,70 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
     this.canScrollRight.set(scrollLeft < scrollWidth - clientWidth - 10);
   }
 
+  // ===== MÉTODOS PARA EL CONTEXT MENU =====
+
+  onTrackContextMenu(event: MouseEvent, song: any): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Posición del menú
+    this.contextMenuPosition.set({
+      x: event.clientX,
+      y: event.clientY
+    });
+
+    // Track seleccionado
+    this.contextMenuTrack.set(song);
+    
+    // Mostrar menú
+    this.contextMenuVisible.set(true);
+  }
+
+  onContextMenuPlay(): void {
+    const track = this.contextMenuTrack();
+    if (track) {
+      this.selectSong(track);
+    }
+    this.closeContextMenu();
+  }
+
+  onContextMenuAddToPlaylist(): void {
+    const track = this.contextMenuTrack();
+    if (track) {
+      console.log('➕ Agregar a playlist desde recomendaciones:', track);
+      
+      // Convertir el formato de la canción al formato esperado por AddToPlaylistService
+      const songForPlaylist = this.convertToPlaylistSong(track);
+      
+      // Abrir el modal de agregar a playlist
+      this.addToPlaylistService.openModal(songForPlaylist);
+    }
+    this.closeContextMenu();
+  }
+
+  onContextMenuClose(): void {
+    this.closeContextMenu();
+  }
+
+  private closeContextMenu(): void {
+    this.contextMenuVisible.set(false);
+    this.contextMenuTrack.set(null);
+  }
+
+  // Método para convertir el formato de canción al formato de playlist
+  private convertToPlaylistSong(song: any): any {
+    return {
+      id: song.id,
+      name_song: song.title,
+      artist_song: song.artist,
+      album_song: song.album || '',
+      art_work_song: song.cover || '',
+      duration: song.duration || 180,
+      genre_song: song.genre,
+      url_song: song.audioFile
+    };
+  }
+
   // ===== FUNCIÓN DE CONVERSIÓN =====
   private songToTrack(song: any): Track {
     return {
@@ -281,33 +355,22 @@ export class RecommendationsComponent implements OnInit, AfterViewInit {
 
   // ===== MÉTODO PARA SELECCIONAR CANCIÓN =====
   selectSong(song: any): void {
-    // Usar el PlayerService real
     if (this.isSelected(song)) {
-      // Si ya está seleccionada, pausar o reanudar
       this.playerService.togglePlayPause();
     } else {
-      // Nueva canción seleccionada - convertir al formato Track
       const track = this.songToTrack(song);
-      
-      // Reproducir con PlayerService
       this.playerService.playNow(track);
-      
-      // ✅ NOTA: Ya NO necesitamos llamar a incrementUserGenre aquí
-      // porque el PlayerService ahora lo hace automáticamente
     }
   }
 
   // ===== MÉTODO PARA VERIFICAR SELECCIÓN =====
   isSelected(song: any): boolean {
-    // Verificar contra el reproductor real
     const currentSong = this.playerService.current();
     return currentSong?.id === song.id;
   }
 
   handleImageError(event: any, song: any): void {
-    // Marcar esta imagen como fallida
     this.failedImages.add(song.cover);
-    // Ocultar la imagen problemática
     const img = event.target;
     img.style.display = 'none';
   }
