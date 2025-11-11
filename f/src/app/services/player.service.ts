@@ -231,15 +231,42 @@ export class PlayerService {
 
   // ---------- Internas ----------
 
-  private loadAndPlay(t: Track) {
-    console.log("sonando")
+ private loadAndPlay(t: Track) {
+    console.log("🔊 Intentando reproducir...");
+    console.log("📁 URL del track:", t.url);
+    console.log("🎵 Track completo:", t);
+    
     this._dur.set(0);
     this._time.set(0);
-    this.audio.src = this.resolve(t.url);
-    this.audio.play().catch(() => {
-      // si el play falla (autoplay policy), igual dejamos cargado
+    
+    const audioUrl = this.resolve(t.url);
+    console.log("🔗 URL resuelta:", audioUrl);
+    
+    // ✅ VERIFICAR SI LA URL ES VÁLIDA
+    if (!audioUrl || audioUrl === '' || audioUrl === 'undefined') {
+        console.error('❌ URL del audio es inválida:', audioUrl);
+        return;
+    }
+    
+    // ✅ VERIFICAR EXTENSIÓN DEL ARCHIVO
+    console.log("📄 Extensión del archivo:", audioUrl.split('.').pop());
+    
+    this.audio.src = audioUrl;
+    
+    this.audio.play().catch((error) => {
+        console.error('❌ Error de reproducción:', error);
+        console.error('❌ Tipo de error:', error.name);
+        
+        // ✅ INTENTAR REPRODUCIR DIRECTAMENTE DESDE LA URL ORIGINAL
+        console.log('🔄 Intentando con URL original sin resolver...');
+        if (t.url && t.url !== audioUrl) {
+            this.audio.src = t.url;
+            this.audio.play().catch(err => {
+                console.error('❌ También falló con URL original:', err);
+            });
+        }
     });
-  }
+}
 
   private replayOrStop() {
     if (this._repeat() === 'one') {
@@ -267,7 +294,8 @@ export class PlayerService {
   }
 
   // ✅ NUEVO: Método para incrementar género
-  private incrementGenreForTrack(track: any): void {
+  // ✅ CORREGIDO: Método para incrementar género
+private incrementGenreForTrack(track: any): void {
     console.log('🎵 PlayerService: Procesando género para track:', track.title);
     
     // Obtener usuario actual
@@ -278,10 +306,19 @@ export class PlayerService {
     }
 
     const user = JSON.parse(userData);
-    const genre = track.genre;
+    
+    // ✅ CORRECCIÓN: Usar género del track O género por defecto
+    const genre = track.genre || track.genre_song || 'Unknown'; 
 
-    if (!user.id || !genre) {
-      console.warn('⚠️ PlayerService: Datos insuficientes - user.id:', user.id, 'genre:', genre);
+    // ✅ CORRECCIÓN: Quitar la validación que bloquea la reproducción
+    if (!user.id) {
+      console.warn('⚠️ PlayerService: User ID no disponible');
+      return;
+    }
+
+    // Si no hay género, simplemente no incrementamos pero permitimos la reproducción
+    if (!genre) {
+      console.log('ℹ️ PlayerService: Track sin género, no se incrementará estadística');
       return;
     }
 
@@ -303,7 +340,7 @@ export class PlayerService {
         console.error('❌ PlayerService: Error incrementando género:', error);
       }
     });
-  }
+}
 
   // ✅ NUEVO: Método para formatear géneros según tu BD
   private formatGenre(genre: string): string | null {

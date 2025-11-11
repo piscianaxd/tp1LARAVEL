@@ -1,0 +1,97 @@
+<!-- Vista principal OCULTA (solo para debug) -->
+<section class="auto-playlists-section" [class.d-none]="true">
+  <!-- Botón temporal para debug -->
+  <!--<button (click)="openWithCurrentSong()" 
+          style="position: fixed; top: 10px; left: 10px; z-index: 1000; background: green; color: white; padding: 15px; font-size: 16px;">
+    🎵 Abrir Vista Detallada
+  </button>-->
+</section>
+
+<!-- Vista detallada de canción actual -->
+<section class="playlist-detail-section" *ngIf="showPlaylistDetail() && selectedPlaylist()">
+  
+  <!-- Header -->
+  <div class="playlist-detail-header">
+    <button class="back-btn" (click)="closePlaylist()" title="Cerrar">
+      <i class="bi bi-arrow-left"></i>
+    </button>
+  
+    <div class="playlist-header-content">
+      <div class="playlist-cover-large">
+        <ng-container *ngIf="selectedPlaylist()!.songs[0]?.art_work_song; else fallbackLarge">
+          <img
+            [src]="(selectedPlaylist()!.songs[0]?.art_work_song | mediaUrl) + bust(selectedPlaylist()!.songs[0]?.id)"
+            [alt]="selectedPlaylist()!.name"
+            class="cover-img-large hover-caratula"
+            (click)="togglePlayPause()"
+          />
+        </ng-container>
+        <ng-template #fallbackLarge>
+          <div class="cover-fallback-large" (click)="togglePlayPause()">
+            <i class="bi bi-music-note-beamed"></i>
+          </div>
+        </ng-template>
+      </div>
+      <!-- LISTA PLAYLIST  ---->
+      
+      <div class="playlist-header-info">
+        <h1 class="playlist-detail-title">{{ selectedPlaylist()!.name }}</h1>
+        <p class="playlist-detail-meta">
+          {{ selectedPlaylist()!.description }}
+        </p>
+
+      <div class="playlist-tracks-container" *ngIf="selectedPlaylist()!.songs && selectedPlaylist()!.songs.length > 0">
+      <div class="tracks-header">
+      <div class="track-number">#</div>
+      <div class="track-title">Título</div>
+      <div class="track-album">Álbum</div>
+      <div class="track-duration">
+        <i class="bi bi-clock"></i>
+      </div>
+    </div>
+    
+    <div class="tracks-list">
+      <div *ngFor="let song of selectedPlaylist()!.songs; let i = index" 
+           class="track-item"
+           (click)="playSong(song, $event)">
+        
+        <div class="track-number">
+          <span class="track-index">{{ i + 1 }}</span>
+        </div>
+        
+        <div class="track-info">
+          <div class="track-cover-small">
+            <ng-container *ngIf="!noImg.has(song.id); else iconFallbackSmall">
+              <img
+                [src]="(song.art_work_song | mediaUrl) + bust(song.id)"
+                [alt]="song.name_song"
+                class="cover-img-small"
+              />
+            </ng-container>
+            <ng-template #iconFallbackSmall>
+              <div class="cover-fallback-small">
+                <i class="bi bi-music-note-beamed"></i>
+              </div>
+            </ng-template>
+          </div>
+          
+          <div class="track-details">
+            <div class="track-name">{{ song.name_song }}</div>
+            <div class="track-artist">{{ song.artist_song }}</div>
+          </div>
+        </div>
+        
+        <div class="track-album">{{ song.album_song || 'Sin álbum' }}</div>
+        <div class="track-duration">{{ formatDuration(song.duration) }}</div>
+      </div>
+    </div>
+  </div>
+      </div>
+
+
+    </div>
+  </div>
+
+  <!-- Lista de canciones -->
+  
+</section>

@@ -363,10 +363,60 @@
   gap: 0.5rem;
 }
 
-/* ========== SECCIÓN DE ELIMINAR CUENTA ========== */
-.danger-zone {
-  background: rgba(255, 71, 87, 0.05);
-  border: 1px solid rgba(255, 71, 87, 0.2);
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--brand);
+  color: var(--bg0);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+.change-button{color: var(--muted)}
+.btn-danger {
+  background: var(--error);
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #ff3742;
+  transform: translateY(-1px);
+}
+
+/* Alertas */
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.alert-success {
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid var(--success);
+  color: var(--success);
+}
+
+.alert-error {
+  background: rgba(255, 71, 87, 0.1);
+  border: 1px solid var(--error);
+  color: var(--error);
+}
+
+/* Mensajes de Error */
+.error-message {
+  color: var(--error);
+  font-size: 0.8rem;
+}
+
+/* Secciones */
+.security-section, .danger-zone {
+  background: var(--bg1);
   border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
