@@ -30,14 +30,12 @@ export class TrackContextComponent implements OnInit, OnDestroy {
   private globalClickListener?: (event: MouseEvent) => void;
 
   constructor(private ngZone: NgZone) {}
-
-  ngOnInit() {
     // Configurar el listener global para clicks
+  ngOnInit() {
     this.setupGlobalClickListener();
   }
-
+  // Limpiar el listener global al destruir el componente
   ngOnDestroy() {
-    // Limpiar el listener global al destruir el componente
     this.removeGlobalClickListener();
   }
 
@@ -98,37 +96,32 @@ export class TrackContextComponent implements OnInit, OnDestroy {
   @HostListener('scroll', ['$event.target'])
   onElementScroll(target: EventTarget | null) {
     if (this.isVisible && target instanceof HTMLElement) {
-      // Debounce muy corto para respuesta casi inmediata
       clearTimeout(this.scrollTimeout);
       this.scrollTimeout = setTimeout(() => {
         this.closeMenu();
-      }, 10); // Solo 10ms de delay
+      }, 10); 
     }
   }
 
   onPlayClick(event: MouseEvent) {
     event.stopPropagation();
-    console.log('🎵 ContextMenu: Play clickeado');
     this.play.emit();
     this.closeMenu();
   }
 
   onDeleteClick(event: MouseEvent) {
     event.stopPropagation();
-    console.log('🗑️ ContextMenu: Delete clickeado');
     this.delete.emit();
     this.closeMenu();
   }
 
   onMoveClick(event: MouseEvent) {
     event.stopPropagation();
-    console.log('📁 ContextMenu: Move clickeado');
     this.move.emit();
   }
 
   onAddToPlaylistClick(event: MouseEvent) {
     event.stopPropagation();
-    console.log('➕ ContextMenu: Agregar a playlist clickeado');
     this.addToPlaylist.emit();
     this.closeMenu();
   }

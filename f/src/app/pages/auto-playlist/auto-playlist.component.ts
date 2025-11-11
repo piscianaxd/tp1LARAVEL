@@ -1,4 +1,3 @@
-// components/auto-playlist/auto-playlist.component.ts
 import { Component, OnInit, signal, computed, inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RandomTrackService, Song } from '../../services/random-track.service';
@@ -45,7 +44,7 @@ export class AutoPlaylistsComponent implements OnInit {
   popularPlaylist = signal<AutoPlaylist | undefined>(undefined);
   popularPlaylistPage = signal(0);
   
-  // ✅ Señales para guardar playlists automáticas
+  // señales para guardar playlists automáticas
   savingPlaylist = signal(false);
   savedPlaylists = signal<Set<string>>(new Set());
   
@@ -55,7 +54,7 @@ export class AutoPlaylistsComponent implements OnInit {
 
 
 
-  // ✅ Señal computada para páginas máximas
+  // Señal computada para páginas máximas
   popularPlaylistMaxPages = computed(() => {
     const playlist = this.popularPlaylist();
     if (!playlist?.songs) return 1;
@@ -65,10 +64,10 @@ export class AutoPlaylistsComponent implements OnInit {
   playlistPage = signal(0);
   playlistMaxPages = signal(0);
 
-  // ✅ CONSTANTE para el tamaño de página
+  // constante para el tamaño de página
   readonly POPULAR_PAGE_SIZE = 6;
 
-  // ✅ NUEVAS señales para guardar playlist
+  // señales para guardar playlist
   popularPlaylistSaved = signal(false);
   savingPopularPlaylist = signal(false);
 
@@ -90,18 +89,15 @@ export class AutoPlaylistsComponent implements OnInit {
     this.loadPopularPlaylist();
   }
 
-  // 1) Type guard para detectar la forma anidada
 isNested(pl: any): pl is { songs: { song: Song }[] } {
   return !!pl && Array.isArray(pl.songs) && pl.songs.length > 0 && 'song' in pl.songs[0];
 }
 
-  // ✅ NUEVO: Método para guardar playlist automática
   saveAutoPlaylist(playlist: AutoPlaylist): void {
     if (this.savingPlaylist() || this.isPlaylistSaved(playlist)) {
       return;
     }
 
-    // 🔥 NUEVO: Confirmación antes de guardar
     this.alertService.showConfirm({
       swal: {
         title: 'Guardar Playlist',
@@ -117,7 +113,6 @@ isNested(pl: any): pl is { songs: { song: Song }[] } {
 
   private executeSavePlaylist(playlist: AutoPlaylist): void {
     this.savingPlaylist.set(true);
-    console.log('💾 Guardando playlist automática:', playlist.name);
 
     const playlistData = {
       name_playlist: playlist.name,
@@ -135,20 +130,16 @@ isNested(pl: any): pl is { songs: { song: Song }[] } {
 
     this.playlistService.createPlaylist(playlistData).subscribe({
       next: (response: any) => {
-        console.log('✅ Playlist confirmada en servidor:', response);
         this.savingPlaylist.set(false);
         
-        // Marcar como guardada usando el nombre como identificador único
         const currentSaved = new Set(this.savedPlaylists());
         currentSaved.add(playlist.name);
         this.savedPlaylists.set(currentSaved);
         
         this.error.set(null);
         
-        // Emitir evento después de guardar exitosamente
         this.playlistEventService.notifyPlaylistSaved();
         
-        // 🔥 NUEVO: Mostrar confirmación
         this.alertService.showSuccess(
           'Playlist guardada',
           `"${playlist.name}" se agregó a tus playlists`
@@ -162,12 +153,10 @@ isNested(pl: any): pl is { songs: { song: Song }[] } {
     });
   }
 
-  // ✅ NUEVO: Verificar si playlist está guardada
   isPlaylistSaved(playlist: AutoPlaylist): boolean {
     return this.savedPlaylists().has(playlist.name);
   }
 
-  // ✅ NUEVO: Obtener ícono para botón de guardar
   getSaveButtonIcon(playlist: AutoPlaylist): string {
     if (this.savingPlaylist()) {
       return 'bi-arrow-repeat loading';
@@ -175,7 +164,6 @@ isNested(pl: any): pl is { songs: { song: Song }[] } {
     return this.isPlaylistSaved(playlist) ? 'bi-check-lg' : 'bi-plus-lg';
   }
 
-  // ✅ NUEVO: Obtener texto para botón de guardar
   getSaveButtonText(playlist: AutoPlaylist): string {
     if (this.savingPlaylist()) {
       return 'Guardando...';
@@ -183,7 +171,6 @@ isNested(pl: any): pl is { songs: { song: Song }[] } {
     return this.isPlaylistSaved(playlist) ? 'Guardada' : 'Guardar';
   }
 
-  // ✅ NUEVO: Método para formatear duración de canciones
   formatDuration(seconds: number): string {
     if (!seconds) return '0:00';
     
@@ -191,46 +178,37 @@ isNested(pl: any): pl is { songs: { song: Song }[] } {
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }
-
-  // ✅ NUEVO: Obtener imagen de cover para vista detallada
   getCoverImageForDetail(playlist: AutoPlaylist): string | null {
     return this.getCoverImage(playlist);
   }
 
-  // ✅ NUEVO: Obtener conteo de canciones para vista detallada
   getSongCountForDetail(playlist: AutoPlaylist): string {
     return this.getSongCount(playlist);
   }
 
-  // ✅ NUEVO: Reproducir canción desde vista detallada
   playSongFromDetail(song: Song, event?: Event): void {
     this.playSong(song, event || new Event('click'));
   }
 
-  // ✅ NUEVO: Cerrar vista detallada
   closePlaylistDetail(): void {
     this.closePlaylist();
   }
 
-  // ✅ NUEVO: Verificar si hay canciones en playlist seleccionada
   hasSongsInSelectedPlaylist(): boolean {
     const playlist = this.selectedPlaylist();
     return !!(playlist?.songs && playlist.songs.length > 0);
   }
 
-  // ✅ NUEVO: Obtener canciones de playlist seleccionada
   getSelectedPlaylistSongs(): Song[] {
     const playlist = this.selectedPlaylist();
     return playlist?.songs || [];
   }
 
-  // ✅ NUEVO: Verificar si hay muchas canciones para mostrar indicador
   shouldShowMoreTracksIndicator(): boolean {
     const playlist = this.selectedPlaylist();
     return !!(playlist?.songs && playlist.songs.length > 8);
   }
 
-  // ✅ NUEVO: Obtener metadata de playlist seleccionada
   getSelectedPlaylistMeta(): string {
     const playlist = this.selectedPlaylist();
     if (!playlist) return '';
@@ -239,7 +217,6 @@ isNested(pl: any): pl is { songs: { song: Song }[] } {
     return `${count} • Playlist automática • Generada por IA`;
   }
 
-  // ✅ MÉTODOS EXISTENTES (se mantienen igual)
   loadPopularPlaylist() {
     this.randomTrackService.getRandomSongs(18).subscribe({
       next: (response) => {
@@ -265,7 +242,6 @@ isNested(pl: any): pl is { songs: { song: Song }[] } {
     if (event) {
       event.stopPropagation();
     }
-    console.log('🎵 Abriendo modal para agregar a playlist:', song.name_song);
     this.addToPlaylistService.openModal(song);
   }
 
@@ -298,24 +274,13 @@ isNested(pl: any): pl is { songs: { song: Song }[] } {
       }))
     };
 
-    console.log('📤 Enviando playlist con canciones:', playlistData);
-
-    // Simulación de guardado instantáneo
-    setTimeout(() => {
-      console.log('✅ Playlist guardada instantáneamente: Mix Popular');
-    }, 0);
-
-    // Llamada real al servidor
     this.playlistService.createPlaylist(playlistData).subscribe({
       next: (response: any) => {
-        console.log('✅ Mix Popular confirmado en servidor:', response);
         this.savingPopularPlaylist.set(false);
         this.popularPlaylistSaved.set(true);
         this.error.set(null);
         
-        // Emitir evento después de guardar exitosamente
         this.playlistEventService.notifyPlaylistSaved();
-        console.log('🔄 Evento de playlist guardada emitido');
       },
       error: (err: HttpErrorResponse) => {
         console.error('❌ Error guardando Mix Popular:', err);
